@@ -1,0 +1,42 @@
+name: Localization Analysis
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore src/LocalizationAnalyzers.csproj
+
+      - name: Build analyzers (netstandard2.0)
+        run: dotnet build src/LocalizationAnalyzers.csproj --no-restore -c Release -f netstandard2.0
+
+      - name: Build CLI tool (net10.0)
+        run: dotnet build src/LocalizationAnalyzers.csproj --no-restore -c Release -f net10.0
+
+      - name: Run analyzers and generate SARIF
+        run: |
+          dotnet run --project src/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- src results.sarif
+
+      - name: Upload SARIF to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: results.sarif
+          category: localization-analyzers
