@@ -128,6 +128,54 @@ class TestClass
         }
 
         [TestMethod]
+        public async Task GetHashCode_ShouldNotReportLOC002()
+        {
+            var source = @"
+class TestClass
+{
+    void TestMethod()
+    {
+        var result = GetHashCode(""test"");
+    }
+}";
+            var diagnostics = await GetDiagnostics(source, new Analyzers.StringInDataAccessAnalyzer());
+            var dv002s = diagnostics.Where(d => d.Id == "LOC002").ToList();
+            Assert.AreEqual(0, dv002s.Count);
+        }
+
+        [TestMethod]
+        public async Task GetType_ShouldNotReportLOC002()
+        {
+            var source = @"
+class TestClass
+{
+    void TestMethod()
+    {
+        var result = GetType(""test"");
+    }
+}";
+            var diagnostics = await GetDiagnostics(source, new Analyzers.StringInDataAccessAnalyzer());
+            var dv002s = diagnostics.Where(d => d.Id == "LOC002").ToList();
+            Assert.AreEqual(0, dv002s.Count);
+        }
+
+        [TestMethod]
+        public async Task StringConcatenation_ShouldNotReportLOC002()
+        {
+            var source = @"
+class TestClass
+{
+    void TestMethod()
+    {
+        var result = ""hello"" + ""world"";
+    }
+}";
+            var diagnostics = await GetDiagnostics(source, new Analyzers.StringInDataAccessAnalyzer());
+            var dv002s = diagnostics.Where(d => d.Id == "LOC002").ToList();
+            Assert.AreEqual(0, dv002s.Count);
+        }
+
+        [TestMethod]
         public async Task DataAccessMethodWithNonStringArgument_ShouldNotReport()
         {
             var source = @"

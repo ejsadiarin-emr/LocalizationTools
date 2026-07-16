@@ -119,5 +119,74 @@ class TestClass
             var dv010s = diagnostics.Where(d => d.Id == "LOC010").ToList();
             Assert.AreEqual(0, dv010s.Count);
         }
+
+        [TestMethod]
+        public async Task DebugWriteLine_ShouldNotReportLOC010()
+        {
+            var source = @"
+using System.Diagnostics;
+class TestClass
+{
+    void TestMethod()
+    {
+        Debug.WriteLine(""Hello World"");
+    }
+}";
+            var diagnostics = await GetDiagnostics(source, new Analyzers.DisplayStringAnalyzer());
+            var dv010s = diagnostics.Where(d => d.Id == "LOC010").ToList();
+            Assert.AreEqual(0, dv010s.Count);
+        }
+
+        [TestMethod]
+        public async Task TraceWriteLine_ShouldNotReportLOC010()
+        {
+            var source = @"
+using System.Diagnostics;
+class TestClass
+{
+    void TestMethod()
+    {
+        Trace.WriteLine(""Hello World"");
+    }
+}";
+            var diagnostics = await GetDiagnostics(source, new Analyzers.DisplayStringAnalyzer());
+            var dv010s = diagnostics.Where(d => d.Id == "LOC010").ToList();
+            Assert.AreEqual(0, dv010s.Count);
+        }
+
+        [TestMethod]
+        public async Task LoggerLogDebug_ShouldReportLOC010()
+        {
+            var source = @"
+interface ILogger { void LogDebug(string message); }
+class TestClass
+{
+    void TestMethod(ILogger logger)
+    {
+        logger.LogDebug(""Hello World"");
+    }
+}";
+            var diagnostics = await GetDiagnostics(source, new Analyzers.DisplayStringAnalyzer());
+            var dv010s = diagnostics.Where(d => d.Id == "LOC010").ToList();
+            Assert.AreEqual(1, dv010s.Count);
+        }
+
+        [TestMethod]
+        public async Task CustomLoggerClass_ShouldReportLOC010()
+        {
+            var source = @"
+class MyAppLogger { public void Log(string message) {} }
+class TestClass
+{
+    void TestMethod()
+    {
+        var logger = new MyAppLogger();
+        logger.Log(""Hello World"");
+    }
+}";
+            var diagnostics = await GetDiagnostics(source, new Analyzers.DisplayStringAnalyzer());
+            var dv010s = diagnostics.Where(d => d.Id == "LOC010").ToList();
+            Assert.AreEqual(1, dv010s.Count);
+        }
     }
 }
