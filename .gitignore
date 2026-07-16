@@ -1,0 +1,105 @@
+# Binaries and build outputs
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+*.cache
+*.log
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# NuGet packages
+packages/
+*.nupkg
+*.snupkg
+.nuget/
+
+# Test results
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# Logs and diagnostics
+logs/
+*.log
+*.trace
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+*.lnk
+
+# Docker (if applicable)
+.dockerignore
+
+# Secrets and configuration
+appsettings.*.json
+secrets.json
+
+# Orchestrator runtime SQLite artifacts
+apps/orchestrator/backend/data/
+apps/orchestrator/backend/data/**/*.db*
+
+# Publish outputs
+publish/
+*.publishproj
+
+# Rider IDE
+.idea/
+
+# Visual Studio Code
+.vscode/settings.json
+.vscode/launch.json
+
+node_modules
+dist
+
+# Build outputs
+apps/orchestrator/backend/wwwroot/
+.artifacts/
+.superpowers/
+.worktrees/
+
+# Local data
+data/
+
+# Temporary session files
+session-*.md
+retain.md
+
+.playwright-mcp
+journal
+wiki
+.agents
+.env
+screenshot*
+test-artifacts/
+*.exe
+**/*.exe
+*.zip
+**/*.zip
+.artifact-cache
+**/*.db
+
+**/*.lscache
+.opencode
+openspec
+.env
