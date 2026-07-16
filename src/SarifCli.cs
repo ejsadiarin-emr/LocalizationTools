@@ -1,4 +1,4 @@
-#if NET8_0_OR_GREATER
+#if NET10_0_OR_GREATER
 #pragma warning disable RS1035 // Do not use banned APIs
 
 using System;
@@ -142,14 +142,19 @@ public static class SarifCli
                 name = d.Id,
                 shortDescription = new { text = d.Title.ToString() },
                 fullDescription = new { text = d.Description.ToString() },
-                defaultConfiguration = new { level = d.DefaultSeverity.ToString().ToLower() },
+                defaultConfiguration = new { level = d.DefaultSeverity switch
+                {
+                    DiagnosticSeverity.Error => "error",
+                    DiagnosticSeverity.Warning => "warning",
+                    DiagnosticSeverity.Info => "note",
+                    _ => "warning"
+                } },
                 properties = new { category = d.Category }
             })
             .ToList();
 
         return new
         {
-            schema = "https://json.schemastore.org/sarif-2.1.0.json",
             version = "2.1.0",
             runs = new[]
             {
@@ -215,7 +220,6 @@ public static class SarifCli
     {
         return new
         {
-            schema = "https://json.schemastore.org/sarif-2.1.0.json",
             version = "2.1.0",
             runs = Array.Empty<object>()
         };
