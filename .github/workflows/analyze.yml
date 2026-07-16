@@ -1,3 +1,4 @@
+---
 name: Localization Analysis
 
 on:
@@ -32,11 +33,11 @@ jobs:
 
       - name: Run analyzers and generate SARIF
         run: |
-          dotnet run --project src/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- src results.sarif
+          dotnet run --project src/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- src string_classification_results.sarif
 
       - name: Upload SARIF to GitHub Code Scanning
         uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
-          sarif_file: results.sarif
+          sarif_file: string_classification_results.sarif
           category: localization-analyzers
