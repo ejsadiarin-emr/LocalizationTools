@@ -159,5 +159,69 @@ class TestClass
             var dv001s = diagnostics.Where(d => d.Id == "LOC001").ToList();
             Assert.AreEqual(0, dv001s.Count);
         }
+
+        [TestMethod]
+        public async Task EmptyStringInConditional_ShouldNotReport()
+        {
+            var source = @"
+class TestClass
+{
+    void TestMethod()
+    {
+        string val = ""hello"";
+        var result = val == """" ? ""yes"" : ""no"";
+    }
+}";
+            var compilation = CreateCompilation(source);
+            var analyzer = new Analyzers.StringInConditionalAnalyzer();
+            var compWithAnalyzers = compilation.WithAnalyzers(new[] { (Microsoft.CodeAnalysis.Diagnostics.DiagnosticAnalyzer)analyzer }.ToImmutableArray());
+            var diagnostics = await compWithAnalyzers.GetAnalyzerDiagnosticsAsync();
+            var dv001s = diagnostics.Where(d => d.Id == "LOC001").ToList();
+            Assert.AreEqual(2, dv001s.Count);
+            Assert.IsTrue(dv001s.Any(d => d.GetMessage().Contains("yes")));
+            Assert.IsTrue(dv001s.Any(d => d.GetMessage().Contains("no")));
+        }
+
+        [TestMethod]
+        public async Task CommaStringInTernary_ShouldNotReport()
+        {
+            var source = @"
+class TestClass
+{
+    void TestMethod()
+    {
+        int count = 5;
+        var comma = count > 1 ? "","" : """";
+    }
+}";
+            var compilation = CreateCompilation(source);
+            var analyzer = new Analyzers.StringInConditionalAnalyzer();
+            var compWithAnalyzers = compilation.WithAnalyzers(new[] { (Microsoft.CodeAnalysis.Diagnostics.DiagnosticAnalyzer)analyzer }.ToImmutableArray());
+            var diagnostics = await compWithAnalyzers.GetAnalyzerDiagnosticsAsync();
+            var dv001s = diagnostics.Where(d => d.Id == "LOC001").ToList();
+            Assert.AreEqual(0, dv001s.Count);
+        }
+
+        [TestMethod]
+        public async Task SingleCharStringInConditional_ShouldNotReport()
+        {
+            var source = @"
+class TestClass
+{
+    void TestMethod()
+    {
+        string val = ""hello"";
+        var result = val == "" "" ? ""space"" : ""other"";
+    }
+}";
+            var compilation = CreateCompilation(source);
+            var analyzer = new Analyzers.StringInConditionalAnalyzer();
+            var compWithAnalyzers = compilation.WithAnalyzers(new[] { (Microsoft.CodeAnalysis.Diagnostics.DiagnosticAnalyzer)analyzer }.ToImmutableArray());
+            var diagnostics = await compWithAnalyzers.GetAnalyzerDiagnosticsAsync();
+            var dv001s = diagnostics.Where(d => d.Id == "LOC001").ToList();
+            Assert.AreEqual(2, dv001s.Count);
+            Assert.IsTrue(dv001s.Any(d => d.GetMessage().Contains("space")));
+            Assert.IsTrue(dv001s.Any(d => d.GetMessage().Contains("other")));
+        }
     }
 }

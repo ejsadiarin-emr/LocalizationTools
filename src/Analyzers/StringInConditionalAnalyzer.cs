@@ -119,10 +119,20 @@ public class StringInConditionalAnalyzer : DiagnosticAnalyzer
     private void ReportDiagnostic(SyntaxNodeAnalysisContext context, LiteralExpressionSyntax literal)
     {
         var text = literal.Token.ValueText;
+        if (IsTrivialString(text))
+            return;
+
         var diagnostic = Diagnostic.Create(
             DiagnosticDescriptors.LOC001,
             literal.GetLocation(),
             text);
         context.ReportDiagnostic(diagnostic);
+    }
+
+    private static bool IsTrivialString(string text)
+    {
+        return string.IsNullOrEmpty(text) ||
+               text.Length == 1 ||
+               text is "\n" or "\r" or "\t";
     }
 }
