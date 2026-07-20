@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -16,7 +17,7 @@ namespace LocalizationAnalyzers;
 
 /// <summary>
 /// CLI entry point for running analyzers and outputting SARIF.
-/// Only compiled for net8.0 (not netstandard2.0).
+/// Only compiled for net10.0 (not netstandard2.0).
 /// </summary>
 public static class SarifCli
 {
@@ -27,6 +28,11 @@ public static class SarifCli
             Console.Error.WriteLine("Usage: LocalizationAnalyzers <project-path> [output-file]");
             Console.Error.WriteLine("  <project-path>  Directory containing .cs files to analyze");
             Console.Error.WriteLine("  [output-file]   Output SARIF file (default: stdout)");
+            Console.Error.WriteLine("");
+            Console.Error.WriteLine("Output includes SARIF 2.1.0 with execution metrics:");
+            Console.Error.WriteLine("  - invocations[]: overall start/end time, arguments, working directory");
+            Console.Error.WriteLine("  - properties.fileMetrics[]: per-file timing, size, line count, diagnostic count");
+            Console.Error.WriteLine("  - properties.totalFileCount/totalLineCount/totalDurationMs: summary stats");
             return 1;
         }
 
@@ -35,7 +41,7 @@ public static class SarifCli
 
         try
         {
-            var sarifLog = AnalyzeProject(projectPath);
+            var sarifLog = AnalyzeProject(projectPath, args);
             var json = JsonSerializer.Serialize(sarifLog, new JsonSerializerOptions { WriteIndented = true });
 
             if (outputFile != null)
@@ -57,8 +63,11 @@ public static class SarifCli
         }
     }
 
-    private static object AnalyzeProject(string projectPath)
+    public static object AnalyzeProject(string projectPath, string[] cliArgs)
     {
+        var overallStopwatch = Stopwatch.StartNew();
+        var overallStartTime = DateTime.UtcNow;
+
         var projectDir = Path.GetFullPath(projectPath);
 
         if (File.Exists(projectDir) && projectDir.EndsWith(".csproj"))
@@ -84,8 +93,26 @@ public static class SarifCli
             return CreateEmptySarifLog();
         }
 
-        var syntaxTrees = csFiles.Select(f =>
-            CSharpSyntaxTree.ParseText(File.ReadAllText(f), path: f)).ToList();
+        var fileDataList = new List<(string FilePath, DateTime StartTime, DateTime EndTime, long FileSizeBytes, int LineCount)>();
+        var syntaxTrees = new List<SyntaxTree>();
+        var totalLineCount = 0;
+
+        foreach (var filePath in csFiles)
+        {
+            var fileStopwatch = Stopwatch.StartNew();
+            var fileStartTime = DateTime.UtcNow;
+
+            var content = File.ReadAllText(filePath);
+            var fileInfo = new FileInfo(filePath);
+            var lineCount = content.Split('\n').Length;
+            totalLineCount += lineCount;
+
+            var syntaxTree = CSharpSyntaxTree.ParseText(content, path: filePath);
+            syntaxTrees.Add(syntaxTree);
+
+            fileStopwatch.Stop();
+            fileDataList.Add((filePath.Replace("\\", "/"), fileStartTime, fileStartTime + fileStopwatch.Elapsed, fileInfo.Length, lineCount));
+        }
 
         var references = GetMetadataReferences();
         var compilation = CSharpCompilation.Create(
@@ -99,7 +126,24 @@ public static class SarifCli
         var diagnostics = compWithAnalyzers.GetAnalyzerDiagnosticsAsync()
             .GetAwaiter().GetResult();
 
-        return CreateSarifLog(diagnostics, csFiles);
+        overallStopwatch.Stop();
+
+        var diagnosticsByFile = diagnostics.GroupBy(d => d.Location.SourceTree?.FilePath ?? "unknown")
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        var fileMetrics = fileDataList.Select(fd => new
+        {
+            filePath = fd.FilePath,
+            startTimeUtc = fd.StartTime,
+            endTimeUtc = fd.EndTime,
+            fileSizeBytes = fd.FileSizeBytes,
+            lineCount = fd.LineCount,
+            diagnosticCount = diagnosticsByFile.GetValueOrDefault(fd.FilePath, 0)
+        }).ToList<object>();
+
+        return CreateSarifLog(diagnostics, csFiles, overallStartTime, DateTime.UtcNow,
+            overallStopwatch.ElapsedMilliseconds, cliArgs, projectDir,
+            fileMetrics, csFiles.Count, totalLineCount);
     }
 
     private static List<MetadataReference> GetMetadataReferences()
@@ -123,7 +167,10 @@ public static class SarifCli
             .ToList();
     }
 
-    private static object CreateSarifLog(IEnumerable<Diagnostic> diagnostics, List<string> csFiles)
+    private static object CreateSarifLog(IEnumerable<Diagnostic> diagnostics, List<string> csFiles,
+        DateTime startTimeUtc, DateTime endTimeUtc, long totalDurationMs,
+        string[] cliArgs, string workingDirectory,
+        List<object> fileMetrics, int totalFileCount, int totalLineCount)
     {
         var results = diagnostics.Select(CreateSarifResult).ToList();
         var artifacts = csFiles.Select(f => new
@@ -170,8 +217,26 @@ public static class SarifCli
                             rules = rules
                         }
                     },
+                    invocations = new[]
+                    {
+                        new
+                        {
+                            startTimeUtc = startTimeUtc,
+                            endTimeUtc = endTimeUtc,
+                            executionSuccessful = true,
+                            arguments = cliArgs,
+                            workingDirectory = workingDirectory
+                        }
+                    },
                     results = results,
-                    artifacts = artifacts
+                    artifacts = artifacts,
+                    properties = new
+                    {
+                        fileMetrics = fileMetrics,
+                        totalFileCount = totalFileCount,
+                        totalLineCount = totalLineCount,
+                        totalDurationMs = totalDurationMs
+                    }
                 }
             }
         };
@@ -221,7 +286,29 @@ public static class SarifCli
         return new
         {
             version = "2.1.0",
-            runs = Array.Empty<object>()
+            runs = new[]
+            {
+                new
+                {
+                    tool = new
+                    {
+                        driver = new
+                        {
+                            name = "LocalizationAnalyzers",
+                            version = "1.0.0"
+                        }
+                    },
+                    invocations = Array.Empty<object>(),
+                    results = Array.Empty<object>(),
+                    properties = new
+                    {
+                        fileMetrics = Array.Empty<object>(),
+                        totalFileCount = 0,
+                        totalLineCount = 0,
+                        totalDurationMs = 0
+                    }
+                }
+            }
         };
     }
 }
