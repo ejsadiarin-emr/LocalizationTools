@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Localization Analyzer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <h1>Localization Analyzer</h1>
+            <p class="subtitle">Static analysis for .NET localization code smells</p>
+        </header>
+
+        <section class="controls">
+            <div class="input-group">
+                <label for="projectPath">Project Directory</label>
+                <div class="input-row">
+                    <input type="text" id="projectPath" placeholder="Path to .NET project directory..." />
+                    <button id="browseBtn" class="btn btn-secondary">Browse</button>
+                    <button id="runBtn" class="btn btn-primary" disabled>Run Analysis</button>
+                </div>
+            </div>
+            <div id="status" class="status hidden"></div>
+        </section>
+
+        <section class="results hidden" id="resultsSection">
+            <div class="summary-panel" id="summaryPanel">
+                <div class="summary-card">
+                    <span class="summary-value" id="totalFiles">0</span>
+                    <span class="summary-label">Files</span>
+                </div>
+                <div class="summary-card">
+                    <span class="summary-value" id="totalLines">0</span>
+                    <span class="summary-label">Lines</span>
+                </div>
+                <div class="summary-card">
+                    <span class="summary-value" id="totalDiagnostics">0</span>
+                    <span class="summary-label">Diagnostics</span>
+                </div>
+                <div class="summary-card">
+                    <span class="summary-value" id="totalDuration">0ms</span>
+                    <span class="summary-label">Duration</span>
+                </div>
+            </div>
+
+            <div class="filters" id="filtersPanel">
+                <span class="filter-label">Filter by rule:</span>
+                <label class="filter-toggle"><input type="checkbox" data-rule="LOC001" checked> LOC001</label>
+                <label class="filter-toggle"><input type="checkbox" data-rule="LOC002" checked> LOC002</label>
+                <label class="filter-toggle"><input type="checkbox" data-rule="LOC003" checked> LOC003</label>
+                <label class="filter-toggle"><input type="checkbox" data-rule="LOC004" checked> LOC004</label>
+                <label class="filter-toggle"><input type="checkbox" data-rule="LOC005" checked> LOC005</label>
+                <label class="filter-toggle"><input type="checkbox" data-rule="LOC006" checked> LOC006</label>
+                <label class="filter-toggle"><input type="checkbox" data-rule="LOC007" checked> LOC007</label>
+                <label class="filter-toggle"><input type="checkbox" data-rule="LOC010" checked> LOC010</label>
+            </div>
+
+            <div class="table-container">
+                <table id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>Rule</th>
+                            <th>Severity</th>
+                            <th>File</th>
+                            <th>Line</th>
+                            <th>Message</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="actions">
+                <button id="exportBtn" class="btn btn-secondary">Export SARIF</button>
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

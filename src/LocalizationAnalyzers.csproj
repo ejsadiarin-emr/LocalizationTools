@@ -32,6 +32,7 @@
 
   <ItemGroup>
     <Compile Remove="LocalizationAnalyzers.Tests/**" />
+    <Compile Remove="LocalizationAnalyzers.Desktop/**" />
   </ItemGroup>
 
   <ItemGroup>
