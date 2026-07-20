@@ -59,12 +59,18 @@ These are related but **should be built and reasoned about separately** — do n
   - `LOC001` (Warning) — string literal in a conditional (if/switch/ternary)
   - `LOC002` (Warning) — string literal passed to a data-access/lookup call (Find/Get/Query)
   - `LOC003` (Warning) — string literal in an equality comparison (==/.Equals())
+  - `LOC004` (Warning) — string concatenation in output context (Console, Debug, logging, UI)
+  - `LOC005` (Warning) — hardcoded date/number format string
+  - `LOC006` (Info) — string method called without StringComparison
+  - `LOC007` (Warning) — hardcoded pluralization logic (ternary comparing Count/Length)
   - `LOC010` (Info) — display string not yet routed through `Localize(...)`
+- Includes a **CLI tool** (`SarifCli.cs`) for running analyzers outside the IDE, with per-file metrics (timing, size, line count).
+- Includes a **WPF + WebView2 desktop app** (`LocalizationAnalyzers.Desktop/`) for GUI-based analysis.
 - Diagnostics flow into **SARIF** (`dotnet build /p:ErrorLog=results.sarif`), which SonarQube and Azure DevOps both consume natively.
 - Ships a code fix (lightbulb in IDE) that extracts a LOC010 string into a `Localize("suggested.key")` call.
 - **CI strategy:** Gate builds on *new* LOC001–LOC003 occurrences only (diff against a committed SARIF baseline). Do not fail builds on the entire legacy backlog.
 
-**Status:** Complete — 34 tests passing, NuGet package generated.
+**Status:** Complete — 73 tests passing, NuGet package generated.
 
 ### Tool 2 — Extraction + Context CLI (`dv-extract-strings`) — ⬜ not yet built
 
@@ -190,8 +196,10 @@ This is the bridge between "the analyzer found a problem" and "the problem is no
 
 | Piece | Status | Location |
 |---|---|---|
-| Tool 1 — Roslyn Analyzer (LOC001–LOC003, LOC010) + code fix | ✅ Complete — 34 tests passing, NuGet package generated | `src/` |
-| Tool 1 — SARIF → SonarQube/Azure DevOps integration | ✅ Complete — SARIF 2.1.0 compatible, 9 integration tests | `src/README.md` |
+| Tool 1 — Roslyn Analyzer (LOC001–LOC003, LOC004–LOC007, LOC010) + code fix | ✅ Complete — 73 tests passing, NuGet package generated | `src/` |
+| Tool 1 — CLI with per-file metrics | ✅ Complete — SARIF 2.1.0 + invocations[] + fileMetrics[] | `src/SarifCli.cs` |
+| Tool 1 — Desktop App (WPF + WebView2) | ✅ Complete — GUI for running analysis | `src/LocalizationAnalyzers.Desktop/` |
+| Tool 1 — SARIF → SonarQube/Azure DevOps integration | ✅ Complete — SARIF 2.1.0 compatible | `src/README.md` |
 | Tool 1 — CI baseline-gate (fail only on new violations) | Documented approach, tooling not yet built | — |
 | Tool 2 — `dv-extract-strings` CLI | Not started | — |
 | Tool 3 — Data bank + Weblate glossary sync | Not started | — |
@@ -226,6 +234,10 @@ This is the bridge between "the analyzer found a problem" and "the problem is no
 | `LOC001` | StringInConditional | Warning | String literal in if/switch/ternary condition | Yes (new only) |
 | `LOC002` | StringInDataAccess | Warning | String literal passed to Find/Get/Query call | Yes (new only) |
 | `LOC003` | StringInEquality | Warning | String literal in == or .Equals() comparison | Yes (new only) |
+| `LOC004` | StringConcatenationInOutput | Warning | String concatenation in output context (Console, Debug, UI) | No |
+| `LOC005` | HardcodedDateFormat | Warning | Hardcoded date/number format string | No |
+| `LOC006` | MissingStringComparison | Info | String method called without StringComparison | No |
+| `LOC007` | HardcodedPluralLogic | Warning | Hardcoded pluralization logic (ternary comparing Count) | No |
 | `LOC010` | DisplayStringNotLocalized | Info | Display string not routed through Localize() | No |
 
 ---

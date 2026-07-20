@@ -7,6 +7,7 @@ Roslyn analyzers for detecting behavioral strings and unlocalized display string
 This analyzer package helps prevent localization issues by detecting two categories of hardcoded strings:
 
 - **Behavioral strings** (LOC001-LOC003): Strings that drive control flow, database lookups, or equality comparisons. These break when translated and must use resource keys or constants.
+- **Localization code smells** (LOC004-LOC007): Patterns that make text hard to translate: string concatenation in output contexts, hardcoded date/number formats, missing StringComparison, and hardcoded pluralization logic.
 - **Display strings** (LOC010): UI text, labels, and messages that should be routed through `Localize()` for translation.
 
 ## Installation
@@ -73,6 +74,68 @@ bool match = status == "Running";
 bool match = status == StatusConstants.Running;
 ```
 
+### LOC004 - String Concatenation in Output (Warning)
+
+Detects string concatenation (`+` operator) or interpolation in output contexts (Console, Debug, logging, UI properties).
+
+**Why it's bad:** Concatenated strings can't be reordered by translators. Different languages have different word orders.
+
+```csharp
+// Bad
+Console.WriteLine("Hello " + name);
+Debug.Log("Count: " + count);
+
+// Good
+Console.WriteLine($"Hello {name}");
+Console.WriteLine(Localize("greeting.hello", name));
+```
+
+### LOC005 - Hardcoded Date/Number Format (Warning)
+
+Detects `ToString("format")` calls with hardcoded date or number format specifiers.
+
+**Why it's bad:** Date `3/5/2026` means March 5 in US but May 3 in Europe. Number formats vary by locale.
+
+```csharp
+// Bad
+string formatted = now.ToString("dd/MM/yyyy");
+string price = amount.ToString("#,##0.00");
+
+// Good
+string formatted = now.ToString("d", CultureInfo.CurrentCulture);
+string price = amount.ToString("C", CultureInfo.CurrentCulture);
+```
+
+### LOC006 - Missing String Comparison (Info)
+
+Detects string methods called without `StringComparison` parameter.
+
+**Why it's bad:** Turkish 'I' problem — `"I".ToLower()` produces different results depending on culture.
+
+```csharp
+// Bad
+bool found = text.Contains("hello");
+string lower = text.ToLower();
+
+// Good
+bool found = text.Contains("hello", StringComparison.Ordinal);
+string lower = text.ToLower(CultureInfo.InvariantCulture);
+```
+
+### LOC007 - Hardcoded Plural Logic (Warning)
+
+Detects ternary expressions comparing `.Count`/`.Length` to 0 or 1 with string literal branches.
+
+**Why it's bad:** English has 2 plural forms; Russian has 3; Arabic has 6; Japanese has none.
+
+```csharp
+// Bad
+string label = count == 1 ? "1 item" : count + " items";
+
+// Good — use ICU MessageFormat or resource-based plural rules
+string label = Pluralize(count, "item", "items");
+```
+
 ### LOC010 - Display String Not Localized (Info)
 
 Detects display strings not routed through `Localize()`.
@@ -98,6 +161,10 @@ Add to your `.editorconfig` file:
 dotnet_diagnostic.LOC001.severity = warning
 dotnet_diagnostic.LOC002.severity = warning
 dotnet_diagnostic.LOC003.severity = warning
+dotnet_diagnostic.LOC004.severity = warning
+dotnet_diagnostic.LOC005.severity = warning
+dotnet_diagnostic.LOC006.severity = suggestion
+dotnet_diagnostic.LOC007.severity = warning
 dotnet_diagnostic.LOC010.severity = suggestion
 ```
 
@@ -165,6 +232,52 @@ Both platforms require SARIF version 2.1.0. The `dotnet build /p:ErrorLog=` comm
   }]
 }
 ```
+
+## CLI Tool
+
+The project includes a command-line tool for running analyzers and generating SARIF output with metrics.
+
+### Build and Run
+
+```bash
+# Build the CLI
+dotnet build src/LocalizationAnalyzers.csproj -c Release -f net10.0
+
+# Run analysis on a project
+dotnet run --project src/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- src results.sarif
+
+# Or publish as self-contained
+dotnet publish src/LocalizationAnalyzers.csproj -c Release -f net10.0 --self-contained
+./publish/LocalizationAnalyzers src results.sarif
+```
+
+### Metrics Output
+
+The CLI includes per-file and aggregate metrics in the SARIF output:
+
+- **Per-file:** Start/end time, file size (bytes), line count, diagnostic count
+- **Aggregate:** Total files, total lines, total duration (ms)
+- **Invocation:** Standard SARIF `invocations[]` array with timing and arguments
+
+## Desktop App
+
+A WPF + WebView2 desktop application provides a GUI for running the analyzer.
+
+### Build and Run
+
+```bash
+dotnet build src/LocalizationAnalyzers.Desktop/ -c Release -f net10.0-windows
+dotnet run --project src/LocalizationAnalyzers.Desktop/ --no-build -c Release -f net10.0-windows
+```
+
+### Features
+
+- Browse to select a `.csproj` file or directory
+- Run analysis with a single click
+- View results in a sortable, filterable table
+- Summary panel with total files, diagnostics, and execution time
+- Rule filter toggles for LOC001-LOC010
+- Export results to SARIF file
 
 ## CI Integration
 
