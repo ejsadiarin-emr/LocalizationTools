@@ -30,20 +30,38 @@
     <PackAsTool>false</PackAsTool>
   </PropertyGroup>
 
+  <!-- dotnet tool pack: pass -p:PackAsDotnetTool=true to create a tool package -->
+  <PropertyGroup Condition="'$(PackAsDotnetTool)' == 'true'">
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>localization-analyzers</ToolCommandName>
+    <PackageId>LocalizationAnalyzers.Tool</PackageId>
+    <IncludeBuildOutput>true</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <DevelopmentDependency>false</DevelopmentDependency>
+    <NoPackageAnalysis>true</NoPackageAnalysis>
+  </PropertyGroup>
+
+  <!-- Exclude sibling project directories from SDK globbing -->
   <ItemGroup>
-    <Compile Remove="LocalizationAnalyzers.Tests/**" />
-    <Compile Remove="LocalizationAnalyzers.Desktop/**" />
+    <Compile Remove="LocalizationAnalyzers.Tests\**" />
+    <Compile Remove="LocalizationAnalyzers.Desktop\**" />
+    <EmbeddedResource Remove="LocalizationAnalyzers.Tests\**" />
+    <EmbeddedResource Remove="LocalizationAnalyzers.Desktop\**" />
+    <None Remove="LocalizationAnalyzers.Tests\**" />
+    <None Remove="LocalizationAnalyzers.Desktop\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Analyzer assemblies go in the analyzers folder of the NuGet package (not the tool package) -->
+    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false"
+          Condition="'$(PackAsDotnetTool)' != 'true'" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.6.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.6.0" />
     <PackageReference Include="System.Composition" Version="10.0.9" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <!-- Analyzer assemblies go in the analyzers folder of the NuGet package -->
-    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
 
 </Project>
