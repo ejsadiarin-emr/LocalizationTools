@@ -4,10 +4,13 @@ namespace LocalizationAnalyzers.Desktop.Services;
 
 public class AnalyzerService
 {
-    public Task<string> AnalyzeAsync(string projectPath)
+    public async Task<string> AnalyzeAsync(string projectPath)
     {
-        var sarifLog = SarifCli.AnalyzeProject(projectPath, new[] { projectPath });
-        var json = JsonSerializer.Serialize(sarifLog, new JsonSerializerOptions { WriteIndented = true });
-        return Task.FromResult(json);
+        return await Task.Run(() =>
+        {
+            var sarifLog = SarifCli.AnalyzeProject(projectPath, new[] { projectPath });
+            var json = JsonSerializer.Serialize(sarifLog, new JsonSerializerOptions { WriteIndented = true });
+            return json;
+        });
     }
 }

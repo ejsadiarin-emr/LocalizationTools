@@ -1,4 +1,4 @@
-const vscode = window.chrome?.webview || {
+const host = window.chrome?.webview || {
     postMessage: (msg) => console.warn('WebView2 not available', msg)
 };
 
@@ -19,7 +19,7 @@ projectPathInput.addEventListener('input', () => {
 });
 
 browseBtn.addEventListener('click', () => {
-    vscode.postMessage({ action: 'browse' });
+    host.postMessage({ action: 'browseFolder' });
 });
 
 runBtn.addEventListener('click', () => {
@@ -30,11 +30,11 @@ runBtn.addEventListener('click', () => {
     runBtn.disabled = true;
     resultsSection.classList.add('hidden');
 
-    vscode.postMessage({ action: 'runAnalysis', projectPath });
+    host.postMessage({ action: 'runAnalysis', projectPath });
 });
 
 exportBtn.addEventListener('click', () => {
-    vscode.postMessage({ action: 'exportSarif', outputPath: 'results.sarif' });
+    host.postMessage({ action: 'exportSarif', outputPath: 'results.sarif' });
 });
 
 filtersPanel.addEventListener('change', (e) => {
@@ -49,7 +49,7 @@ filtersPanel.addEventListener('change', (e) => {
     }
 });
 
-window.addEventListener('message', (event) => {
+host.addEventListener('message', (event) => {
     const data = event.data;
 
     if (data.action === 'browseResult') {

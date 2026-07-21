@@ -41,21 +41,23 @@ public partial class MainWindow : Window
         var action = root.GetProperty("action").GetString();
         switch (action)
         {
-            case "browse":
-                var dialog = new Microsoft.Win32.OpenFileDialog
+            case "browseFolder":
+                var folderDialog = new Microsoft.Win32.OpenFolderDialog
                 {
-                    Title = "Select Project File",
-                    Filter = "C# Project (*.csproj)|*.csproj|All Files (*.*)|*.*"
+                    Title = "Select Directory to Analyze"
                 };
-                if (dialog.ShowDialog() == true)
+                if (folderDialog.ShowDialog() == true)
                 {
-                    var projectDir = Path.GetDirectoryName(dialog.FileName) ?? "";
-                    var browseResult = JsonSerializer.Serialize(new
+                    var folderPath = folderDialog.FolderName;
+                    Dispatcher.BeginInvoke(() =>
                     {
-                        action = "browseResult",
-                        path = projectDir
+                        var browseResult = JsonSerializer.Serialize(new
+                        {
+                            action = "browseResult",
+                            path = folderPath
+                        });
+                        WebView.CoreWebView2.PostWebMessageAsJson(browseResult);
                     });
-                    WebView.CoreWebView2.PostWebMessageAsString(browseResult);
                 }
                 break;
 
@@ -72,8 +74,8 @@ public partial class MainWindow : Window
                         results = parsed.Results,
                         fileMetrics = parsed.FileMetrics,
                         summary = parsed.Summary
-                    });
-                    WebView.CoreWebView2.PostWebMessageAsString(resultJson);
+                    }, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+                    WebView.CoreWebView2.PostWebMessageAsJson(resultJson);
                 }
                 catch (Exception ex)
                 {
@@ -83,7 +85,7 @@ public partial class MainWindow : Window
                         success = false,
                         error = ex.Message
                     });
-                    WebView.CoreWebView2.PostWebMessageAsString(errorJson);
+                    WebView.CoreWebView2.PostWebMessageAsJson(errorJson);
                 }
                 break;
 
@@ -98,7 +100,7 @@ public partial class MainWindow : Window
                         success = true,
                         path = Path.GetFullPath(outputPath)
                     });
-                    WebView.CoreWebView2.PostWebMessageAsString(exportResult);
+                    WebView.CoreWebView2.PostWebMessageAsJson(exportResult);
                 }
                 catch (Exception ex)
                 {
@@ -108,7 +110,7 @@ public partial class MainWindow : Window
                         success = false,
                         error = ex.Message
                     });
-                    WebView.CoreWebView2.PostWebMessageAsString(exportError);
+                    WebView.CoreWebView2.PostWebMessageAsJson(exportError);
                 }
                 break;
         }
