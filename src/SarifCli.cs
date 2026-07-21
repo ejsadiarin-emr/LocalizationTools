@@ -81,10 +81,14 @@ public static class SarifCli
             return CreateEmptySarifLog();
         }
 
+        var excludedDirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "bin", "obj", "Test", "TestResults"
+        };
+
         var csFiles = Directory.GetFiles(projectDir, "*.cs", SearchOption.AllDirectories)
-            .Where(f => !f.Contains(Path.Combine("bin", "")) &&
-                        !f.Contains(Path.Combine("obj", "")) &&
-                        !f.Contains("Test"))
+            .Where(f => !f.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                          .Any(part => excludedDirs.Contains(part)))
             .ToList();
 
         if (csFiles.Count == 0)
