@@ -75,8 +75,8 @@ public class DynamicResourceKeyAnalyzer : DiagnosticAnalyzer
         if (expression is IdentifierNameSyntax identifier)
         {
             var name = identifier.Identifier.Text;
-            return name.Contains("localizer", System.StringComparison.OrdinalIgnoreCase)
-                || name.Contains("Localize", System.StringComparison.Ordinal);
+            return name.IndexOf("localizer", System.StringComparison.OrdinalIgnoreCase) >= 0
+                || name.IndexOf("Localize", System.StringComparison.Ordinal) >= 0;
         }
 
         return false;
