@@ -63,9 +63,10 @@ public partial class MainWindow : Window
 
             case "runAnalysis":
                 var projectPath = root.GetProperty("projectPath").GetString() ?? "";
+                var includeCaRules = root.TryGetProperty("includeCaRules", out var caProp) && caProp.GetBoolean();
                 try
                 {
-                    _lastSarifJson = await _analyzerService.AnalyzeAsync(projectPath);
+                    _lastSarifJson = await _analyzerService.AnalyzeAsync(projectPath, includeCaRules);
                     var parsed = SarifParser.Parse(_lastSarifJson);
                     var resultJson = JsonSerializer.Serialize(new
                     {

@@ -11,6 +11,8 @@ const resultsBody = document.getElementById('resultsBody');
 const exportBtn = document.getElementById('exportBtn');
 const filtersPanel = document.getElementById('filtersPanel');
 
+const caRulesToggle = document.getElementById('ca-rules-toggle');
+
 let allResults = [];
 let activeFilters = new Set(['LOC001', 'LOC002', 'LOC003', 'LOC004', 'LOC005', 'LOC006', 'LOC007', 'LOC010']);
 
@@ -30,7 +32,7 @@ runBtn.addEventListener('click', () => {
     runBtn.disabled = true;
     resultsSection.classList.add('hidden');
 
-    host.postMessage({ action: 'runAnalysis', projectPath });
+    host.postMessage({ action: 'runAnalysis', projectPath, includeCaRules: caRulesToggle.checked });
 });
 
 exportBtn.addEventListener('click', () => {
@@ -40,13 +42,26 @@ exportBtn.addEventListener('click', () => {
 filtersPanel.addEventListener('change', (e) => {
     if (e.target.type === 'checkbox') {
         const rule = e.target.dataset.rule;
-        if (e.target.checked) {
-            activeFilters.add(rule);
-        } else {
-            activeFilters.delete(rule);
+        if (rule) {
+            if (e.target.checked) {
+                activeFilters.add(rule);
+            } else {
+                activeFilters.delete(rule);
+            }
+            renderResults();
         }
-        renderResults();
     }
+});
+
+caRulesToggle.addEventListener('change', () => {
+    const projectPath = projectPathInput.value.trim();
+    if (!projectPath) return;
+
+    setStatus('running', 'Analyzing project...');
+    runBtn.disabled = true;
+    resultsSection.classList.add('hidden');
+
+    host.postMessage({ action: 'runAnalysis', projectPath, includeCaRules: caRulesToggle.checked });
 });
 
 host.addEventListener('message', (event) => {
@@ -100,7 +115,10 @@ function formatNumber(n) {
 }
 
 function renderResults() {
-    const filtered = allResults.filter(r => activeFilters.has(r.ruleId));
+    const filtered = allResults.filter(r => {
+        if (r.ruleId.startsWith('CA')) return caRulesToggle.checked;
+        return activeFilters.has(r.ruleId);
+    });
     resultsBody.innerHTML = '';
 
     if (filtered.length === 0) {
@@ -114,8 +132,11 @@ function renderResults() {
         const row = document.createElement('tr');
         const shortPath = r.filePath.replace(/^.*[\\/]/, '');
         const severityClass = `severity-${r.level}`;
+        const isCa = r.ruleId.startsWith('CA');
+        const badgeClass = isCa ? 'badge-ca' : 'badge-loc';
+        const badgeLabel = isCa ? 'CA' : 'LOC';
         row.innerHTML = `
-            <td><strong>${r.ruleId}</strong></td>
+            <td><span class="${badgeClass}">${badgeLabel}</span> <strong>${r.ruleId}</strong></td>
             <td class="${severityClass}">${r.level}</td>
             <td class="file-path" title="${r.filePath}">${shortPath}</td>
             <td class="line-num">${r.startLine}</td>

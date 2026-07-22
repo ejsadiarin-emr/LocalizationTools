@@ -194,6 +194,32 @@ body {
     accent-color: #007acc;
 }
 
+.filter-separator {
+    width: 1px;
+    height: 20px;
+    background: #444;
+    margin: 0 4px;
+}
+
+.badge-ca, .badge-loc {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'Cascadia Code', 'Consolas', monospace;
+}
+
+.badge-loc {
+    background: #264f78;
+    color: #73c991;
+}
+
+.badge-ca {
+    background: #4a3000;
+    color: #cca700;
+}
+
 .table-container {
     overflow-x: auto;
     margin-bottom: 16px;
