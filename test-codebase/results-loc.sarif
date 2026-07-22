@@ -1,0 +1,1311 @@
+{
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "LocalizationAnalyzers",
+          "version": "1.0.0",
+          "informationUri": "https://github.com/your-org/LocalizationAnalyzers",
+          "rules": [
+            {
+              "id": "LOC010",
+              "name": "LOC010",
+              "shortDescription": {
+                "text": "Display string not localized"
+              },
+              "fullDescription": {
+                "text": "Display strings shown to users should be routed through Localize() for translation."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "properties": {
+                "category": "Localization"
+              }
+            },
+            {
+              "id": "LOC013",
+              "name": "LOC013",
+              "shortDescription": {
+                "text": "Dynamic resource key in localizer"
+              },
+              "fullDescription": {
+                "text": "Dynamic resource keys (interpolation, concatenation, variables) prevent localization tooling from extracting translatable strings."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "properties": {
+                "category": "Localization"
+              }
+            },
+            {
+              "id": "LOC014",
+              "name": "LOC014",
+              "shortDescription": {
+                "text": "English-only pluralization pattern"
+              },
+              "fullDescription": {
+                "text": "English-only pluralization (count == 1 ? singular : plural) doesn\u0027t work for languages with complex plural forms (Russian, Arabic, etc.)."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "category": "Localization"
+              }
+            },
+            {
+              "id": "LOC005",
+              "name": "LOC005",
+              "shortDescription": {
+                "text": "Hardcoded date/number format string"
+              },
+              "fullDescription": {
+                "text": "Hardcoded date/number format strings produce locale-dependent output. Use CultureInfo-aware formatting instead."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "category": "Localization"
+              }
+            },
+            {
+              "id": "LOC012",
+              "name": "LOC012",
+              "shortDescription": {
+                "text": "Hardcoded date/time format string"
+              },
+              "fullDescription": {
+                "text": "Hardcoded date/time format strings without CultureInfo produce locale-dependent output. Use CultureInfo.InvariantCulture or a culture-aware format."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "category": "Localization"
+              }
+            },
+            {
+              "id": "LOC007",
+              "name": "LOC007",
+              "shortDescription": {
+                "text": "Hardcoded pluralization logic"
+              },
+              "fullDescription": {
+                "text": "Hardcoded pluralization (e.g., count == 1 ? \u0022item\u0022 : \u0022items\u0022) doesn\u0027t work for languages with complex plural forms (Russian, Arabic, etc.)."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "category": "Localization"
+              }
+            },
+            {
+              "id": "LOC006",
+              "name": "LOC006",
+              "shortDescription": {
+                "text": "Missing StringComparison parameter"
+              },
+              "fullDescription": {
+                "text": "String methods without StringComparison use culture-dependent defaults, which can cause unexpected behavior across locales."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "properties": {
+                "category": "Localization"
+              }
+            },
+            {
+              "id": "LOC015",
+              "name": "LOC015",
+              "shortDescription": {
+                "text": "Punctuation outside translatable string"
+              },
+              "fullDescription": {
+                "text": "Punctuation outside translatable strings prevents translators from adjusting punctuation for the target language."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "properties": {
+                "category": "Localization"
+              }
+            },
+            {
+              "id": "LOC004",
+              "name": "LOC004",
+              "shortDescription": {
+                "text": "String concatenation in output context"
+              },
+              "fullDescription": {
+                "text": "String concatenation in output contexts produces untranslatable fragments. Use string interpolation or resource keys instead."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "category": "Localization"
+              }
+            },
+            {
+              "id": "LOC001",
+              "name": "LOC001",
+              "shortDescription": {
+                "text": "String literal in conditional expression"
+              },
+              "fullDescription": {
+                "text": "String literals in conditionals break when translated. Use resource keys instead."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "category": "Localization"
+              }
+            },
+            {
+              "id": "LOC002",
+              "name": "LOC002",
+              "shortDescription": {
+                "text": "String literal in data access call"
+              },
+              "fullDescription": {
+                "text": "String literals in data access calls break when translated. Use resource keys or constants."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "category": "Localization"
+              }
+            },
+            {
+              "id": "LOC003",
+              "name": "LOC003",
+              "shortDescription": {
+                "text": "String literal in equality comparison"
+              },
+              "fullDescription": {
+                "text": "String literals in equality comparisons break when translated. Use resource keys or constants."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "category": "Localization"
+              }
+            },
+            {
+              "id": "LOC011",
+              "name": "LOC011",
+              "shortDescription": {
+                "text": "String interpolation in localizable context"
+              },
+              "fullDescription": {
+                "text": "String interpolation in localizable contexts prevents translators from reordering words. Use composite formatting with resource keys instead."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "category": "Localization"
+              }
+            }
+          ]
+        }
+      },
+      "invocations": [
+        {
+          "startTimeUtc": "2026-07-22T07:19:03.6641505Z",
+          "endTimeUtc": "2026-07-22T07:19:04.5683532Z",
+          "executionSuccessful": true,
+          "arguments": [
+            "C:\\Users\\E1560951\\LocalizationAnalyzers\\test-codebase",
+            "C:\\Users\\E1560951\\LocalizationAnalyzers\\test-codebase\\results-loc.sarif"
+          ],
+          "workingDirectory": "C:\\Users\\E1560951\\LocalizationAnalyzers\\test-codebase"
+        }
+      ],
+      "results": [
+        {
+          "ruleId": "LOC010",
+          "level": "note",
+          "message": {
+            "text": "Display string \u0027Click here to continue\u0027 not routed through Localize()"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Localization/HomeController.cs"
+                },
+                "region": {
+                  "startLine": 94,
+                  "startColumn": 26,
+                  "endLine": 94,
+                  "endColumn": 50
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC010",
+          "level": "note",
+          "message": {
+            "text": "Display string \u0027Submit Order\u0027 not routed through Localize()"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Localization/HomeController.cs"
+                },
+                "region": {
+                  "startLine": 100,
+                  "startColumn": 30,
+                  "endLine": 100,
+                  "endColumn": 44
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC013",
+          "level": "note",
+          "message": {
+            "text": "Dynamic resource key \u0027$\u0022Hello {name}\u0022\u0027 passed to localizer; use a constant or literal key for localization tooling"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Localization/HomeController.cs"
+                },
+                "region": {
+                  "startLine": 25,
+                  "startColumn": 31,
+                  "endLine": 25,
+                  "endColumn": 46
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC013",
+          "level": "note",
+          "message": {
+            "text": "Dynamic resource key \u0027$\u0022Welcome back, {userName}!\u0022\u0027 passed to localizer; use a constant or literal key for localization tooling"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Localization/HomeController.cs"
+                },
+                "region": {
+                  "startLine": 31,
+                  "startColumn": 35,
+                  "endLine": 31,
+                  "endColumn": 63
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC013",
+          "level": "note",
+          "message": {
+            "text": "Dynamic resource key \u0027\u0022Error_\u0022 \u002B errorCode\u0027 passed to localizer; use a constant or literal key for localization tooling"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Localization/HomeController.cs"
+                },
+                "region": {
+                  "startLine": 37,
+                  "startColumn": 31,
+                  "endLine": 37,
+                  "endColumn": 51
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC013",
+          "level": "note",
+          "message": {
+            "text": "Dynamic resource key \u0027$\u0022Status_{status}\u0022\u0027 passed to localizer; use a constant or literal key for localization tooling"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Localization/HomeController.cs"
+                },
+                "region": {
+                  "startLine": 43,
+                  "startColumn": 31,
+                  "endLine": 43,
+                  "endColumn": 49
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC013",
+          "level": "note",
+          "message": {
+            "text": "Dynamic resource key \u0027resourceKey\u0027 passed to localizer; use a constant or literal key for localization tooling"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Localization/HomeController.cs"
+                },
+                "region": {
+                  "startLine": 50,
+                  "startColumn": 31,
+                  "endLine": 50,
+                  "endColumn": 42
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC003",
+          "level": "warning",
+          "message": {
+            "text": "String literal \u0027ClickHere\u0027 used in equality check; translate to break when localized"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Localization/HomeController.cs"
+                },
+                "region": {
+                  "startLine": 106,
+                  "startColumn": 36,
+                  "endLine": 106,
+                  "endColumn": 47
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC003",
+          "level": "warning",
+          "message": {
+            "text": "String literal \u0027Hello {0}\u0027 used in equality check; translate to break when localized"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Localization/HomeController.cs"
+                },
+                "region": {
+                  "startLine": 68,
+                  "startColumn": 31,
+                  "endLine": 68,
+                  "endColumn": 42
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC003",
+          "level": "warning",
+          "message": {
+            "text": "String literal \u0027WelcomeMessage\u0027 used in equality check; translate to break when localized"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Localization/HomeController.cs"
+                },
+                "region": {
+                  "startLine": 74,
+                  "startColumn": 31,
+                  "endLine": 74,
+                  "endColumn": 47
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC011",
+          "level": "warning",
+          "message": {
+            "text": "String interpolation \u0027$\u0022Hello {name}\u0022\u0027 in localizable context; use format strings with resource keys instead"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Localization/HomeController.cs"
+                },
+                "region": {
+                  "startLine": 25,
+                  "startColumn": 31,
+                  "endLine": 25,
+                  "endColumn": 46
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC011",
+          "level": "warning",
+          "message": {
+            "text": "String interpolation \u0027$\u0022Welcome back, {userName}!\u0022\u0027 in localizable context; use format strings with resource keys instead"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Localization/HomeController.cs"
+                },
+                "region": {
+                  "startLine": 31,
+                  "startColumn": 35,
+                  "endLine": 31,
+                  "endColumn": 63
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC011",
+          "level": "warning",
+          "message": {
+            "text": "String interpolation \u0027$\u0022Status_{status}\u0022\u0027 in localizable context; use format strings with resource keys instead"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Localization/HomeController.cs"
+                },
+                "region": {
+                  "startLine": 43,
+                  "startColumn": 31,
+                  "endLine": 43,
+                  "endColumn": 49
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC010",
+          "level": "note",
+          "message": {
+            "text": "Display string \u0027Click here to continue\u0027 not routed through Localize()"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/AllSmellsOverview.cs"
+                },
+                "region": {
+                  "startLine": 77,
+                  "startColumn": 26,
+                  "endLine": 77,
+                  "endColumn": 50
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC014",
+          "level": "warning",
+          "message": {
+            "text": "English-only plural logic \u0027count == 1\u0027; use ICU MessageFormat or resource-based plural rules"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/AllSmellsOverview.cs"
+                },
+                "region": {
+                  "startLine": 114,
+                  "startColumn": 17,
+                  "endLine": 114,
+                  "endColumn": 27
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC005",
+          "level": "warning",
+          "message": {
+            "text": "Hardcoded format string \u0027MM/dd/yyyy\u0027 is locale-dependent; use CultureInfo-aware formatting"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/AllSmellsOverview.cs"
+                },
+                "region": {
+                  "startLine": 50,
+                  "startColumn": 32,
+                  "endLine": 50,
+                  "endColumn": 44
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC005",
+          "level": "warning",
+          "message": {
+            "text": "Hardcoded format string \u0027hh:mm:ss\u0027 is locale-dependent; use CultureInfo-aware formatting"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/AllSmellsOverview.cs"
+                },
+                "region": {
+                  "startLine": 95,
+                  "startColumn": 32,
+                  "endLine": 95,
+                  "endColumn": 42
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC012",
+          "level": "warning",
+          "message": {
+            "text": "Hardcoded date/time format \u0027MM/dd/yyyy\u0027 passed to DateTime method without CultureInfo; use a culture-aware format or InvariantCulture"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/AllSmellsOverview.cs"
+                },
+                "region": {
+                  "startLine": 50,
+                  "startColumn": 32,
+                  "endLine": 50,
+                  "endColumn": 44
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC012",
+          "level": "warning",
+          "message": {
+            "text": "Hardcoded date/time format \u0027hh:mm:ss\u0027 passed to DateTime method without CultureInfo; use a culture-aware format or InvariantCulture"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/AllSmellsOverview.cs"
+                },
+                "region": {
+                  "startLine": 95,
+                  "startColumn": 32,
+                  "endLine": 95,
+                  "endColumn": 42
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC007",
+          "level": "warning",
+          "message": {
+            "text": "Hardcoded plural logic on \u0027count == 1\u0027; use ICU MessageFormat or resource-based plural rules"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/AllSmellsOverview.cs"
+                },
+                "region": {
+                  "startLine": 68,
+                  "startColumn": 20,
+                  "endLine": 68,
+                  "endColumn": 60
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC004",
+          "level": "warning",
+          "message": {
+            "text": "String concatenation \u0027\u0022User \u0022 \u002B user \u002B \u0022 did \u0022 \u002B action\u0027 in output context; use interpolation or resource keys for localizable text"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/AllSmellsOverview.cs"
+                },
+                "region": {
+                  "startLine": 41,
+                  "startColumn": 31,
+                  "endLine": 41,
+                  "endColumn": 64
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC001",
+          "level": "warning",
+          "message": {
+            "text": "String literal \u0027active\u0027 used in conditional; translate to break when localized"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/AllSmellsOverview.cs"
+                },
+                "region": {
+                  "startLine": 22,
+                  "startColumn": 26,
+                  "endLine": 22,
+                  "endColumn": 34
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC001",
+          "level": "warning",
+          "message": {
+            "text": "String literal \u00271 file\u0027 used in conditional; translate to break when localized"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/AllSmellsOverview.cs"
+                },
+                "region": {
+                  "startLine": 68,
+                  "startColumn": 33,
+                  "endLine": 68,
+                  "endColumn": 41
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC003",
+          "level": "warning",
+          "message": {
+            "text": "String literal \u0027admin\u0027 used in equality check; translate to break when localized"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/AllSmellsOverview.cs"
+                },
+                "region": {
+                  "startLine": 32,
+                  "startColumn": 28,
+                  "endLine": 32,
+                  "endColumn": 35
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC014",
+          "level": "warning",
+          "message": {
+            "text": "English-only plural logic \u0027\u0022You have \u0022 \u002B count \u002B \u0022 items in your cart\u0022\u0027; use ICU MessageFormat or resource-based plural rules"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Globalization/TextProcessor.cs"
+                },
+                "region": {
+                  "startLine": 78,
+                  "startColumn": 31,
+                  "endLine": 78,
+                  "endColumn": 74
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC007",
+          "level": "warning",
+          "message": {
+            "text": "Hardcoded plural logic on \u0027count == 1\u0027; use ICU MessageFormat or resource-based plural rules"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Globalization/TextProcessor.cs"
+                },
+                "region": {
+                  "startLine": 57,
+                  "startColumn": 20,
+                  "endLine": 57,
+                  "endColumn": 60
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC006",
+          "level": "note",
+          "message": {
+            "text": "String method \u0027ToLower\u0027 called without StringComparison; specify StringComparison for locale-safe behavior"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Globalization/TextProcessor.cs"
+                },
+                "region": {
+                  "startLine": 45,
+                  "startColumn": 20,
+                  "endLine": 45,
+                  "endColumn": 34
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC004",
+          "level": "warning",
+          "message": {
+            "text": "String concatenation \u0027\u0022You have \u0022 \u002B count \u002B \u0022 items in your cart\u0022\u0027 in output context; use interpolation or resource keys for localizable text"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Globalization/TextProcessor.cs"
+                },
+                "region": {
+                  "startLine": 78,
+                  "startColumn": 31,
+                  "endLine": 78,
+                  "endColumn": 74
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC001",
+          "level": "warning",
+          "message": {
+            "text": "String literal \u00271 item\u0027 used in conditional; translate to break when localized"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Globalization/TextProcessor.cs"
+                },
+                "region": {
+                  "startLine": 57,
+                  "startColumn": 33,
+                  "endLine": 57,
+                  "endColumn": 41
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC005",
+          "level": "warning",
+          "message": {
+            "text": "Hardcoded format string \u0027C2\u0027 is locale-dependent; use CultureInfo-aware formatting"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Formatting/ReportFormatter.cs"
+                },
+                "region": {
+                  "startLine": 32,
+                  "startColumn": 36,
+                  "endLine": 32,
+                  "endColumn": 40
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC005",
+          "level": "warning",
+          "message": {
+            "text": "Hardcoded format string \u0027yyyy-MM-dd HH:mm:ss\u0027 is locale-dependent; use CultureInfo-aware formatting"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Formatting/ReportFormatter.cs"
+                },
+                "region": {
+                  "startLine": 26,
+                  "startColumn": 34,
+                  "endLine": 26,
+                  "endColumn": 55
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC005",
+          "level": "warning",
+          "message": {
+            "text": "Hardcoded format string \u0027hh:mm:ss tt\u0027 is locale-dependent; use CultureInfo-aware formatting"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Formatting/ReportFormatter.cs"
+                },
+                "region": {
+                  "startLine": 20,
+                  "startColumn": 34,
+                  "endLine": 20,
+                  "endColumn": 47
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC005",
+          "level": "warning",
+          "message": {
+            "text": "Hardcoded format string \u0027MM/dd/yyyy\u0027 is locale-dependent; use CultureInfo-aware formatting"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Formatting/ReportFormatter.cs"
+                },
+                "region": {
+                  "startLine": 14,
+                  "startColumn": 34,
+                  "endLine": 14,
+                  "endColumn": 46
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC005",
+          "level": "warning",
+          "message": {
+            "text": "Hardcoded format string \u0027MM/dd/yyyy\u0027 is locale-dependent; use CultureInfo-aware formatting"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Formatting/ReportFormatter.cs"
+                },
+                "region": {
+                  "startLine": 56,
+                  "startColumn": 34,
+                  "endLine": 56,
+                  "endColumn": 46
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC012",
+          "level": "warning",
+          "message": {
+            "text": "Hardcoded date/time format \u0027yyyy-MM-dd HH:mm:ss\u0027 passed to DateTime method without CultureInfo; use a culture-aware format or InvariantCulture"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Formatting/ReportFormatter.cs"
+                },
+                "region": {
+                  "startLine": 26,
+                  "startColumn": 34,
+                  "endLine": 26,
+                  "endColumn": 55
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC012",
+          "level": "warning",
+          "message": {
+            "text": "Hardcoded date/time format \u0027hh:mm:ss tt\u0027 passed to DateTime method without CultureInfo; use a culture-aware format or InvariantCulture"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Formatting/ReportFormatter.cs"
+                },
+                "region": {
+                  "startLine": 20,
+                  "startColumn": 34,
+                  "endLine": 20,
+                  "endColumn": 47
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC012",
+          "level": "warning",
+          "message": {
+            "text": "Hardcoded date/time format \u0027MM/dd/yyyy\u0027 passed to DateTime method without CultureInfo; use a culture-aware format or InvariantCulture"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Formatting/ReportFormatter.cs"
+                },
+                "region": {
+                  "startLine": 14,
+                  "startColumn": 34,
+                  "endLine": 14,
+                  "endColumn": 46
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC006",
+          "level": "note",
+          "message": {
+            "text": "String method \u0027ToLower\u0027 called without StringComparison; specify StringComparison for locale-safe behavior"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Globalization/CaRuleExamples.cs"
+                },
+                "region": {
+                  "startLine": 44,
+                  "startColumn": 20,
+                  "endLine": 44,
+                  "endColumn": 35
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC006",
+          "level": "note",
+          "message": {
+            "text": "String method \u0027ToUpper\u0027 called without StringComparison; specify StringComparison for locale-safe behavior"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Globalization/CaRuleExamples.cs"
+                },
+                "region": {
+                  "startLine": 56,
+                  "startColumn": 20,
+                  "endLine": 56,
+                  "endColumn": 34
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC006",
+          "level": "note",
+          "message": {
+            "text": "String method \u0027ToUpperInvariant\u0027 called without StringComparison; specify StringComparison for locale-safe behavior"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Globalization/CaRuleExamples.cs"
+                },
+                "region": {
+                  "startLine": 72,
+                  "startColumn": 20,
+                  "endLine": 72,
+                  "endColumn": 43
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC004",
+          "level": "warning",
+          "message": {
+            "text": "String concatenation \u0027\u0022User: \u0022 \u002B name \u002B \u0022, Age: \u0022 \u002B age\u0027 in output context; use interpolation or resource keys for localizable text"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Features/UserDashboard.cs"
+                },
+                "region": {
+                  "startLine": 48,
+                  "startColumn": 31,
+                  "endLine": 48,
+                  "endColumn": 64
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC004",
+          "level": "warning",
+          "message": {
+            "text": "String concatenation \u0027\u0022User \u0022 \u002B userId \u002B \u0022 performed \u0022 \u002B action\u0027 in output context; use interpolation or resource keys for localizable text"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Features/UserDashboard.cs"
+                },
+                "region": {
+                  "startLine": 54,
+                  "startColumn": 25,
+                  "endLine": 54,
+                  "endColumn": 66
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC001",
+          "level": "warning",
+          "message": {
+            "text": "String literal \u0027active\u0027 used in conditional; translate to break when localized"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Features/UserDashboard.cs"
+                },
+                "region": {
+                  "startLine": 26,
+                  "startColumn": 26,
+                  "endLine": 26,
+                  "endColumn": 34
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "LOC003",
+          "level": "warning",
+          "message": {
+            "text": "String literal \u0027admin\u0027 used in equality check; translate to break when localized"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Features/UserDashboard.cs"
+                },
+                "region": {
+                  "startLine": 42,
+                  "startColumn": 28,
+                  "endLine": 42,
+                  "endColumn": 35
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "artifacts": [
+        {
+          "location": {
+            "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/AllSmellsOverview.cs"
+          },
+          "roles": [
+            "resultFile"
+          ]
+        },
+        {
+          "location": {
+            "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Features/UserDashboard.cs"
+          },
+          "roles": [
+            "resultFile"
+          ]
+        },
+        {
+          "location": {
+            "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Formatting/ReportFormatter.cs"
+          },
+          "roles": [
+            "resultFile"
+          ]
+        },
+        {
+          "location": {
+            "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Globalization/CaRuleExamples.cs"
+          },
+          "roles": [
+            "resultFile"
+          ]
+        },
+        {
+          "location": {
+            "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Globalization/TextProcessor.cs"
+          },
+          "roles": [
+            "resultFile"
+          ]
+        },
+        {
+          "location": {
+            "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Localization/HomeController.cs"
+          },
+          "roles": [
+            "resultFile"
+          ]
+        }
+      ],
+      "properties": {
+        "fileMetrics": [
+          {
+            "filePath": "C:/Users/E1560951/LocalizationAnalyzers/test-codebase/AllSmellsOverview.cs",
+            "startTimeUtc": "2026-07-22T07:19:03.6683738Z",
+            "endTimeUtc": "2026-07-22T07:19:03.7588109Z",
+            "fileSizeBytes": 5960,
+            "lineCount": 132,
+            "diagnosticCount": 0
+          },
+          {
+            "filePath": "C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Features/UserDashboard.cs",
+            "startTimeUtc": "2026-07-22T07:19:03.7593826Z",
+            "endTimeUtc": "2026-07-22T07:19:03.7624991Z",
+            "fileSizeBytes": 1871,
+            "lineCount": 75,
+            "diagnosticCount": 0
+          },
+          {
+            "filePath": "C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Formatting/ReportFormatter.cs",
+            "startTimeUtc": "2026-07-22T07:19:03.7626411Z",
+            "endTimeUtc": "2026-07-22T07:19:03.7637419Z",
+            "fileSizeBytes": 1806,
+            "lineCount": 60,
+            "diagnosticCount": 0
+          },
+          {
+            "filePath": "C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Globalization/CaRuleExamples.cs",
+            "startTimeUtc": "2026-07-22T07:19:03.7638392Z",
+            "endTimeUtc": "2026-07-22T07:19:03.764455Z",
+            "fileSizeBytes": 2259,
+            "lineCount": 76,
+            "diagnosticCount": 0
+          },
+          {
+            "filePath": "C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Globalization/TextProcessor.cs",
+            "startTimeUtc": "2026-07-22T07:19:03.7645092Z",
+            "endTimeUtc": "2026-07-22T07:19:03.7650471Z",
+            "fileSizeBytes": 2258,
+            "lineCount": 82,
+            "diagnosticCount": 0
+          },
+          {
+            "filePath": "C:/Users/E1560951/LocalizationAnalyzers/test-codebase/Localization/HomeController.cs",
+            "startTimeUtc": "2026-07-22T07:19:03.7650972Z",
+            "endTimeUtc": "2026-07-22T07:19:03.7677772Z",
+            "fileSizeBytes": 3140,
+            "lineCount": 110,
+            "diagnosticCount": 0
+          }
+        ],
+        "totalFileCount": 6,
+        "totalLineCount": 535,
+        "totalDurationMs": 902
+      }
+    }
+  ]
+}
