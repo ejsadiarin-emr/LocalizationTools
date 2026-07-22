@@ -196,7 +196,7 @@ This is the bridge between "the analyzer found a problem" and "the problem is no
 
 | Piece | Status | Location |
 |---|---|---|
-| Tool 1 — Roslyn Analyzer (LOC001–LOC003, LOC004–LOC007, LOC010) + code fix | ✅ Complete — 73 tests passing, NuGet package generated | `src/` |
+| Tool 1 — Roslyn Analyzer (LOC001–LOC007, LOC010, LOC011–LOC015) + code fix | ✅ Complete — 73 tests passing, NuGet package generated | `src/` |
 | Tool 1 — CLI with per-file metrics | ✅ Complete — SARIF 2.1.0 + invocations[] + fileMetrics[] | `src/SarifCli.cs` |
 | Tool 1 — Desktop App (WPF + WebView2) | ✅ Complete — GUI for running analysis | `src/LocalizationAnalyzers.Desktop/` |
 | Tool 1 — SARIF → SonarQube/Azure DevOps integration | ✅ Complete — SARIF 2.1.0 compatible | `src/README.md` |
@@ -239,6 +239,11 @@ This is the bridge between "the analyzer found a problem" and "the problem is no
 | `LOC006` | MissingStringComparison | Info | String method called without StringComparison | No |
 | `LOC007` | HardcodedPluralLogic | Warning | Hardcoded pluralization logic (ternary comparing Count) | No |
 | `LOC010` | DisplayStringNotLocalized | Info | Display string not routed through Localize() | No |
+| `LOC011` | StringInterpolationInLocalizableContext | Warning | Detects `$"..."` passed to localizer indexers or UI properties | No |
+| `LOC012` | HardcodedDateTimeFormat | Warning | Detects DateTime.ToString with format strings without CultureInfo | No |
+| `LOC013` | DynamicResourceKey | Info | Detects computed/dynamic keys in localizer indexers | No |
+| `LOC014` | EnglishOnlyPluralization | Warning | Detects if/else and ternary pluralization with count comparisons | No |
+| `LOC015` | PunctuationOutsideString | Info | Detects punctuation concatenated outside translatable strings | No |
 
 ---
 

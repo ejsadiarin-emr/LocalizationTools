@@ -24,6 +24,11 @@ dotnet_diagnostic.LOC005.severity = warning
 dotnet_diagnostic.LOC006.severity = suggestion
 dotnet_diagnostic.LOC007.severity = warning
 dotnet_diagnostic.LOC010.severity = suggestion
+dotnet_diagnostic.LOC011.severity = warning
+dotnet_diagnostic.LOC012.severity = warning
+dotnet_diagnostic.LOC013.severity = suggestion
+dotnet_diagnostic.LOC014.severity = warning
+dotnet_diagnostic.LOC015.severity = suggestion
 
 # Style rules
 csharp_style_var_for_built_in_types = false:suggestion

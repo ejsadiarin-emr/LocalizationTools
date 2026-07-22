@@ -7,7 +7,28 @@
 | LOC001 | String literal in conditional expression | Warning |
 | LOC002 | String literal in data access call | Warning |
 | LOC003 | String literal in equality comparison | Warning |
+| LOC004 | String Concatenation in Output | Warning |
+| LOC005 | Hardcoded Date/Number Format | Warning |
+| LOC006 | Missing StringComparison | Info |
+| LOC007 | Hardcoded Plural Logic | Warning |
 | LOC010 | Display string not localized | Info |
+| LOC011 | String Interpolation in Localizable Context | Warning |
+| LOC012 | Hardcoded DateTime Format | Warning |
+| LOC013 | Dynamic Resource Key | Info |
+| LOC014 | English-Only Pluralization | Warning |
+| LOC015 | Punctuation Outside String | Info |
+
+## CA Rule Integration (Opt-in)
+
+The CLI tool can load CA1303-CA1311 globalization rules from `Microsoft.CodeAnalysis.NetAnalyzers` via the `--with-ca-rules` flag. These rules provide additional coverage for:
+- CA1303: Do not pass literals as localized parameters
+- CA1304: Specify CultureInfo
+- CA1305: Specify IFormatProvider
+- CA1307: Specify StringComparison for clarity
+- CA1308: Normalize strings to uppercase
+- CA1309: Use ordinal StringComparison
+- CA1310: Specify StringComparison for correctness
+- CA1311: Specify culture or use invariant for ToUpper/ToLower
 
 ## Gaps to Discuss
 

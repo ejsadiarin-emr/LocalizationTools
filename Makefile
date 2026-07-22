@@ -1,4 +1,4 @@
-.PHONY: build build-analyzer build-cli build-desktop test clean analyze restore pack run-desktop publish-desktop
+.PHONY: build build-analyzer build-cli build-desktop test clean analyze analyze-test analyze-test-ca restore pack run-desktop publish-desktop ci
 
 # Default target
 all: build
@@ -55,6 +55,14 @@ run-desktop: build-desktop
 # Publish self-contained single-file desktop app
 publish-desktop:
 	dotnet publish src/LocalizationAnalyzers.Desktop/LocalizationAnalyzers.Desktop.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+
+# Run analyzers on test codebase (LOC rules only)
+analyze-test: build-cli
+	dotnet run --project src/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- test-codebase/
+
+# Run analyzers on test codebase with CA rules (LOC + CA globalization rules)
+analyze-test-ca: build-cli
+	dotnet run --project src/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- test-codebase/ --with-ca-rules
 
 # Full CI pipeline
 ci: restore build test analyze
