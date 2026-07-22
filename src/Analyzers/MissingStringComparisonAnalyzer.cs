@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -8,6 +9,7 @@ namespace LocalizationAnalyzers.Analyzers;
 
 /// <summary>
 /// LOC006: Detects string method calls without StringComparison parameter.
+/// Uses semantic analysis to verify the method is on a string type and check parameter types.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public class MissingStringComparisonAnalyzer : DiagnosticAnalyzer
@@ -39,10 +41,27 @@ public class MissingStringComparisonAnalyzer : DiagnosticAnalyzer
 
         var methodName = memberAccess.Name.Identifier.Text;
 
+        // Get the symbol to verify this is actually a string method
+        var symbol = context.SemanticModel.GetSymbolInfo(invocation, context.CancellationToken).Symbol as IMethodSymbol;
+        if (symbol == null)
+            return;
+
+        // Verify the receiver type is string (or the method is a static string method)
+        var receiverType = symbol.ReceiverType;
+        if (receiverType == null)
+            return;
+
+        var typeName = receiverType.OriginalDefinition.ToDisplayString();
+        if (typeName != "string")
+            return;
+
         if (StringComparisonMethods.Contains(methodName))
         {
-            if (invocation.ArgumentList.Arguments.Count == 1 &&
-                invocation.ArgumentList.Arguments[0].Expression is LiteralExpressionSyntax)
+            // Semantic check: does any argument have StringComparison type?
+            var hasStringComparison = symbol.Parameters.Any(p =>
+                p.Type.OriginalDefinition.ToDisplayString() == "System.StringComparison");
+
+            if (!hasStringComparison)
             {
                 context.ReportDiagnostic(Diagnostic.Create(
                     DiagnosticDescriptors.LOC006,
@@ -52,7 +71,8 @@ public class MissingStringComparisonAnalyzer : DiagnosticAnalyzer
         }
         else if (CultureMethods.Contains(methodName))
         {
-            if (invocation.ArgumentList.Arguments.Count == 0)
+            // Semantic check: does the method have zero arguments?
+            if (symbol.Parameters.Length == 0)
             {
                 context.ReportDiagnostic(Diagnostic.Create(
                     DiagnosticDescriptors.LOC006,

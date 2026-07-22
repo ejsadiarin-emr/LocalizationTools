@@ -184,5 +184,29 @@ class TestClass
             var loc006s = diagnostics.Where(d => d.Id == "LOC006").ToList();
             Assert.AreEqual(1, loc006s.Count);
         }
+
+        [TestMethod]
+        public async Task NonStringTypeWithContains_ShouldNotReport()
+        {
+            var source = @"
+class MyCollection
+{
+    public bool Contains(string item) => true;
+}
+class TestClass
+{
+    void TestMethod()
+    {
+        var collection = new MyCollection();
+        bool found = collection.Contains(""test"");
+    }
+}";
+            var compilation = CreateCompilation(source);
+            var analyzer = new Analyzers.MissingStringComparisonAnalyzer();
+            var compWithAnalyzers = compilation.WithAnalyzers(new[] { (Microsoft.CodeAnalysis.Diagnostics.DiagnosticAnalyzer)analyzer }.ToImmutableArray());
+            var diagnostics = await compWithAnalyzers.GetAnalyzerDiagnosticsAsync();
+            var loc006s = diagnostics.Where(d => d.Id == "LOC006").ToList();
+            Assert.AreEqual(0, loc006s.Count);
+        }
     }
 }

@@ -162,7 +162,12 @@ public static class SarifCli
             MetadataReference.CreateFromFile(Path.Combine(runtimeDir, "System.Runtime.dll")),
             MetadataReference.CreateFromFile(Path.Combine(runtimeDir, "System.Private.CoreLib.dll")),
             MetadataReference.CreateFromFile(Path.Combine(runtimeDir, "System.Console.dll")),
-            MetadataReference.CreateFromFile(Path.Combine(runtimeDir, "netstandard.dll"))
+            MetadataReference.CreateFromFile(Path.Combine(runtimeDir, "netstandard.dll")),
+            MetadataReference.CreateFromFile(Path.Combine(runtimeDir, "System.Linq.dll")),
+            MetadataReference.CreateFromFile(Path.Combine(runtimeDir, "System.Globalization.dll")),
+            MetadataReference.CreateFromFile(Path.Combine(runtimeDir, "System.Collections.Immutable.dll")),
+            MetadataReference.CreateFromFile(Path.Combine(runtimeDir, "System.Memory.dll")),
+            MetadataReference.CreateFromFile(Path.Combine(runtimeDir, "System.Text.RegularExpressions.dll"))
         };
 
         // Add Roslyn assemblies for CA rules that need semantic analysis
