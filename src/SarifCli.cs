@@ -25,9 +25,10 @@ public static class SarifCli
     {
         if (args.Length < 1)
         {
-            Console.Error.WriteLine("Usage: LocalizationAnalyzers <project-path> [output-file]");
-            Console.Error.WriteLine("  <project-path>  Directory containing .cs files to analyze");
-            Console.Error.WriteLine("  [output-file]   Output SARIF file (default: stdout)");
+            Console.Error.WriteLine("Usage: LocalizationAnalyzers <project-path> [output-file] [--with-ca-rules]");
+            Console.Error.WriteLine("  <project-path>      Directory containing .cs files to analyze");
+            Console.Error.WriteLine("  [output-file]       Output SARIF file (default: stdout)");
+            Console.Error.WriteLine("  --with-ca-rules     Include built-in CA globalization rules (CA1303-CA1311)");
             Console.Error.WriteLine("");
             Console.Error.WriteLine("Output includes SARIF 2.1.0 with execution metrics:");
             Console.Error.WriteLine("  - invocations[]: overall start/end time, arguments, working directory");
@@ -36,12 +37,15 @@ public static class SarifCli
             return 1;
         }
 
-        var projectPath = args[0];
-        var outputFile = args.Length > 1 ? args[1] : null;
+        var includeCaRules = args.Any(a => a.Equals("--with-ca-rules", StringComparison.OrdinalIgnoreCase));
+        var filteredArgs = args.Where(a => !a.Equals("--with-ca-rules", StringComparison.OrdinalIgnoreCase)).ToArray();
+
+        var projectPath = filteredArgs[0];
+        var outputFile = filteredArgs.Length > 1 ? filteredArgs[1] : null;
 
         try
         {
-            var sarifLog = AnalyzeProject(projectPath, args);
+            var sarifLog = AnalyzeProject(projectPath, args, includeCaRules);
             var json = JsonSerializer.Serialize(sarifLog, new JsonSerializerOptions { WriteIndented = true });
 
             if (outputFile != null)
@@ -63,7 +67,7 @@ public static class SarifCli
         }
     }
 
-    public static object AnalyzeProject(string projectPath, string[] cliArgs)
+    public static object AnalyzeProject(string projectPath, string[] cliArgs, bool includeCaRules = false)
     {
         var overallStopwatch = Stopwatch.StartNew();
         var overallStartTime = DateTime.UtcNow;
@@ -125,7 +129,7 @@ public static class SarifCli
             references,
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
-        var analyzers = GetAnalyzers();
+        var analyzers = GetAnalyzers(includeCaRules);
         var compWithAnalyzers = compilation.WithAnalyzers(analyzers.ToImmutableArray());
         var diagnostics = compWithAnalyzers.GetAnalyzerDiagnosticsAsync()
             .GetAwaiter().GetResult();
@@ -147,34 +151,176 @@ public static class SarifCli
 
         return CreateSarifLog(diagnostics, csFiles, overallStartTime, DateTime.UtcNow,
             overallStopwatch.ElapsedMilliseconds, cliArgs, projectDir,
-            fileMetrics, csFiles.Count, totalLineCount);
+            fileMetrics, csFiles.Count, totalLineCount, includeCaRules);
     }
 
     private static List<MetadataReference> GetMetadataReferences()
     {
         var runtimeDir = System.Runtime.InteropServices.RuntimeEnvironment.GetRuntimeDirectory();
-        return new List<MetadataReference>
+        var references = new List<MetadataReference>
         {
             MetadataReference.CreateFromFile(Path.Combine(runtimeDir, "System.Runtime.dll")),
             MetadataReference.CreateFromFile(Path.Combine(runtimeDir, "System.Private.CoreLib.dll")),
             MetadataReference.CreateFromFile(Path.Combine(runtimeDir, "System.Console.dll")),
             MetadataReference.CreateFromFile(Path.Combine(runtimeDir, "netstandard.dll"))
         };
+
+        // Add Roslyn assemblies for CA rules that need semantic analysis
+        var codeAnalysisDir = Path.GetDirectoryName(typeof(CSharpCompilation).Assembly.Location);
+        if (codeAnalysisDir != null)
+        {
+            var codeAnalysisDll = Path.Combine(codeAnalysisDir, "Microsoft.CodeAnalysis.dll");
+            var codeAnalysisCSharpDll = Path.Combine(codeAnalysisDir, "Microsoft.CodeAnalysis.CSharp.dll");
+            if (File.Exists(codeAnalysisDll))
+                references.Add(MetadataReference.CreateFromFile(codeAnalysisDll));
+            if (File.Exists(codeAnalysisCSharpDll))
+                references.Add(MetadataReference.CreateFromFile(codeAnalysisCSharpDll));
+        }
+
+        return references;
     }
 
-    private static List<DiagnosticAnalyzer> GetAnalyzers()
+    private static List<DiagnosticAnalyzer> GetAnalyzers(bool includeCaRules = false)
     {
         var assembly = typeof(SarifCli).Assembly;
-        return assembly.GetTypes()
+        var analyzers = assembly.GetTypes()
             .Where(t => typeof(DiagnosticAnalyzer).IsAssignableFrom(t) && !t.IsAbstract)
             .Select(t => (DiagnosticAnalyzer)Activator.CreateInstance(t)!)
             .ToList();
+
+        if (includeCaRules)
+        {
+            analyzers.AddRange(GetCaAnalyzers());
+        }
+
+        return analyzers;
+    }
+
+    private static IEnumerable<DiagnosticAnalyzer> GetCaAnalyzers()
+    {
+        var analyzerDlls = FindCaAnalyzerDlls();
+        if (analyzerDlls.Count == 0)
+        {
+            yield break;
+        }
+
+        // Register assembly resolve handler to redirect Microsoft.CodeAnalysis v3.11.0
+        // requests to the version already loaded in the current process (v5.6.0+).
+        ResolveEventHandler? resolveHandler = null;
+        resolveHandler = (sender, args) =>
+        {
+            var requestedName = new AssemblyName(args.Name);
+            if (requestedName.Name == "Microsoft.CodeAnalysis" ||
+                requestedName.Name == "Microsoft.CodeAnalysis.CSharp" ||
+                requestedName.Name == "Microsoft.CodeAnalysis.CSharp.Workspaces")
+            {
+                return AppDomain.CurrentDomain.GetAssemblies()
+                    .FirstOrDefault(a => a.GetName().Name == requestedName.Name);
+            }
+            return null;
+        };
+        AppDomain.CurrentDomain.AssemblyResolve += resolveHandler;
+
+        try
+        {
+            foreach (var dllPath in analyzerDlls)
+            {
+                Assembly asm;
+                try
+                {
+                    asm = Assembly.LoadFrom(dllPath);
+                }
+                catch
+                {
+                    continue;
+                }
+
+                DiagnosticAnalyzer[]? analyzers = null;
+                try
+                {
+                    analyzers = asm.GetTypes()
+                        .Where(t => typeof(DiagnosticAnalyzer).IsAssignableFrom(t) && !t.IsAbstract)
+                        .Select(t => (DiagnosticAnalyzer)Activator.CreateInstance(t)!)
+                        .ToArray();
+                }
+                catch (ReflectionTypeLoadException ex)
+                {
+                    analyzers = ex.Types
+                        .Where(t => t != null && typeof(DiagnosticAnalyzer).IsAssignableFrom(t) && !t.IsAbstract)
+                        .Select(t => (DiagnosticAnalyzer)Activator.CreateInstance(t!)!)
+                        .ToArray();
+                }
+                catch
+                {
+                    // Skip assemblies that can't be loaded
+                }
+
+                if (analyzers != null)
+                {
+                    foreach (var analyzer in analyzers)
+                    {
+                        yield return analyzer;
+                    }
+                }
+            }
+        }
+        finally
+        {
+            AppDomain.CurrentDomain.AssemblyResolve -= resolveHandler;
+        }
+    }
+
+    private static List<string> FindCaAnalyzerDlls()
+    {
+        var dlls = new List<string>();
+
+        // Search in NuGet global packages folder
+        var nugetPackages = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+            ".nuget", "packages");
+
+        var analyzerPackageDir = Path.Combine(nugetPackages, "microsoft.codeanalysis.netanalyzers");
+        if (!Directory.Exists(analyzerPackageDir))
+        {
+            return dlls;
+        }
+
+        // Find latest version directory
+        var versionDirs = Directory.GetDirectories(analyzerPackageDir)
+            .Select(d => new DirectoryInfo(d))
+            .OrderByDescending(d => d.Name)
+            .ToList();
+
+        if (versionDirs.Count == 0)
+        {
+            return dlls;
+        }
+
+        var latestVersionDir = versionDirs[0].FullName;
+        var analyzersDir = Path.Combine(latestVersionDir, "analyzers", "dotnet");
+
+        // Main analyzer assembly
+        var mainDll = Path.Combine(analyzersDir, "Microsoft.CodeAnalysis.NetAnalyzers.dll");
+        if (File.Exists(mainDll))
+        {
+            dlls.Add(mainDll);
+        }
+
+        // C#-specific analyzer assembly (contains CA1305, CA1307, CA1308, CA1309, CA1310, CA1311)
+        var csDll = Path.Combine(analyzersDir, "cs", "Microsoft.CodeAnalysis.CSharp.NetAnalyzers.dll");
+        if (File.Exists(csDll))
+        {
+            dlls.Add(csDll);
+        }
+
+        return dlls;
     }
 
     private static object CreateSarifLog(IEnumerable<Diagnostic> diagnostics, List<string> csFiles,
         DateTime startTimeUtc, DateTime endTimeUtc, long totalDurationMs,
         string[] cliArgs, string workingDirectory,
-        List<object> fileMetrics, int totalFileCount, int totalLineCount)
+        List<object> fileMetrics, int totalFileCount, int totalLineCount,
+        bool includeCaRules = false)
     {
         var results = diagnostics.Select(CreateSarifResult).ToList();
         var artifacts = csFiles.Select(f => new
@@ -183,7 +329,7 @@ public static class SarifCli
             roles = new[] { "resultFile" }
         }).ToList();
 
-        var rules = GetAnalyzers()
+        var rules = GetAnalyzers(includeCaRules)
             .SelectMany(a => a.SupportedDiagnostics)
             .GroupBy(d => d.Id)
             .Select(g => g.First())
@@ -204,6 +350,39 @@ public static class SarifCli
             })
             .ToList();
 
+        var driver = new
+        {
+            name = "LocalizationAnalyzers",
+            version = "1.0.0",
+            informationUri = "https://github.com/your-org/LocalizationAnalyzers",
+            rules = rules
+        };
+
+        object toolObject;
+        if (includeCaRules)
+        {
+            toolObject = new
+            {
+                driver = driver,
+                components = new[]
+                {
+                    new
+                    {
+                        name = "Microsoft.CodeAnalysis.NetAnalyzers",
+                        version = "10.0.302",
+                        informationUri = "https://github.com/dotnet/roslyn-analyzers"
+                    }
+                }
+            };
+        }
+        else
+        {
+            toolObject = new
+            {
+                driver = driver
+            };
+        }
+
         return new
         {
             version = "2.1.0",
@@ -211,16 +390,7 @@ public static class SarifCli
             {
                 new
                 {
-                    tool = new
-                    {
-                        driver = new
-                        {
-                            name = "LocalizationAnalyzers",
-                            version = "1.0.0",
-                            informationUri = "https://github.com/your-org/LocalizationAnalyzers",
-                            rules = rules
-                        }
-                    },
+                    tool = toolObject,
                     invocations = new[]
                     {
                         new
