@@ -118,4 +118,74 @@ public static class DiagnosticDescriptors
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
         description: Loc007Description);
+
+    // LOC011 — String Interpolation in Localizable Context
+    private static readonly LocalizableString Loc011Title = "String interpolation in localizable context";
+    private static readonly LocalizableString Loc011MessageFormat = "String interpolation '{0}' in localizable context; use format strings with resource keys instead";
+    private static readonly LocalizableString Loc011Description = "String interpolation in localizable contexts prevents translators from reordering words. Use composite formatting with resource keys instead.";
+
+    public static readonly DiagnosticDescriptor LOC011 = new(
+        id: "LOC011",
+        title: Loc011Title,
+        messageFormat: Loc011MessageFormat,
+        category: "Localization",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: Loc011Description);
+
+    // LOC012 — Hardcoded DateTime Format String
+    private static readonly LocalizableString Loc012Title = "Hardcoded date/time format string";
+    private static readonly LocalizableString Loc012MessageFormat = "Hardcoded date/time format '{0}' passed to DateTime method without CultureInfo; use a culture-aware format or InvariantCulture";
+    private static readonly LocalizableString Loc012Description = "Hardcoded date/time format strings without CultureInfo produce locale-dependent output. Use CultureInfo.InvariantCulture or a culture-aware format.";
+
+    public static readonly DiagnosticDescriptor LOC012 = new(
+        id: "LOC012",
+        title: Loc012Title,
+        messageFormat: Loc012MessageFormat,
+        category: "Localization",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: Loc012Description);
+
+    // LOC013 — Dynamic Resource Key
+    private static readonly LocalizableString Loc013Title = "Dynamic resource key in localizer";
+    private static readonly LocalizableString Loc013MessageFormat = "Dynamic resource key '{0}' passed to localizer; use a constant or literal key for localization tooling";
+    private static readonly LocalizableString Loc013Description = "Dynamic resource keys (interpolation, concatenation, variables) prevent localization tooling from extracting translatable strings.";
+
+    public static readonly DiagnosticDescriptor LOC013 = new(
+        id: "LOC013",
+        title: Loc013Title,
+        messageFormat: Loc013MessageFormat,
+        category: "Localization",
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: true,
+        description: Loc013Description);
+
+    // LOC014 — English-Only Pluralization
+    private static readonly LocalizableString Loc014Title = "English-only pluralization pattern";
+    private static readonly LocalizableString Loc014MessageFormat = "English-only plural logic '{0}'; use ICU MessageFormat or resource-based plural rules";
+    private static readonly LocalizableString Loc014Description = "English-only pluralization (count == 1 ? singular : plural) doesn't work for languages with complex plural forms (Russian, Arabic, etc.).";
+
+    public static readonly DiagnosticDescriptor LOC014 = new(
+        id: "LOC014",
+        title: Loc014Title,
+        messageFormat: Loc014MessageFormat,
+        category: "Localization",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: Loc014Description);
+
+    // LOC015 — Punctuation Outside String
+    private static readonly LocalizableString Loc015Title = "Punctuation outside translatable string";
+    private static readonly LocalizableString Loc015MessageFormat = "Punctuation '{0}' concatenated outside translatable string; include punctuation inside the string for proper translation";
+    private static readonly LocalizableString Loc015Description = "Punctuation outside translatable strings prevents translators from adjusting punctuation for the target language.";
+
+    public static readonly DiagnosticDescriptor LOC015 = new(
+        id: "LOC015",
+        title: Loc015Title,
+        messageFormat: Loc015MessageFormat,
+        category: "Localization",
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: true,
+        description: Loc015Description);
 }
