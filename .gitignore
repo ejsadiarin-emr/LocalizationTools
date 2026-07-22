@@ -2,14 +2,7 @@
 bin/
 obj/
 
-# Unrelated sibling projects
-src/DataBank.Cli/
-src/DataBank.Cli.Tests/
-databank-samples/
-
 # Generated SARIF output
-results.sarif
-published_results.sarif
 *.dll
 *.exe
 *.pdb

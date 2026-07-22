@@ -1,0 +1,374 @@
+{
+  "version": 1,
+  "generated": "2026-07-22T07:03:16.4617724Z",
+  "entries": [
+    {
+      "id": "rc::app.rc::IDS_APP_TITLE",
+      "key": "IDS_APP_TITLE",
+      "value": "DeltaV Application",
+      "locale": "en",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 100,
+        "rcDefine": "IDS_APP_TITLE"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_WELCOME",
+      "key": "IDS_WELCOME",
+      "value": "Welcome to DeltaV",
+      "locale": "en",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 101,
+        "rcDefine": "IDS_WELCOME"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_GOODBYE",
+      "key": "IDS_GOODBYE",
+      "value": "Goodbye",
+      "locale": "en",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 102,
+        "rcDefine": "IDS_GOODBYE"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_ERR_FILE",
+      "key": "IDS_ERR_FILE",
+      "value": "File not found",
+      "locale": "en",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 200,
+        "rcDefine": "IDS_ERR_FILE"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_ERR_ACCESS",
+      "key": "IDS_ERR_ACCESS",
+      "value": "Access denied",
+      "locale": "en",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 201,
+        "rcDefine": "IDS_ERR_ACCESS"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_STATUS_RUNNING",
+      "key": "IDS_STATUS_RUNNING",
+      "value": "Running",
+      "locale": "en",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 300,
+        "rcDefine": "IDS_STATUS_RUNNING"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_STATUS_IDLE",
+      "key": "IDS_STATUS_IDLE",
+      "value": "Idle",
+      "locale": "en",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 301,
+        "rcDefine": "IDS_STATUS_IDLE"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_BTN_SUBMIT",
+      "key": "IDS_BTN_SUBMIT",
+      "value": "Submit",
+      "locale": "en",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 400,
+        "rcDefine": "IDS_BTN_SUBMIT"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_BTN_CANCEL",
+      "key": "IDS_BTN_CANCEL",
+      "value": "Cancel",
+      "locale": "en",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 401,
+        "rcDefine": "IDS_BTN_CANCEL"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_APP_TITLE",
+      "key": "IDS_APP_TITLE",
+      "value": "Application DeltaV",
+      "locale": "fr",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 100,
+        "rcDefine": "IDS_APP_TITLE"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_WELCOME",
+      "key": "IDS_WELCOME",
+      "value": "Bienvenue dans DeltaV",
+      "locale": "fr",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 101,
+        "rcDefine": "IDS_WELCOME"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_GOODBYE",
+      "key": "IDS_GOODBYE",
+      "value": "Au revoir",
+      "locale": "fr",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 102,
+        "rcDefine": "IDS_GOODBYE"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_ERR_FILE",
+      "key": "IDS_ERR_FILE",
+      "value": "Fichier non trouv\u00E9",
+      "locale": "fr",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 200,
+        "rcDefine": "IDS_ERR_FILE"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_ERR_ACCESS",
+      "key": "IDS_ERR_ACCESS",
+      "value": "Acc\u00E8s refus\u00E9",
+      "locale": "fr",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 201,
+        "rcDefine": "IDS_ERR_ACCESS"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_STATUS_RUNNING",
+      "key": "IDS_STATUS_RUNNING",
+      "value": "En fonctionnement",
+      "locale": "fr",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 300,
+        "rcDefine": "IDS_STATUS_RUNNING"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_STATUS_IDLE",
+      "key": "IDS_STATUS_IDLE",
+      "value": "Inactif",
+      "locale": "fr",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 301,
+        "rcDefine": "IDS_STATUS_IDLE"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_BTN_SUBMIT",
+      "key": "IDS_BTN_SUBMIT",
+      "value": "Soumettre",
+      "locale": "fr",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 400,
+        "rcDefine": "IDS_BTN_SUBMIT"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_BTN_CANCEL",
+      "key": "IDS_BTN_CANCEL",
+      "value": "Annuler",
+      "locale": "fr",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 401,
+        "rcDefine": "IDS_BTN_CANCEL"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_APP_TITLE",
+      "key": "IDS_APP_TITLE",
+      "value": "DeltaV Anwendung",
+      "locale": "de",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 100,
+        "rcDefine": "IDS_APP_TITLE"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_WELCOME",
+      "key": "IDS_WELCOME",
+      "value": "Willkommen bei DeltaV",
+      "locale": "de",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 101,
+        "rcDefine": "IDS_WELCOME"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_GOODBYE",
+      "key": "IDS_GOODBYE",
+      "value": "Auf Wiedersehen",
+      "locale": "de",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 102,
+        "rcDefine": "IDS_GOODBYE"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_ERR_FILE",
+      "key": "IDS_ERR_FILE",
+      "value": "Datei nicht gefunden",
+      "locale": "de",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 200,
+        "rcDefine": "IDS_ERR_FILE"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_ERR_ACCESS",
+      "key": "IDS_ERR_ACCESS",
+      "value": "Zugriff verweigert",
+      "locale": "de",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 201,
+        "rcDefine": "IDS_ERR_ACCESS"
+      }
+    }
+  ]
+}

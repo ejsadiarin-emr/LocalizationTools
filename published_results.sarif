@@ -1,0 +1,162 @@
+{
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "LocalizationAnalyzers",
+          "version": "1.0.0",
+          "informationUri": "https://github.com/your-org/LocalizationAnalyzers",
+          "rules": [
+            {
+              "id": "LOC010",
+              "name": "LOC010",
+              "shortDescription": {
+                "text": "Display string not localized"
+              },
+              "fullDescription": {
+                "text": "Display strings shown to users should be routed through Localize() for translation."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "properties": {
+                "category": "Localization"
+              }
+            },
+            {
+              "id": "LOC001",
+              "name": "LOC001",
+              "shortDescription": {
+                "text": "String literal in conditional expression"
+              },
+              "fullDescription": {
+                "text": "String literals in conditionals break when translated. Use resource keys instead."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "category": "Localization"
+              }
+            },
+            {
+              "id": "LOC002",
+              "name": "LOC002",
+              "shortDescription": {
+                "text": "String literal in data access call"
+              },
+              "fullDescription": {
+                "text": "String literals in data access calls break when translated. Use resource keys or constants."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "category": "Localization"
+              }
+            },
+            {
+              "id": "LOC003",
+              "name": "LOC003",
+              "shortDescription": {
+                "text": "String literal in equality comparison"
+              },
+              "fullDescription": {
+                "text": "String literals in equality comparisons break when translated. Use resource keys or constants."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "category": "Localization"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "LOC001",
+          "level": "warning",
+          "message": {
+            "text": "String literal \u0027Console\u0027 used in conditional; translate to break when localized"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/src/Analyzers/DisplayStringAnalyzer.cs"
+                },
+                "region": {
+                  "startLine": 125,
+                  "startColumn": 26,
+                  "endLine": 125,
+                  "endColumn": 35
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "artifacts": [
+        {
+          "location": {
+            "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/src/DiagnosticDescriptors.cs"
+          },
+          "roles": [
+            "resultFile"
+          ]
+        },
+        {
+          "location": {
+            "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/src/SarifCli.cs"
+          },
+          "roles": [
+            "resultFile"
+          ]
+        },
+        {
+          "location": {
+            "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/src/Analyzers/DisplayStringAnalyzer.cs"
+          },
+          "roles": [
+            "resultFile"
+          ]
+        },
+        {
+          "location": {
+            "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/src/Analyzers/StringInConditionalAnalyzer.cs"
+          },
+          "roles": [
+            "resultFile"
+          ]
+        },
+        {
+          "location": {
+            "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/src/Analyzers/StringInDataAccessAnalyzer.cs"
+          },
+          "roles": [
+            "resultFile"
+          ]
+        },
+        {
+          "location": {
+            "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/src/Analyzers/StringInEqualityAnalyzer.cs"
+          },
+          "roles": [
+            "resultFile"
+          ]
+        },
+        {
+          "location": {
+            "uri": "file:///C:/Users/E1560951/LocalizationAnalyzers/src/CodeFixes/ExtractToResourceCodeFix.cs"
+          },
+          "roles": [
+            "resultFile"
+          ]
+        }
+      ]
+    }
+  ]
+}

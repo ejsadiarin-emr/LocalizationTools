@@ -1,0 +1,71 @@
+#include "resource.h"
+#include <windows.h>
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE       "DeltaV Application"
+    IDS_WELCOME         "Welcome to DeltaV"
+    IDS_GOODBYE         "Goodbye"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERR_FILE        "File not found"
+    IDS_ERR_ACCESS      "Access denied"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_STATUS_RUNNING  "Running"
+    IDS_STATUS_IDLE     "Idle"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BTN_SUBMIT      "Submit"
+    IDS_BTN_CANCEL      "Cancel"
+END
+
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE       "Application DeltaV"
+    IDS_WELCOME         "Bienvenue dans DeltaV"
+    IDS_GOODBYE         "Au revoir"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERR_FILE        "Fichier non trouvé"
+    IDS_ERR_ACCESS      "Accès refusé"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_STATUS_RUNNING  "En fonctionnement"
+    IDS_STATUS_IDLE     "Inactif"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BTN_SUBMIT      "Soumettre"
+    IDS_BTN_CANCEL      "Annuler"
+END
+
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE       "DeltaV Anwendung"
+    IDS_WELCOME         "Willkommen bei DeltaV"
+    IDS_GOODBYE         "Auf Wiedersehen"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERR_FILE        "Datei nicht gefunden"
+    IDS_ERR_ACCESS      "Zugriff verweigert"
+END

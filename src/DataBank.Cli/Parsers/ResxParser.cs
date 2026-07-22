@@ -1,0 +1,98 @@
+using System.Text.RegularExpressions;
+using System.Xml.Linq;
+using DataBank.Cli.Models;
+
+namespace DataBank.Cli.Parsers;
+
+public static partial class ResxParser
+{
+    private static readonly XNamespace Xsd = "http://www.w3.org/2001/XMLSchema";
+    private static readonly XNamespace MsData = "urn:schemas-microsoft-com:xml-msdata";
+
+    public static List<LocalizedStringEntry> Parse(string filePath)
+    {
+        var entries = new List<LocalizedStringEntry>();
+        var locale = DetectLocale(filePath);
+        var relativePath = Path.GetFileName(filePath);
+
+        try
+        {
+            var doc = XDocument.Load(filePath);
+            var root = doc.Root;
+            if (root is null)
+                return entries;
+
+            foreach (var dataElement in root.Elements("data"))
+            {
+                var entry = ParseDataElement(dataElement, locale, relativePath);
+                if (entry is not null)
+                    entries.Add(entry);
+            }
+        }
+        catch (Exception)
+        {
+            // TODO: handle malformed XML gracefully
+        }
+
+        return entries;
+    }
+
+    private static LocalizedStringEntry? ParseDataElement(
+        XElement dataElement, string locale, string relativePath)
+    {
+        var name = dataElement.Attribute("name")?.Value;
+        if (string.IsNullOrEmpty(name))
+            return null;
+
+        // skip non-string entries (ex. binary/object data)
+        if (dataElement.Attribute("type") is not null)
+            return null;
+
+        var valueElement = dataElement.Element("value");
+        var value = valueElement?.Value ?? string.Empty;
+
+        // preserve whitespace if xml:space="preserve"
+        var xmlSpace = dataElement.Attribute(XNamespace.Xml + "space")?.Value;
+        if (xmlSpace == "preserve" && valueElement is not null)
+        {
+            value = valueElement.Value;
+        }
+
+        var comment = dataElement.Element("comment")?.Value;
+
+        return new LocalizedStringEntry
+        {
+            Id = $"resx::{relativePath}::{name}",
+            Key = name,
+            Value = value,
+            Locale = locale,
+            Source = new SourceInfo
+            {
+                Format = "resx",
+                File = relativePath,
+                Path = relativePath
+            },
+            Metadata = new EntryMetadata
+            {
+                Comment = comment
+            }
+        };
+    }
+
+    internal static string DetectLocale(string filePath)
+    {
+        var fileName = Path.GetFileNameWithoutExtension(filePath);
+
+        // Pattern: Messages.fr.resx → fr
+        // Pattern: Messages.zh-Hans.resx → zh-Hans
+        // Pattern: Messages.resx → en (base)
+        var match = ResxLocalePattern().Match(fileName);
+        if (match.Success)
+            return match.Groups[1].Value;
+
+        return "en";
+    }
+
+    [GeneratedRegex(@"\.([a-zA-Z]{2}(?:-[a-zA-Z0-9]+)?)$")]
+    private static partial Regex ResxLocalePattern();
+}

@@ -1,0 +1,838 @@
+{
+  "version": 1,
+  "generated": "2026-07-22T07:03:01.0729046Z",
+  "entries": [
+    {
+      "id": "resx::Messages.fr.resx::WelcomeMessage",
+      "key": "WelcomeMessage",
+      "value": "Bienvenue dans DeltaV",
+      "locale": "fr",
+      "source": {
+        "format": "resx",
+        "file": "Messages.fr.resx",
+        "path": "Messages.fr.resx"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "resx::Messages.fr.resx::ErrorMessage",
+      "key": "ErrorMessage",
+      "value": "Une erreur s\u0027est produite",
+      "locale": "fr",
+      "source": {
+        "format": "resx",
+        "file": "Messages.fr.resx",
+        "path": "Messages.fr.resx"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "resx::Messages.fr.resx::StatusRunning",
+      "key": "StatusRunning",
+      "value": "En fonctionnement",
+      "locale": "fr",
+      "source": {
+        "format": "resx",
+        "file": "Messages.fr.resx",
+        "path": "Messages.fr.resx"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "resx::Messages.fr.resx::StatusIdle",
+      "key": "StatusIdle",
+      "value": "Inactif",
+      "locale": "fr",
+      "source": {
+        "format": "resx",
+        "file": "Messages.fr.resx",
+        "path": "Messages.fr.resx"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "resx::Messages.fr.resx::ButtonSubmit",
+      "key": "ButtonSubmit",
+      "value": "Soumettre",
+      "locale": "fr",
+      "source": {
+        "format": "resx",
+        "file": "Messages.fr.resx",
+        "path": "Messages.fr.resx"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "resx::Messages.fr.resx::ButtonCancel",
+      "key": "ButtonCancel",
+      "value": "Annuler",
+      "locale": "fr",
+      "source": {
+        "format": "resx",
+        "file": "Messages.fr.resx",
+        "path": "Messages.fr.resx"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "resx::Messages.fr.resx::PressureHigh",
+      "key": "PressureHigh",
+      "value": "Pression \u00E9lev\u00E9e",
+      "locale": "fr",
+      "source": {
+        "format": "resx",
+        "file": "Messages.fr.resx",
+        "path": "Messages.fr.resx"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "resx::Messages.fr.resx::PressureLow",
+      "key": "PressureLow",
+      "value": "Pression basse",
+      "locale": "fr",
+      "source": {
+        "format": "resx",
+        "file": "Messages.fr.resx",
+        "path": "Messages.fr.resx"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "resx::Messages.fr.resx::TemperatureFormat",
+      "key": "TemperatureFormat",
+      "value": "Temp\u00E9rature : {0}\u00B0C",
+      "locale": "fr",
+      "source": {
+        "format": "resx",
+        "file": "Messages.fr.resx",
+        "path": "Messages.fr.resx"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "resx::Messages.fr.resx::MissingInFrench",
+      "key": "MissingInFrench",
+      "value": "This key is missing in Chinese",
+      "locale": "fr",
+      "source": {
+        "format": "resx",
+        "file": "Messages.fr.resx",
+        "path": "Messages.fr.resx"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "resx::Messages.resx::WelcomeMessage",
+      "key": "WelcomeMessage",
+      "value": "Welcome to DeltaV",
+      "locale": "en",
+      "source": {
+        "format": "resx",
+        "file": "Messages.resx",
+        "path": "Messages.resx"
+      },
+      "metadata": {
+        "comment": "Main greeting shown on application startup",
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "resx::Messages.resx::ErrorMessage",
+      "key": "ErrorMessage",
+      "value": "An error occurred",
+      "locale": "en",
+      "source": {
+        "format": "resx",
+        "file": "Messages.resx",
+        "path": "Messages.resx"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "resx::Messages.resx::StatusRunning",
+      "key": "StatusRunning",
+      "value": "Running",
+      "locale": "en",
+      "source": {
+        "format": "resx",
+        "file": "Messages.resx",
+        "path": "Messages.resx"
+      },
+      "metadata": {
+        "comment": "Device status label",
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "resx::Messages.resx::StatusIdle",
+      "key": "StatusIdle",
+      "value": "Idle",
+      "locale": "en",
+      "source": {
+        "format": "resx",
+        "file": "Messages.resx",
+        "path": "Messages.resx"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "resx::Messages.resx::ButtonSubmit",
+      "key": "ButtonSubmit",
+      "value": "Submit",
+      "locale": "en",
+      "source": {
+        "format": "resx",
+        "file": "Messages.resx",
+        "path": "Messages.resx"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "resx::Messages.resx::ButtonCancel",
+      "key": "ButtonCancel",
+      "value": "Cancel",
+      "locale": "en",
+      "source": {
+        "format": "resx",
+        "file": "Messages.resx",
+        "path": "Messages.resx"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "resx::Messages.resx::PressureHigh",
+      "key": "PressureHigh",
+      "value": "Pressure high",
+      "locale": "en",
+      "source": {
+        "format": "resx",
+        "file": "Messages.resx",
+        "path": "Messages.resx"
+      },
+      "metadata": {
+        "comment": "Alarm message for high pressure condition",
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "resx::Messages.resx::PressureLow",
+      "key": "PressureLow",
+      "value": "Pressure low",
+      "locale": "en",
+      "source": {
+        "format": "resx",
+        "file": "Messages.resx",
+        "path": "Messages.resx"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "resx::Messages.resx::TemperatureFormat",
+      "key": "TemperatureFormat",
+      "value": "Temperature: {0}\u00B0C",
+      "locale": "en",
+      "source": {
+        "format": "resx",
+        "file": "Messages.resx",
+        "path": "Messages.resx"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "resx::Messages.resx::EmptyValue",
+      "key": "EmptyValue",
+      "value": "",
+      "locale": "en",
+      "source": {
+        "format": "resx",
+        "file": "Messages.resx",
+        "path": "Messages.resx"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "resx::Messages.zh-Hans.resx::WelcomeMessage",
+      "key": "WelcomeMessage",
+      "value": "\u6B22\u8FCE\u4F7F\u7528 DeltaV",
+      "locale": "zh-Hans",
+      "source": {
+        "format": "resx",
+        "file": "Messages.zh-Hans.resx",
+        "path": "Messages.zh-Hans.resx"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "resx::Messages.zh-Hans.resx::ErrorMessage",
+      "key": "ErrorMessage",
+      "value": "\u53D1\u751F\u9519\u8BEF",
+      "locale": "zh-Hans",
+      "source": {
+        "format": "resx",
+        "file": "Messages.zh-Hans.resx",
+        "path": "Messages.zh-Hans.resx"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "resx::Messages.zh-Hans.resx::StatusRunning",
+      "key": "StatusRunning",
+      "value": "\u8FD0\u884C\u4E2D",
+      "locale": "zh-Hans",
+      "source": {
+        "format": "resx",
+        "file": "Messages.zh-Hans.resx",
+        "path": "Messages.zh-Hans.resx"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "resx::Messages.zh-Hans.resx::StatusIdle",
+      "key": "StatusIdle",
+      "value": "\u7A7A\u95F2",
+      "locale": "zh-Hans",
+      "source": {
+        "format": "resx",
+        "file": "Messages.zh-Hans.resx",
+        "path": "Messages.zh-Hans.resx"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "resx::Messages.zh-Hans.resx::ButtonSubmit",
+      "key": "ButtonSubmit",
+      "value": "\u63D0\u4EA4",
+      "locale": "zh-Hans",
+      "source": {
+        "format": "resx",
+        "file": "Messages.zh-Hans.resx",
+        "path": "Messages.zh-Hans.resx"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "resx::Messages.zh-Hans.resx::ButtonCancel",
+      "key": "ButtonCancel",
+      "value": "\u53D6\u6D88",
+      "locale": "zh-Hans",
+      "source": {
+        "format": "resx",
+        "file": "Messages.zh-Hans.resx",
+        "path": "Messages.zh-Hans.resx"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "resx::Messages.zh-Hans.resx::PressureHigh",
+      "key": "PressureHigh",
+      "value": "\u538B\u529B\u8FC7\u9AD8",
+      "locale": "zh-Hans",
+      "source": {
+        "format": "resx",
+        "file": "Messages.zh-Hans.resx",
+        "path": "Messages.zh-Hans.resx"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "resx::Messages.zh-Hans.resx::PressureLow",
+      "key": "PressureLow",
+      "value": "\u538B\u529B\u8FC7\u4F4E",
+      "locale": "zh-Hans",
+      "source": {
+        "format": "resx",
+        "file": "Messages.zh-Hans.resx",
+        "path": "Messages.zh-Hans.resx"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "resx::Messages.zh-Hans.resx::TemperatureFormat",
+      "key": "TemperatureFormat",
+      "value": "\u6E29\u5EA6\uFF1A{0}\u00B0C",
+      "locale": "zh-Hans",
+      "source": {
+        "format": "resx",
+        "file": "Messages.zh-Hans.resx",
+        "path": "Messages.zh-Hans.resx"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": null,
+        "rcDefine": null
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_APP_TITLE",
+      "key": "IDS_APP_TITLE",
+      "value": "DeltaV Application",
+      "locale": "en",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 0,
+        "rcDefine": "IDS_APP_TITLE"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_WELCOME",
+      "key": "IDS_WELCOME",
+      "value": "Welcome to DeltaV",
+      "locale": "en",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 0,
+        "rcDefine": "IDS_WELCOME"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_GOODBYE",
+      "key": "IDS_GOODBYE",
+      "value": "Goodbye",
+      "locale": "en",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 0,
+        "rcDefine": "IDS_GOODBYE"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_ERR_FILE",
+      "key": "IDS_ERR_FILE",
+      "value": "File not found",
+      "locale": "en",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 0,
+        "rcDefine": "IDS_ERR_FILE"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_ERR_ACCESS",
+      "key": "IDS_ERR_ACCESS",
+      "value": "Access denied",
+      "locale": "en",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 0,
+        "rcDefine": "IDS_ERR_ACCESS"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_STATUS_RUNNING",
+      "key": "IDS_STATUS_RUNNING",
+      "value": "Running",
+      "locale": "en",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 0,
+        "rcDefine": "IDS_STATUS_RUNNING"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_STATUS_IDLE",
+      "key": "IDS_STATUS_IDLE",
+      "value": "Idle",
+      "locale": "en",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 0,
+        "rcDefine": "IDS_STATUS_IDLE"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_BTN_SUBMIT",
+      "key": "IDS_BTN_SUBMIT",
+      "value": "Submit",
+      "locale": "en",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 0,
+        "rcDefine": "IDS_BTN_SUBMIT"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_BTN_CANCEL",
+      "key": "IDS_BTN_CANCEL",
+      "value": "Cancel",
+      "locale": "en",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 0,
+        "rcDefine": "IDS_BTN_CANCEL"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_APP_TITLE",
+      "key": "IDS_APP_TITLE",
+      "value": "Application DeltaV",
+      "locale": "fr",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 0,
+        "rcDefine": "IDS_APP_TITLE"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_WELCOME",
+      "key": "IDS_WELCOME",
+      "value": "Bienvenue dans DeltaV",
+      "locale": "fr",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 0,
+        "rcDefine": "IDS_WELCOME"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_GOODBYE",
+      "key": "IDS_GOODBYE",
+      "value": "Au revoir",
+      "locale": "fr",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 0,
+        "rcDefine": "IDS_GOODBYE"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_ERR_FILE",
+      "key": "IDS_ERR_FILE",
+      "value": "Fichier non trouv\u00E9",
+      "locale": "fr",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 0,
+        "rcDefine": "IDS_ERR_FILE"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_ERR_ACCESS",
+      "key": "IDS_ERR_ACCESS",
+      "value": "Acc\u00E8s refus\u00E9",
+      "locale": "fr",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 0,
+        "rcDefine": "IDS_ERR_ACCESS"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_STATUS_RUNNING",
+      "key": "IDS_STATUS_RUNNING",
+      "value": "En fonctionnement",
+      "locale": "fr",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 0,
+        "rcDefine": "IDS_STATUS_RUNNING"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_STATUS_IDLE",
+      "key": "IDS_STATUS_IDLE",
+      "value": "Inactif",
+      "locale": "fr",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 0,
+        "rcDefine": "IDS_STATUS_IDLE"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_BTN_SUBMIT",
+      "key": "IDS_BTN_SUBMIT",
+      "value": "Soumettre",
+      "locale": "fr",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 0,
+        "rcDefine": "IDS_BTN_SUBMIT"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_BTN_CANCEL",
+      "key": "IDS_BTN_CANCEL",
+      "value": "Annuler",
+      "locale": "fr",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 0,
+        "rcDefine": "IDS_BTN_CANCEL"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_APP_TITLE",
+      "key": "IDS_APP_TITLE",
+      "value": "DeltaV Anwendung",
+      "locale": "de",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 0,
+        "rcDefine": "IDS_APP_TITLE"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_WELCOME",
+      "key": "IDS_WELCOME",
+      "value": "Willkommen bei DeltaV",
+      "locale": "de",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 0,
+        "rcDefine": "IDS_WELCOME"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_GOODBYE",
+      "key": "IDS_GOODBYE",
+      "value": "Auf Wiedersehen",
+      "locale": "de",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 0,
+        "rcDefine": "IDS_GOODBYE"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_ERR_FILE",
+      "key": "IDS_ERR_FILE",
+      "value": "Datei nicht gefunden",
+      "locale": "de",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 0,
+        "rcDefine": "IDS_ERR_FILE"
+      }
+    },
+    {
+      "id": "rc::app.rc::IDS_ERR_ACCESS",
+      "key": "IDS_ERR_ACCESS",
+      "value": "Zugriff verweigert",
+      "locale": "de",
+      "source": {
+        "format": "rc",
+        "file": "app.rc",
+        "path": "app.rc"
+      },
+      "metadata": {
+        "comment": null,
+        "rcId": 0,
+        "rcDefine": "IDS_ERR_ACCESS"
+      }
+    }
+  ]
+}
