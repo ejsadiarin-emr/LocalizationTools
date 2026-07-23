@@ -1,0 +1,1438 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ContextualDisplay Name="AALM_dt" Path="Graphics.ContextualDisplays.Emerson.Detail" SchemaVersion="14.3.1.11971">
+  <Metadata>
+    <LastEditUser>Emerson</LastEditUser>
+    <LastEditTime>07/08/2026 12:00:00.000 UTC-05:00</LastEditTime>
+  </Metadata>
+  <Title>
+    <LanguageValues>
+      <LanguageValue Name="en">
+        <Content>Alarm module detail display</Content>
+      </LanguageValue>
+      <LanguageValue Name="jp">
+        <Content>Alarm module detail display</Content>
+      </LanguageValue>
+      <LanguageValue Name="ru">
+        <Content>Alarm module detail display</Content>
+      </LanguageValue>
+      <LanguageValue Name="zh">
+        <Content>Alarm module detail display</Content>
+      </LanguageValue>
+    </LanguageValues>
+  </Title>
+  <Description>
+    <LanguageValues>
+      <LanguageValue Name="en">
+        <Content>Alarm module detail display</Content>
+      </LanguageValue>
+      <LanguageValue Name="jp">
+        <Content>Alarm module detail display</Content>
+      </LanguageValue>
+      <LanguageValue Name="ru">
+        <Content>Alarm module detail display</Content>
+      </LanguageValue>
+      <LanguageValue Name="zh">
+        <Content>报警模块详细信息</Content>
+      </LanguageValue>
+    </LanguageValues>
+  </Description>
+  <ContainedElements>
+    <Gem Name="CD_MOD_INFO1" Definition="Library.CD_MOD_INFO">
+      <Height>
+        <Value>557496</Value>
+      </Height>
+      <Width>
+        <Value>4508500</Value>
+      </Width>
+      <X>
+        <Value>411226</Value>
+      </X>
+      <Variables>
+        <GraphicVariable Name="Tag" VariableType="ControlTagName">
+          <InitialValue>
+            <Reference>Dsp.Tag</Reference>
+          </InitialValue>
+        </GraphicVariable>
+      </Variables>
+    </Gem>
+    <Text Name="txtLimits">
+      <Font>
+        <Reference>GL.Library.S_HeaderFont</Reference>
+      </Font>
+      <Foreground>
+        <Reference>GL.Library.S_InfoTextColor</Reference>
+      </Foreground>
+      <Height>
+        <Value>160464</Value>
+      </Height>
+      <Label>
+        <Reference>GL.Library.S_Limits</Reference>
+      </Label>
+      <Title>
+        <Value>
+          <LanguageValues>
+            <LanguageValue Name="en">
+              <Content>txtLimits</Content>
+            </LanguageValue>
+            <LanguageValue Name="jp">
+              <Content>txtLimits</Content>
+            </LanguageValue>
+            <LanguageValue Name="ru">
+              <Content>txtLimits</Content>
+            </LanguageValue>
+            <LanguageValue Name="zh">
+              <Content>txtLimits</Content>
+            </LanguageValue>
+          </LanguageValues>
+        </Value>
+      </Title>
+      <VerticalTextAlignment>
+        <Value>Center</Value>
+      </VerticalTextAlignment>
+      <Width>
+        <Value>381000</Value>
+      </Width>
+      <X>
+        <Value>85374</Value>
+      </X>
+      <Y>
+        <Value>737357</Value>
+      </Y>
+    </Text>
+    <Text Name="txtAlarms">
+      <Font>
+        <Reference>GL.Library.S_HeaderFont</Reference>
+      </Font>
+      <Foreground>
+        <Reference>GL.Library.S_InfoTextColor</Reference>
+      </Foreground>
+      <Height>
+        <Value>160464</Value>
+      </Height>
+      <Label>
+        <Reference>GL.Library.S_Alarms</Reference>
+      </Label>
+      <Title>
+        <Value>
+          <LanguageValues>
+            <LanguageValue Name="en">
+              <Content>txtAlarms</Content>
+            </LanguageValue>
+            <LanguageValue Name="jp">
+              <Content>txtAlarms</Content>
+            </LanguageValue>
+            <LanguageValue Name="ru">
+              <Content>txtAlarms</Content>
+            </LanguageValue>
+            <LanguageValue Name="zh">
+              <Content>txtAlarms</Content>
+            </LanguageValue>
+          </LanguageValues>
+        </Value>
+      </Title>
+      <VerticalTextAlignment>
+        <Value>Center</Value>
+      </VerticalTextAlignment>
+      <Width>
+        <Value>431800</Value>
+      </Width>
+      <X>
+        <Value>2161842</Value>
+      </X>
+      <Y>
+        <Value>737357</Value>
+      </Y>
+    </Text>
+    <Text Name="txtMisc">
+      <Font>
+        <Reference>GL.Library.S_HeaderFont</Reference>
+      </Font>
+      <Foreground>
+        <Reference>GL.Library.S_InfoTextColor</Reference>
+      </Foreground>
+      <Height>
+        <Value>160464</Value>
+      </Height>
+      <Label>
+        <Reference>GL.Library.S_Misc</Reference>
+      </Label>
+      <Title>
+        <Value>
+          <LanguageValues>
+            <LanguageValue Name="en">
+              <Content>txtMisc</Content>
+            </LanguageValue>
+            <LanguageValue Name="jp">
+              <Content>txtMisc</Content>
+            </LanguageValue>
+            <LanguageValue Name="ru">
+              <Content>txtMisc</Content>
+            </LanguageValue>
+            <LanguageValue Name="zh">
+              <Content>txtMisc</Content>
+            </LanguageValue>
+          </LanguageValues>
+        </Value>
+      </Title>
+      <VerticalTextAlignment>
+        <Value>Center</Value>
+      </VerticalTextAlignment>
+      <Width>
+        <Value>304800</Value>
+      </Width>
+      <X>
+        <Value>85374</Value>
+      </X>
+      <Y>
+        <Value>2126920</Value>
+      </Y>
+    </Text>
+    <Text Name="txtDiagnostics">
+      <Font>
+        <Reference>GL.Library.S_HeaderFont</Reference>
+      </Font>
+      <Foreground>
+        <Reference>GL.Library.S_InfoTextColor</Reference>
+      </Foreground>
+      <Height>
+        <Value>160464</Value>
+      </Height>
+      <Label>
+        <Reference>GL.Library.S_Diagnostics</Reference>
+      </Label>
+      <Title>
+        <Value>
+          <LanguageValues>
+            <LanguageValue Name="en">
+              <Content>txtDiagnostics</Content>
+            </LanguageValue>
+            <LanguageValue Name="jp">
+              <Content>txtDiagnostics</Content>
+            </LanguageValue>
+            <LanguageValue Name="ru">
+              <Content>txtDiagnostics</Content>
+            </LanguageValue>
+            <LanguageValue Name="zh">
+              <Content>txtDiagnostics</Content>
+            </LanguageValue>
+          </LanguageValues>
+        </Value>
+      </Title>
+      <VerticalTextAlignment>
+        <Value>Center</Value>
+      </VerticalTextAlignment>
+      <Width>
+        <Value>698500</Value>
+      </Width>
+      <X>
+        <Value>2161842</Value>
+      </X>
+      <Y>
+        <Value>2280016</Value>
+      </Y>
+    </Text>
+    <Gem Name="CD_LABEL_SCALEDVALUE1" Definition="Library.CD_LABEL_SCALEDVALUE">
+      <Height>
+        <Value>160464</Value>
+      </Height>
+      <Width>
+        <Value>2019427</Value>
+      </Width>
+      <X>
+        <Value>85374</Value>
+      </X>
+      <Y>
+        <Value>931841</Value>
+      </Y>
+      <Variables>
+        <GraphicVariable Name="Label" VariableType="LocalizableString">
+          <InitialValue>
+            <Reference>GL.Library.S_HH_Limit</Reference>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="Parameter" VariableType="ParameterRef">
+          <InitialValue>
+            <Value>DLSYS[Dsp.Tag+'/'+Dsp.Context1+'/HI_HI_LIM.CV']</Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="Scale" VariableType="Scale">
+          <InitialValue>
+            <Value>
+              <Scale>
+                <CustomScale>
+                  <Scaling>
+                    <ScaleRange>
+                      <ScalingRange>
+                        <LowValue>0</LowValue>
+                        <HighValue>100</HighValue>
+                      </ScalingRange>
+                    </ScaleRange>
+                    <DecimalPlaces>1</DecimalPlaces>
+                    <EngineeringUnit>no units</EngineeringUnit>
+                  </Scaling>
+                </CustomScale>
+                <ScaleExpression>DLSYS[Dsp.Tag+'/'+Dsp.Context1+'/IN_SCALE']</ScaleExpression>
+              </Scale>
+            </Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="EU" VariableType="LocalizableString">
+          <InitialValue>
+            <Value>
+              <GsLocalizedString>
+                <LanguageValues>
+                  <LanguageValue Name="en">
+                    <Content>
+                    </Content>
+                  </LanguageValue>
+                  <LanguageValue Name="jp">
+                    <Content>
+                    </Content>
+                  </LanguageValue>
+                  <LanguageValue Name="ru">
+                    <Content>
+                    </Content>
+                  </LanguageValue>
+                  <LanguageValue Name="zh">
+                    <Content>
+                    </Content>
+                  </LanguageValue>
+                </LanguageValues>
+              </GsLocalizedString>
+            </Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="EUVisibility" VariableType="Boolean">
+          <InitialValue>
+            <Value>True</Value>
+          </InitialValue>
+        </GraphicVariable>
+        <SelectionCustomPropertyVariable Name="CustomWrites" VariableType="Selection">
+          <InitialValue>
+            <Value>2</Value>
+          </InitialValue>
+        </SelectionCustomPropertyVariable>
+        <GraphicVariable Name="SISConfirm" VariableType="GraphicsExpression">
+          <InitialValue>
+            <Value>
+            </Value>
+          </InitialValue>
+        </GraphicVariable>
+      </Variables>
+    </Gem>
+    <Gem Name="CD_LABEL_SCALEDVALUE2" Definition="Library.CD_LABEL_SCALEDVALUE">
+      <Height>
+        <Value>160464</Value>
+      </Height>
+      <Width>
+        <Value>2019427</Value>
+      </Width>
+      <X>
+        <Value>89154</Value>
+      </X>
+      <Y>
+        <Value>1090051</Value>
+      </Y>
+      <Variables>
+        <GraphicVariable Name="Label" VariableType="LocalizableString">
+          <InitialValue>
+            <Reference>GL.Library.S_H_Limit</Reference>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="Parameter" VariableType="ParameterRef">
+          <InitialValue>
+            <Value>DLSYS[Dsp.Tag+'/'+Dsp.Context1+'/HI_LIM.CV']</Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="Scale" VariableType="Scale">
+          <InitialValue>
+            <Value>
+              <Scale>
+                <CustomScale>
+                  <Scaling>
+                    <ScaleRange>
+                      <ScalingRange>
+                        <LowValue>0</LowValue>
+                        <HighValue>100</HighValue>
+                      </ScalingRange>
+                    </ScaleRange>
+                    <DecimalPlaces>1</DecimalPlaces>
+                    <EngineeringUnit>no units</EngineeringUnit>
+                  </Scaling>
+                </CustomScale>
+                <ScaleExpression>DLSYS[Dsp.Tag+'/'+Dsp.Context1+'/IN_SCALE']</ScaleExpression>
+              </Scale>
+            </Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="EU" VariableType="LocalizableString">
+          <InitialValue>
+            <Value>
+              <GsLocalizedString>
+                <LanguageValues>
+                  <LanguageValue Name="en">
+                    <Content>
+                    </Content>
+                  </LanguageValue>
+                  <LanguageValue Name="jp">
+                    <Content>
+                    </Content>
+                  </LanguageValue>
+                  <LanguageValue Name="ru">
+                    <Content>
+                    </Content>
+                  </LanguageValue>
+                  <LanguageValue Name="zh">
+                    <Content>
+                    </Content>
+                  </LanguageValue>
+                </LanguageValues>
+              </GsLocalizedString>
+            </Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="EUVisibility" VariableType="Boolean">
+          <InitialValue>
+            <Value>True</Value>
+          </InitialValue>
+        </GraphicVariable>
+        <SelectionCustomPropertyVariable Name="CustomWrites" VariableType="Selection">
+          <InitialValue>
+            <Value>2</Value>
+          </InitialValue>
+        </SelectionCustomPropertyVariable>
+        <GraphicVariable Name="SISConfirm" VariableType="GraphicsExpression">
+          <InitialValue>
+            <Value>
+            </Value>
+          </InitialValue>
+        </GraphicVariable>
+      </Variables>
+    </Gem>
+    <Gem Name="CD_LABEL_SCALEDVALUE3" Definition="Library.CD_LABEL_SCALEDVALUE">
+      <Height>
+        <Value>160464</Value>
+      </Height>
+      <Width>
+        <Value>2019427</Value>
+      </Width>
+      <X>
+        <Value>85374</Value>
+      </X>
+      <Y>
+        <Value>1246572</Value>
+      </Y>
+      <Variables>
+        <GraphicVariable Name="Label" VariableType="LocalizableString">
+          <InitialValue>
+            <Reference>GL.Library.S_DEV_HI_Limit</Reference>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="Parameter" VariableType="ParameterRef">
+          <InitialValue>
+            <Value>DLSYS[Dsp.Tag+'/'+Dsp.Context1+'/DV_HI_LIM.CV']</Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="Scale" VariableType="Scale">
+          <InitialValue>
+            <Value>
+              <Scale>
+                <CustomScale>
+                  <Scaling>
+                    <ScaleRange>
+                      <ScalingRange>
+                        <LowValue>0</LowValue>
+                        <HighValue>100</HighValue>
+                      </ScalingRange>
+                    </ScaleRange>
+                    <DecimalPlaces>1</DecimalPlaces>
+                    <EngineeringUnit>no units</EngineeringUnit>
+                  </Scaling>
+                </CustomScale>
+                <ScaleExpression>DLSYS[Dsp.Tag+'/'+Dsp.Context1+'/IN_SCALE']</ScaleExpression>
+              </Scale>
+            </Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="EU" VariableType="LocalizableString">
+          <InitialValue>
+            <Value>
+              <GsLocalizedString>
+                <LanguageValues>
+                  <LanguageValue Name="en">
+                    <Content>
+                    </Content>
+                  </LanguageValue>
+                  <LanguageValue Name="jp">
+                    <Content>
+                    </Content>
+                  </LanguageValue>
+                  <LanguageValue Name="ru">
+                    <Content>
+                    </Content>
+                  </LanguageValue>
+                  <LanguageValue Name="zh">
+                    <Content>
+                    </Content>
+                  </LanguageValue>
+                </LanguageValues>
+              </GsLocalizedString>
+            </Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="EUVisibility" VariableType="Boolean">
+          <InitialValue>
+            <Value>True</Value>
+          </InitialValue>
+        </GraphicVariable>
+        <SelectionCustomPropertyVariable Name="CustomWrites" VariableType="Selection">
+          <InitialValue>
+            <Value>2</Value>
+          </InitialValue>
+        </SelectionCustomPropertyVariable>
+        <GraphicVariable Name="SISConfirm" VariableType="GraphicsExpression">
+          <InitialValue>
+            <Value>
+            </Value>
+          </InitialValue>
+        </GraphicVariable>
+      </Variables>
+    </Gem>
+    <Gem Name="CD_LABEL_SCALEDVALUE4" Definition="Library.CD_LABEL_SCALEDVALUE">
+      <Height>
+        <Value>160464</Value>
+      </Height>
+      <Width>
+        <Value>2019427</Value>
+      </Width>
+      <X>
+        <Value>85374</Value>
+      </X>
+      <Y>
+        <Value>1408540</Value>
+      </Y>
+      <Variables>
+        <GraphicVariable Name="Label" VariableType="LocalizableString">
+          <InitialValue>
+            <Reference>GL.Library.S_DEV_LO_Limit</Reference>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="Parameter" VariableType="ParameterRef">
+          <InitialValue>
+            <Value>DLSYS[Dsp.Tag+'/'+Dsp.Context1+'/DV_LO_LIM.CV']</Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="Scale" VariableType="Scale">
+          <InitialValue>
+            <Value>
+              <Scale>
+                <CustomScale>
+                  <Scaling>
+                    <ScaleRange>
+                      <ScalingRange>
+                        <LowValue>0</LowValue>
+                        <HighValue>100</HighValue>
+                      </ScalingRange>
+                    </ScaleRange>
+                    <DecimalPlaces>1</DecimalPlaces>
+                    <EngineeringUnit>no units</EngineeringUnit>
+                  </Scaling>
+                </CustomScale>
+                <ScaleExpression>DLSYS[Dsp.Tag+'/'+Dsp.Context1+'/IN_SCALE']</ScaleExpression>
+              </Scale>
+            </Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="EU" VariableType="LocalizableString">
+          <InitialValue>
+            <Value>
+              <GsLocalizedString>
+                <LanguageValues>
+                  <LanguageValue Name="en">
+                    <Content>
+                    </Content>
+                  </LanguageValue>
+                  <LanguageValue Name="jp">
+                    <Content>
+                    </Content>
+                  </LanguageValue>
+                  <LanguageValue Name="ru">
+                    <Content>
+                    </Content>
+                  </LanguageValue>
+                  <LanguageValue Name="zh">
+                    <Content>
+                    </Content>
+                  </LanguageValue>
+                </LanguageValues>
+              </GsLocalizedString>
+            </Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="EUVisibility" VariableType="Boolean">
+          <InitialValue>
+            <Value>True</Value>
+          </InitialValue>
+        </GraphicVariable>
+        <SelectionCustomPropertyVariable Name="CustomWrites" VariableType="Selection">
+          <InitialValue>
+            <Value>2</Value>
+          </InitialValue>
+        </SelectionCustomPropertyVariable>
+        <GraphicVariable Name="SISConfirm" VariableType="GraphicsExpression">
+          <InitialValue>
+            <Value>
+            </Value>
+          </InitialValue>
+        </GraphicVariable>
+      </Variables>
+    </Gem>
+    <Gem Name="CD_LABEL_SCALEDVALUE5" Definition="Library.CD_LABEL_SCALEDVALUE">
+      <Height>
+        <Value>160464</Value>
+      </Height>
+      <Width>
+        <Value>2019427</Value>
+      </Width>
+      <X>
+        <Value>85374</Value>
+      </X>
+      <Y>
+        <Value>1570508</Value>
+      </Y>
+      <Variables>
+        <GraphicVariable Name="Label" VariableType="LocalizableString">
+          <InitialValue>
+            <Reference>GL.Library.S_L_Limit</Reference>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="Parameter" VariableType="ParameterRef">
+          <InitialValue>
+            <Value>DLSYS[Dsp.Tag+'/'+Dsp.Context1+'/LO_LIM.CV']</Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="Scale" VariableType="Scale">
+          <InitialValue>
+            <Value>
+              <Scale>
+                <CustomScale>
+                  <Scaling>
+                    <ScaleRange>
+                      <ScalingRange>
+                        <LowValue>0</LowValue>
+                        <HighValue>100</HighValue>
+                      </ScalingRange>
+                    </ScaleRange>
+                    <DecimalPlaces>1</DecimalPlaces>
+                    <EngineeringUnit>no units</EngineeringUnit>
+                  </Scaling>
+                </CustomScale>
+                <ScaleExpression>DLSYS[Dsp.Tag+'/'+Dsp.Context1+'/IN_SCALE']</ScaleExpression>
+              </Scale>
+            </Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="EU" VariableType="LocalizableString">
+          <InitialValue>
+            <Value>
+              <GsLocalizedString>
+                <LanguageValues>
+                  <LanguageValue Name="en">
+                    <Content>
+                    </Content>
+                  </LanguageValue>
+                  <LanguageValue Name="jp">
+                    <Content>
+                    </Content>
+                  </LanguageValue>
+                  <LanguageValue Name="ru">
+                    <Content>
+                    </Content>
+                  </LanguageValue>
+                  <LanguageValue Name="zh">
+                    <Content>
+                    </Content>
+                  </LanguageValue>
+                </LanguageValues>
+              </GsLocalizedString>
+            </Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="EUVisibility" VariableType="Boolean">
+          <InitialValue>
+            <Value>True</Value>
+          </InitialValue>
+        </GraphicVariable>
+        <SelectionCustomPropertyVariable Name="CustomWrites" VariableType="Selection">
+          <InitialValue>
+            <Value>2</Value>
+          </InitialValue>
+        </SelectionCustomPropertyVariable>
+        <GraphicVariable Name="SISConfirm" VariableType="GraphicsExpression">
+          <InitialValue>
+            <Value>
+            </Value>
+          </InitialValue>
+        </GraphicVariable>
+      </Variables>
+    </Gem>
+    <Gem Name="CD_LABEL_SCALEDVALUE6" Definition="Library.CD_LABEL_SCALEDVALUE">
+      <Height>
+        <Value>160464</Value>
+      </Height>
+      <Width>
+        <Value>2019427</Value>
+      </Width>
+      <X>
+        <Value>85374</Value>
+      </X>
+      <Y>
+        <Value>1732476</Value>
+      </Y>
+      <Variables>
+        <GraphicVariable Name="Label" VariableType="LocalizableString">
+          <InitialValue>
+            <Reference>GL.Library.S_LL_Limit</Reference>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="Parameter" VariableType="ParameterRef">
+          <InitialValue>
+            <Value>DLSYS[Dsp.Tag+'/'+Dsp.Context1+'/LO_LO_LIM.CV']</Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="Scale" VariableType="Scale">
+          <InitialValue>
+            <Value>
+              <Scale>
+                <CustomScale>
+                  <Scaling>
+                    <ScaleRange>
+                      <ScalingRange>
+                        <LowValue>0</LowValue>
+                        <HighValue>100</HighValue>
+                      </ScalingRange>
+                    </ScaleRange>
+                    <DecimalPlaces>1</DecimalPlaces>
+                    <EngineeringUnit>no units</EngineeringUnit>
+                  </Scaling>
+                </CustomScale>
+                <ScaleExpression>DLSYS[Dsp.Tag+'/'+Dsp.Context1+'/IN_SCALE']</ScaleExpression>
+              </Scale>
+            </Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="EU" VariableType="LocalizableString">
+          <InitialValue>
+            <Value>
+              <GsLocalizedString>
+                <LanguageValues>
+                  <LanguageValue Name="en">
+                    <Content>
+                    </Content>
+                  </LanguageValue>
+                  <LanguageValue Name="jp">
+                    <Content>
+                    </Content>
+                  </LanguageValue>
+                  <LanguageValue Name="ru">
+                    <Content>
+                    </Content>
+                  </LanguageValue>
+                  <LanguageValue Name="zh">
+                    <Content>
+                    </Content>
+                  </LanguageValue>
+                </LanguageValues>
+              </GsLocalizedString>
+            </Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="EUVisibility" VariableType="Boolean">
+          <InitialValue>
+            <Value>True</Value>
+          </InitialValue>
+        </GraphicVariable>
+        <SelectionCustomPropertyVariable Name="CustomWrites" VariableType="Selection">
+          <InitialValue>
+            <Value>2</Value>
+          </InitialValue>
+        </SelectionCustomPropertyVariable>
+        <GraphicVariable Name="SISConfirm" VariableType="GraphicsExpression">
+          <InitialValue>
+            <Value>
+            </Value>
+          </InitialValue>
+        </GraphicVariable>
+      </Variables>
+    </Gem>
+    <Gem Name="CD_LABEL_VALUE8" Definition="Library.CD_LABEL_VALUE">
+      <Height>
+        <Value>160464</Value>
+      </Height>
+      <Width>
+        <Value>2019367</Value>
+      </Width>
+      <X>
+        <Value>85374</Value>
+      </X>
+      <Y>
+        <Value>1896491</Value>
+      </Y>
+      <Variables>
+        <GraphicVariable Name="Label" VariableType="LocalizableString">
+          <InitialValue>
+            <Reference>GL.Library.S_ALM_Hys</Reference>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="Parameter" VariableType="ParameterRef">
+          <InitialValue>
+            <Value>DLSYS[Dsp.Tag+'/'+Dsp.Context1+'/ALARM_HYS']</Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="EU" VariableType="LocalizableString">
+          <InitialValue>
+            <Value>
+              <GsLocalizedString>
+                <LanguageValues>
+                  <LanguageValue Name="en">
+                    <Content>%</Content>
+                  </LanguageValue>
+                  <LanguageValue Name="jp">
+                    <Content>%</Content>
+                  </LanguageValue>
+                  <LanguageValue Name="ru">
+                    <Content>%</Content>
+                  </LanguageValue>
+                  <LanguageValue Name="zh">
+                    <Content>%</Content>
+                  </LanguageValue>
+                </LanguageValues>
+              </GsLocalizedString>
+            </Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="EU_Visibility" VariableType="Boolean">
+          <InitialValue>
+            <Value>True</Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="DecPlaces" VariableType="Integer">
+          <InitialValue>
+            <Value>1</Value>
+          </InitialValue>
+        </GraphicVariable>
+        <SelectionCustomPropertyVariable Name="CustomWrites" VariableType="Selection">
+          <InitialValue>
+            <Value>2</Value>
+          </InitialValue>
+        </SelectionCustomPropertyVariable>
+        <GraphicVariable Name="SISConfirm" VariableType="GraphicsExpression">
+          <InitialValue>
+            <Value>
+            </Value>
+          </InitialValue>
+        </GraphicVariable>
+      </Variables>
+    </Gem>
+    <Gem Name="CD_ALARM_DATA1" Definition="Library.CD_ALARM_DATA">
+      <Height>
+        <Value>202692</Value>
+      </Height>
+      <Width>
+        <Value>3119461</Value>
+      </Width>
+      <X>
+        <Value>2161842</Value>
+      </X>
+      <Y>
+        <Value>928066</Value>
+      </Y>
+      <Variables>
+        <GraphicVariable Name="Tag" VariableType="ControlTagName">
+          <InitialValue>
+            <Reference>Dsp.Tag</Reference>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="AlarmName" VariableType="String">
+          <InitialValue>
+            <Value>HI_HI_ALM</Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="AlarmLabel" VariableType="LocalizableString">
+          <InitialValue>
+            <Reference>GL.Library.S_HHAlarm</Reference>
+          </InitialValue>
+        </GraphicVariable>
+      </Variables>
+    </Gem>
+    <Gem Name="CD_ALARM_DATA2" Definition="Library.CD_ALARM_DATA">
+      <Height>
+        <Value>202692</Value>
+      </Height>
+      <Width>
+        <Value>3119461</Value>
+      </Width>
+      <X>
+        <Value>2161842</Value>
+      </X>
+      <Y>
+        <Value>1090041</Value>
+      </Y>
+      <Variables>
+        <GraphicVariable Name="Tag" VariableType="ControlTagName">
+          <InitialValue>
+            <Reference>Dsp.Tag</Reference>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="AlarmName" VariableType="String">
+          <InitialValue>
+            <Value>HI_ALM</Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="AlarmLabel" VariableType="LocalizableString">
+          <InitialValue>
+            <Reference>GL.Library.S_HAlarm</Reference>
+          </InitialValue>
+        </GraphicVariable>
+      </Variables>
+    </Gem>
+    <Gem Name="CD_ALARM_DATA3" Definition="Library.CD_ALARM_DATA">
+      <Height>
+        <Value>202692</Value>
+      </Height>
+      <Width>
+        <Value>3119461</Value>
+      </Width>
+      <X>
+        <Value>2161842</Value>
+      </X>
+      <Y>
+        <Value>1246632</Value>
+      </Y>
+      <Variables>
+        <GraphicVariable Name="Tag" VariableType="ControlTagName">
+          <InitialValue>
+            <Reference>Dsp.Tag</Reference>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="AlarmName" VariableType="String">
+          <InitialValue>
+            <Value>DV_HI_ALM</Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="AlarmLabel" VariableType="LocalizableString">
+          <InitialValue>
+            <Reference>GL.Library.S_DevHAlarm</Reference>
+          </InitialValue>
+        </GraphicVariable>
+      </Variables>
+    </Gem>
+    <Gem Name="CD_ALARM_DATA4" Definition="Library.CD_ALARM_DATA">
+      <Height>
+        <Value>202692</Value>
+      </Height>
+      <Width>
+        <Value>3119461</Value>
+      </Width>
+      <X>
+        <Value>2161842</Value>
+      </X>
+      <Y>
+        <Value>1408557</Value>
+      </Y>
+      <Variables>
+        <GraphicVariable Name="Tag" VariableType="ControlTagName">
+          <InitialValue>
+            <Reference>Dsp.Tag</Reference>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="AlarmName" VariableType="String">
+          <InitialValue>
+            <Value>DV_LO_ALM</Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="AlarmLabel" VariableType="LocalizableString">
+          <InitialValue>
+            <Reference>GL.Library.S_DevLAlarm</Reference>
+          </InitialValue>
+        </GraphicVariable>
+      </Variables>
+    </Gem>
+    <Gem Name="CD_ALARM_DATA5" Definition="Library.CD_ALARM_DATA">
+      <Height>
+        <Value>202692</Value>
+      </Height>
+      <Width>
+        <Value>3119461</Value>
+      </Width>
+      <X>
+        <Value>2161842</Value>
+      </X>
+      <Y>
+        <Value>1570482</Value>
+      </Y>
+      <Variables>
+        <GraphicVariable Name="Tag" VariableType="ControlTagName">
+          <InitialValue>
+            <Reference>Dsp.Tag</Reference>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="AlarmName" VariableType="String">
+          <InitialValue>
+            <Value>LO_ALM</Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="AlarmLabel" VariableType="LocalizableString">
+          <InitialValue>
+            <Reference>GL.Library.S_LAlarm</Reference>
+          </InitialValue>
+        </GraphicVariable>
+      </Variables>
+    </Gem>
+    <Gem Name="CD_ALARM_DATA6" Definition="Library.CD_ALARM_DATA">
+      <Height>
+        <Value>202692</Value>
+      </Height>
+      <Width>
+        <Value>3119461</Value>
+      </Width>
+      <X>
+        <Value>2161842</Value>
+      </X>
+      <Y>
+        <Value>1732534</Value>
+      </Y>
+      <Variables>
+        <GraphicVariable Name="Tag" VariableType="ControlTagName">
+          <InitialValue>
+            <Reference>Dsp.Tag</Reference>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="AlarmName" VariableType="String">
+          <InitialValue>
+            <Value>LO_LO_ALM</Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="AlarmLabel" VariableType="LocalizableString">
+          <InitialValue>
+            <Reference>GL.Library.S_LLAlarm</Reference>
+          </InitialValue>
+        </GraphicVariable>
+      </Variables>
+    </Gem>
+    <Gem Name="CD_ALARM_DATA7" Definition="Library.CD_ALARM_DATA">
+      <Height>
+        <Value>202692</Value>
+      </Height>
+      <Width>
+        <Value>3119461</Value>
+      </Width>
+      <X>
+        <Value>2161842</Value>
+      </X>
+      <Y>
+        <Value>1896491</Value>
+      </Y>
+      <Variables>
+        <GraphicVariable Name="Tag" VariableType="ControlTagName">
+          <InitialValue>
+            <Reference>Dsp.Tag</Reference>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="AlarmName" VariableType="String">
+          <InitialValue>
+            <Value>PVBAD_ALM</Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="AlarmLabel" VariableType="LocalizableString">
+          <InitialValue>
+            <Reference>GL.Library.S_PVBadAlarm</Reference>
+          </InitialValue>
+        </GraphicVariable>
+      </Variables>
+    </Gem>
+    <Gem Name="CD_ALM_PRI_ADJ1" Definition="Library.CD_ALM_PRI_ADJ">
+      <Height>
+        <Value>160464</Value>
+      </Height>
+      <Width>
+        <Value>1279336</Value>
+      </Width>
+      <X>
+        <Value>2161842</Value>
+      </X>
+      <Y>
+        <Value>2080313</Value>
+      </Y>
+      <Variables>
+        <GraphicVariable Name="Tag" VariableType="ControlTagName">
+          <InitialValue>
+            <Reference>Dsp.Tag</Reference>
+          </InitialValue>
+        </GraphicVariable>
+      </Variables>
+    </Gem>
+    <CheckBox Name="chkboxEnable">
+      <DataSource>
+        <Value>DLSYS[Dsp.Tag+'/'+Dsp.Context1+'/ENABLE.CV']</Value>
+      </DataSource>
+      <Font>
+        <Reference>GL.Library.S_CheckBoxSizeFont</Reference>
+      </Font>
+      <Foreground>
+        <Reference>GL.Library.S_InfoTextColor</Reference>
+      </Foreground>
+      <Height>
+        <Value>152400</Value>
+      </Height>
+      <Label>
+        <Value>
+          <LanguageValues>
+            <LanguageValue Name="en">
+              <Content>
+              </Content>
+            </LanguageValue>
+            <LanguageValue Name="jp">
+              <Content>
+              </Content>
+            </LanguageValue>
+            <LanguageValue Name="ru">
+              <Content>
+              </Content>
+            </LanguageValue>
+            <LanguageValue Name="zh">
+              <Content>
+              </Content>
+            </LanguageValue>
+          </LanguageValues>
+        </Value>
+      </Label>
+      <LineColor>
+        <Value>
+          <SolidColorBrush>
+            <Color>#FFFFFF</Color>
+          </SolidColorBrush>
+        </Value>
+      </LineColor>
+      <VerticalTextAlignment>
+        <Value>Center</Value>
+      </VerticalTextAlignment>
+      <Width>
+        <Value>152400</Value>
+      </Width>
+      <Writes>
+        <Value>NormalWrite</Value>
+      </Writes>
+      <X>
+        <Value>1104900</Value>
+      </X>
+      <Y>
+        <Value>2280031</Value>
+      </Y>
+    </CheckBox>
+    <Text Name="txtEnable">
+      <Font>
+        <Reference>GL.Library.S_InfoTextFont</Reference>
+      </Font>
+      <Foreground>
+        <Reference>GL.Library.S_InfoTextColor</Reference>
+      </Foreground>
+      <Height>
+        <Value>160464</Value>
+      </Height>
+      <Label>
+        <Reference>GL.Library.S_Enable</Reference>
+      </Label>
+      <Title>
+        <Value>
+          <LanguageValues>
+            <LanguageValue Name="en">
+              <Content>txtEnable</Content>
+            </LanguageValue>
+            <LanguageValue Name="jp">
+              <Content>txtEnable</Content>
+            </LanguageValue>
+            <LanguageValue Name="ru">
+              <Content>txtEnable</Content>
+            </LanguageValue>
+            <LanguageValue Name="zh">
+              <Content>txtEnable</Content>
+            </LanguageValue>
+          </LanguageValues>
+        </Value>
+      </Title>
+      <VerticalTextAlignment>
+        <Value>Center</Value>
+      </VerticalTextAlignment>
+      <Width>
+        <Value>444500</Value>
+      </Width>
+      <X>
+        <Value>85374</Value>
+      </X>
+      <Y>
+        <Value>2280031</Value>
+      </Y>
+    </Text>
+    <Gem Name="CD_DIAGNOSTICS1" Definition="Library.CD_DIAGNOSTICS">
+      <Height>
+        <Value>2478024</Value>
+      </Height>
+      <Width>
+        <Value>3017520</Value>
+      </Width>
+      <X>
+        <Value>2159000</Value>
+      </X>
+      <Y>
+        <Value>2512314</Value>
+      </Y>
+      <Variables>
+        <GraphicVariable Name="Tag" VariableType="ControlTagName">
+          <InitialValue>
+            <Reference>Dsp.Tag</Reference>
+          </InitialValue>
+        </GraphicVariable>
+      </Variables>
+    </Gem>
+    <Gem Name="CD_COND_ALM1" Definition="Library.CD_COND_ALM">
+      <Height>
+        <Value>155448</Value>
+      </Height>
+      <Width>
+        <Value>219456</Value>
+      </Width>
+      <X>
+        <Value>526156</Value>
+      </X>
+      <Y>
+        <Value>753437</Value>
+      </Y>
+      <Variables>
+        <GraphicVariable Name="Tag" VariableType="ControlTagName">
+          <InitialValue>
+            <Reference>Dsp.Tag</Reference>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="FB" VariableType="String">
+          <InitialValue>
+            <Reference>Dsp.Context1</Reference>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="CondAlmDetect" VariableType="String">
+          <InitialValue>
+            <Value>HI_HYS</Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="CondAlmDsp" VariableType="String">
+          <InitialValue>
+            <Value>CAlarmAnalogDev</Value>
+          </InitialValue>
+        </GraphicVariable>
+      </Variables>
+    </Gem>
+    <Text Name="txtEnab">
+      <Font>
+        <Reference>GL.Library.S_InfoTextFont</Reference>
+      </Font>
+      <Foreground>
+        <Reference>GL.Library.S_InfoTextColor</Reference>
+      </Foreground>
+      <Height>
+        <Value>160464</Value>
+      </Height>
+      <Label>
+        <Reference>GL.Library.S_AlmEnab</Reference>
+      </Label>
+      <VerticalTextAlignment>
+        <Value>Center</Value>
+      </VerticalTextAlignment>
+      <Width>
+        <Value>295529</Value>
+      </Width>
+      <X>
+        <Value>4171915</Value>
+      </X>
+      <Y>
+        <Value>737362</Value>
+      </Y>
+    </Text>
+    <Text Name="txtOOS">
+      <Font>
+        <Reference>GL.Library.S_InfoTextFont</Reference>
+      </Font>
+      <Foreground>
+        <Reference>GL.Library.S_InfoTextColor</Reference>
+      </Foreground>
+      <Height>
+        <Value>160464</Value>
+      </Height>
+      <Label>
+        <Reference>GL.Library.S_AlmOOS</Reference>
+      </Label>
+      <VerticalTextAlignment>
+        <Value>Center</Value>
+      </VerticalTextAlignment>
+      <Width>
+        <Value>263779</Value>
+      </Width>
+      <X>
+        <Value>4466838</Value>
+      </X>
+      <Y>
+        <Value>737362</Value>
+      </Y>
+    </Text>
+    <Text Name="txtShlv">
+      <Font>
+        <Reference>GL.Library.S_InfoTextFont</Reference>
+      </Font>
+      <Foreground>
+        <Reference>GL.Library.S_InfoTextColor</Reference>
+      </Foreground>
+      <Height>
+        <Value>160464</Value>
+      </Height>
+      <Label>
+        <Reference>GL.Library.S_AlmShlv</Reference>
+      </Label>
+      <VerticalTextAlignment>
+        <Value>Center</Value>
+      </VerticalTextAlignment>
+      <Width>
+        <Value>244440</Value>
+      </Width>
+      <X>
+        <Value>4752814</Value>
+      </X>
+      <Y>
+        <Value>737362</Value>
+      </Y>
+    </Text>
+    <Text Name="txtHelp">
+      <Font>
+        <Reference>GL.Library.S_InfoTextFont</Reference>
+      </Font>
+      <Foreground>
+        <Reference>GL.Library.S_InfoTextColor</Reference>
+      </Foreground>
+      <Height>
+        <Value>160464</Value>
+      </Height>
+      <Label>
+        <Reference>GL.Library.S_AlmHelp</Reference>
+      </Label>
+      <VerticalTextAlignment>
+        <Value>Center</Value>
+      </VerticalTextAlignment>
+      <Width>
+        <Value>265049</Value>
+      </Width>
+      <X>
+        <Value>5026261</Value>
+      </X>
+      <Y>
+        <Value>737362</Value>
+      </Y>
+    </Text>
+    <Gem Name="SG_Alarms1" Definition="Library.SG_Alarms">
+      <Height>
+        <Value>182880</Value>
+      </Height>
+      <Width>
+        <Value>182880</Value>
+      </Width>
+      <X>
+        <Value>5091684</Value>
+      </X>
+      <Y>
+        <Value>111252</Value>
+      </Y>
+      <Variables>
+        <GraphicVariable Name="Tag" VariableType="ControlTagName">
+          <InitialValue>
+            <Reference>Dsp.Tag</Reference>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="AlmParam" VariableType="String">
+          <InitialValue>
+            <Value>ALARMS</Value>
+          </InitialValue>
+        </GraphicVariable>
+        <GraphicVariable Name="AlmIndex" VariableType="String">
+          <InitialValue>
+            <Value>1</Value>
+          </InitialValue>
+        </GraphicVariable>
+      </Variables>
+    </Gem>
+  </ContainedElements>
+  <EventHandlers>
+    <EventHandler Event="OnOpen">
+      <Script>
+        <ExpressionString>Dsp.IsAutoTagDeselectionEnabled = false;
+GL.Library.F_SetHistoryTag(Dsp.Tag);</ExpressionString>
+      </Script>
+    </EventHandler>
+    <EventHandler Event="OnActivated">
+      <Script>
+        <ExpressionString>DL.SelectTag(Dsp.Tag);</ExpressionString>
+      </Script>
+    </EventHandler>
+  </EventHandlers>
+  <WindowTitle>
+    <Value>Dsp.Tag</Value>
+  </WindowTitle>
+  <BackgroundColor>
+    <Reference>GL.Library.S_DispBackColor</Reference>
+  </BackgroundColor>
+  <Width>
+    <Value>5330952</Value>
+  </Width>
+  <Height>
+    <Value>5016500</Value>
+  </Height>
+  <LockAspectRatio>
+    <Value>True</Value>
+  </LockAspectRatio>
+  <ContextualDisplayType>
+    <Value>Detail</Value>
+  </ContextualDisplayType>
+  <Tag>
+    <GsLocalizedString>
+      <LanguageValues>
+        <LanguageValue Name="en">
+          <Content>Module Name</Content>
+        </LanguageValue>
+        <LanguageValue Name="jp">
+          <Content>ﾓｼﾞｭｰﾙ名</Content>
+        </LanguageValue>
+        <LanguageValue Name="ru">
+          <Content>Module Name</Content>
+        </LanguageValue>
+        <LanguageValue Name="zh">
+          <Content>模块名称</Content>
+        </LanguageValue>
+      </LanguageValues>
+    </GsLocalizedString>
+  </Tag>
+  <Context1Description>
+    <GsLocalizedString>
+      <LanguageValues>
+        <LanguageValue Name="en">
+          <Content>Function Block Name</Content>
+        </LanguageValue>
+        <LanguageValue Name="jp">
+          <Content>ﾌｧﾝｸｼｮﾝ ﾌﾞﾛｯｸ名</Content>
+        </LanguageValue>
+        <LanguageValue Name="ru">
+          <Content>Function Block Name</Content>
+        </LanguageValue>
+        <LanguageValue Name="zh">
+          <Content>功能块名称</Content>
+        </LanguageValue>
+      </LanguageValues>
+    </GsLocalizedString>
+  </Context1Description>
+  <Context1DefaultValue>ALM1</Context1DefaultValue>
+</ContextualDisplay>
