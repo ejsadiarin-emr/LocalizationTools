@@ -74,7 +74,8 @@ public partial class MainWindow : Window
                         success = true,
                         results = parsed.Results,
                         fileMetrics = parsed.FileMetrics,
-                        summary = parsed.Summary
+                        summary = parsed.Summary,
+                        rules = parsed.Rules
                     }, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
                     WebView.CoreWebView2.PostWebMessageAsJson(resultJson);
                 }

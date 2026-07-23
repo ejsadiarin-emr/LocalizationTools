@@ -14,7 +14,9 @@ const filtersPanel = document.getElementById('filtersPanel');
 const caRulesToggle = document.getElementById('ca-rules-toggle');
 
 let allResults = [];
-let activeFilters = new Set(['LOC001', 'LOC002', 'LOC003', 'LOC004', 'LOC005', 'LOC006', 'LOC007', 'LOC010']);
+let rulesMap = {};
+let activeFilters = new Set(['LOC001', 'LOC002', 'LOC003', 'LOC004', 'LOC005', 'LOC006', 'LOC007', 'LOC010', 'LOC011', 'LOC012', 'LOC013', 'LOC014', 'LOC015']);
+let expandedRowId = null;
 
 projectPathInput.addEventListener('input', () => {
     runBtn.disabled = !projectPathInput.value.trim();
@@ -80,8 +82,10 @@ host.addEventListener('message', (event) => {
         if (data.success) {
             setStatus('success', `Analysis complete: ${data.results.length} diagnostics found`);
             allResults = data.results;
+            rulesMap = data.rules || {};
             updateSummary(data.summary);
             resultsSection.classList.remove('hidden');
+            expandedRowId = null;
             renderResults();
         } else {
             setStatus('error', `Analysis failed: ${data.error}`);
@@ -128,13 +132,19 @@ function renderResults() {
         return;
     }
 
-    for (const r of filtered) {
+    for (let i = 0; i < filtered.length; i++) {
+        const r = filtered[i];
+        const rowId = `row-${i}`;
         const row = document.createElement('tr');
         const shortPath = r.filePath.replace(/^.*[\\/]/, '');
         const severityClass = `severity-${r.level}`;
         const isCa = r.ruleId.startsWith('CA');
         const badgeClass = isCa ? 'badge-ca' : 'badge-loc';
         const badgeLabel = isCa ? 'CA' : 'LOC';
+        const isExpanded = expandedRowId === rowId;
+        row.className = isExpanded ? 'row-expanded' : '';
+        row.dataset.rowId = rowId;
+        row.dataset.index = i;
         row.innerHTML = `
             <td><span class="${badgeClass}">${badgeLabel}</span> <strong>${r.ruleId}</strong></td>
             <td class="${severityClass}">${r.level}</td>
@@ -142,8 +152,101 @@ function renderResults() {
             <td class="line-num">${r.startLine}</td>
             <td class="message">${escapeHtml(r.message)}</td>
         `;
+        row.addEventListener('click', () => toggleExpandedRow(rowId, r, i));
         resultsBody.appendChild(row);
+
+        if (isExpanded) {
+            const detailRow = document.createElement('tr');
+            detailRow.className = 'expanded-detail';
+            detailRow.innerHTML = `<td colspan="5">${renderExpandedContent(r)}</td>`;
+            resultsBody.appendChild(detailRow);
+        }
     }
+}
+
+function toggleExpandedRow(rowId, result, index) {
+    if (expandedRowId === rowId) {
+        expandedRowId = null;
+    } else {
+        expandedRowId = rowId;
+    }
+    renderResults();
+}
+
+function renderExpandedContent(r) {
+    const rule = rulesMap[r.ruleId] || {};
+    const sections = [];
+
+    sections.push(`<div class="expanded-panel">`);
+
+    sections.push(`<div class="expanded-section">`);
+    sections.push(`<h4 class="expanded-heading">Metadata</h4>`);
+    sections.push(`<div class="expanded-grid">`);
+    sections.push(`<div class="expanded-field"><span class="expanded-label">Rule:</span> <span class="expanded-value">${escapeHtml(r.ruleId)}</span></div>`);
+    sections.push(`<div class="expanded-field"><span class="expanded-label">Severity:</span> <span class="expanded-value severity-${r.level}">${escapeHtml(r.level)}</span></div>`);
+    if (r.classification) {
+        sections.push(`<div class="expanded-field"><span class="expanded-label">Classification:</span> <span class="expanded-value"><span class="classification-badge">${escapeHtml(r.classification)}</span></span></div>`);
+    }
+    sections.push(`<div class="expanded-field"><span class="expanded-label">Location:</span> <span class="expanded-value file-path">${escapeHtml(r.filePath)}:${r.startLine}</span></div>`);
+    sections.push(`</div></div>`);
+
+    if (r.sourceSnippet) {
+        sections.push(`<div class="expanded-section">`);
+        sections.push(`<h4 class="expanded-heading">Source Code</h4>`);
+        sections.push(`<div class="source-snippet">`);
+        sections.push(`<div class="source-line highlighted"><span class="line-num">${r.startLine}</span><span class="line-content">${escapeHtml(r.sourceSnippet)}</span></div>`);
+        sections.push(`</div>`);
+        sections.push(`</div>`);
+    }
+
+    if (r.stringLiteral) {
+        sections.push(`<div class="expanded-section">`);
+        sections.push(`<h4 class="expanded-heading">String Literal</h4>`);
+        sections.push(`<pre class="source-snippet"><code>${escapeHtml(r.stringLiteral)}</code></pre>`);
+        sections.push(`</div>`);
+    }
+
+    sections.push(`<div class="expanded-section">`);
+    sections.push(`<h4 class="expanded-heading">Rule Details</h4>`);
+    if (rule.shortDescription) {
+        sections.push(`<p class="rule-description">${escapeHtml(rule.shortDescription)}</p>`);
+    }
+    if (rule.fullDescription && rule.fullDescription !== rule.shortDescription) {
+        sections.push(`<p class="rule-description-full">${escapeHtml(rule.fullDescription)}</p>`);
+    }
+    if (rule.helpUri) {
+        sections.push(`<p class="rule-link"><a href="${escapeHtml(rule.helpUri)}" target="_blank">View documentation</a></p>`);
+    }
+    if (rule.tags && rule.tags.length > 0) {
+        sections.push(`<div class="rule-tags">${rule.tags.map(t => `<span class="tag-badge">${escapeHtml(t)}</span>`).join(' ')}</div>`);
+    }
+    if (rule.relatedRules && rule.relatedRules.length > 0) {
+        const relatedLinks = rule.relatedRules.map(rr => {
+            const isCa = rr.startsWith('CA');
+            const uri = isCa
+                ? `https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/${rr.toLowerCase()}`
+                : `https://github.com/your-org/LocalizationAnalyzers/blob/main/docs/${rr}.md`;
+            return `<a href="${uri}" target="_blank" class="related-rule-link">${rr}</a>`;
+        }).join(' ');
+        sections.push(`<p class="related-rules"><span class="expanded-label">Related rules:</span> ${relatedLinks}</p>`);
+    }
+    sections.push(`</div>`);
+
+    if (rule.exampleBad || rule.exampleGood) {
+        sections.push(`<div class="expanded-section">`);
+        sections.push(`<h4 class="expanded-heading">Code Example</h4>`);
+        sections.push(`<div class="example-container">`);
+        if (rule.exampleBad) {
+            sections.push(`<div class="example-block example-bad"><span class="example-label">Bad (current)</span><pre><code>${escapeHtml(rule.exampleBad)}</code></pre></div>`);
+        }
+        if (rule.exampleGood) {
+            sections.push(`<div class="example-block example-good"><span class="example-label">Good (fix)</span><pre><code>${escapeHtml(rule.exampleGood)}</code></pre></div>`);
+        }
+        sections.push(`</div></div>`);
+    }
+
+    sections.push(`</div>`);
+    return sections.join('');
 }
 
 function escapeHtml(str) {

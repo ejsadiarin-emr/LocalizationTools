@@ -14,6 +14,65 @@ public class SarifParser
         var properties = run.TryGetProperty("properties", out var propsEl) ? propsEl : default;
         var invocations = run.TryGetProperty("invocations", out var invEl) ? invEl : default;
 
+        var rules = new Dictionary<string, RuleMetadata>();
+        if (run.TryGetProperty("tool", out var tool) &&
+            tool.TryGetProperty("driver", out var driver) &&
+            driver.TryGetProperty("rules", out var rulesEl) &&
+            rulesEl.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var rule in rulesEl.EnumerateArray())
+            {
+                var ruleId = rule.TryGetProperty("id", out var idEl) ? idEl.GetString() ?? "" : "";
+                if (string.IsNullOrEmpty(ruleId)) continue;
+
+                var shortDesc = rule.TryGetProperty("shortDescription", out var sd) &&
+                    sd.TryGetProperty("text", out var sdText) ? sdText.GetString() ?? "" : "";
+                var fullDesc = rule.TryGetProperty("fullDescription", out var fd) &&
+                    fd.TryGetProperty("text", out var fdText) ? fdText.GetString() ?? "" : "";
+                var helpUri = rule.TryGetProperty("helpUri", out var hu) ? hu.GetString() : null;
+
+                var tags = new List<string>();
+                if (rule.TryGetProperty("properties", out var ruleProps) &&
+                    ruleProps.TryGetProperty("tags", out var tagsEl) &&
+                    tagsEl.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var tag in tagsEl.EnumerateArray())
+                        tags.Add(tag.GetString() ?? "");
+                }
+
+                var relatedRules = new List<string>();
+                if (ruleProps.ValueKind == JsonValueKind.Object &&
+                    ruleProps.TryGetProperty("relatedRules", out var rrEl) &&
+                    rrEl.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var rr in rrEl.EnumerateArray())
+                        relatedRules.Add(rr.GetString() ?? "");
+                }
+
+                string? exampleBad = null;
+                string? exampleGood = null;
+                if (ruleProps.ValueKind == JsonValueKind.Object &&
+                    ruleProps.TryGetProperty("example", out var exEl) &&
+                    exEl.ValueKind == JsonValueKind.Object)
+                {
+                    if (exEl.TryGetProperty("bad", out var badEl)) exampleBad = badEl.GetString();
+                    if (exEl.TryGetProperty("good", out var goodEl)) exampleGood = goodEl.GetString();
+                }
+
+                rules[ruleId] = new RuleMetadata
+                {
+                    RuleId = ruleId,
+                    ShortDescription = shortDesc,
+                    FullDescription = fullDesc,
+                    HelpUri = helpUri,
+                    Tags = tags,
+                    RelatedRules = relatedRules,
+                    ExampleBad = exampleBad,
+                    ExampleGood = exampleGood
+                };
+            }
+        }
+
         var parsedResults = new List<SarifResult>();
         if (results.ValueKind == JsonValueKind.Array)
         {
@@ -24,6 +83,20 @@ public class SarifParser
                 var region = location.GetProperty("region");
                 var artifact = location.GetProperty("artifactLocation");
 
+                string? classification = null;
+                string? sourceSnippet = null;
+                string? stringLiteral = null;
+
+                if (r.TryGetProperty("properties", out var resultProps))
+                {
+                    if (resultProps.TryGetProperty("classification", out var classEl))
+                        classification = classEl.GetString();
+                    if (resultProps.TryGetProperty("sourceSnippet", out var snippetEl))
+                        sourceSnippet = snippetEl.GetString();
+                    if (resultProps.TryGetProperty("stringLiteral", out var literalEl))
+                        stringLiteral = literalEl.GetString();
+                }
+
                 parsedResults.Add(new SarifResult
                 {
                     RuleId = r.GetProperty("ruleId").GetString() ?? "",
@@ -33,7 +106,10 @@ public class SarifParser
                     StartLine = region.GetProperty("startLine").GetInt32(),
                     StartColumn = region.GetProperty("startColumn").GetInt32(),
                     EndLine = region.GetProperty("endLine").GetInt32(),
-                    EndColumn = region.GetProperty("endColumn").GetInt32()
+                    EndColumn = region.GetProperty("endColumn").GetInt32(),
+                    Classification = classification ?? "",
+                    SourceSnippet = sourceSnippet,
+                    StringLiteral = stringLiteral
                 });
             }
         }
@@ -77,6 +153,7 @@ public class SarifParser
             Results = parsedResults,
             FileMetrics = fileMetrics,
             Summary = summary,
+            Rules = rules,
             RawSarif = sarifJson
         };
     }
@@ -87,6 +164,7 @@ public class AnalysisResult
     public List<SarifResult> Results { get; set; } = new();
     public List<FileMetric> FileMetrics { get; set; } = new();
     public AnalysisSummary Summary { get; set; } = new();
+    public Dictionary<string, RuleMetadata> Rules { get; set; } = new();
     public string RawSarif { get; set; } = "";
 }
 
@@ -100,6 +178,9 @@ public class SarifResult
     public int StartColumn { get; set; }
     public int EndLine { get; set; }
     public int EndColumn { get; set; }
+    public string Classification { get; set; } = "";
+    public string? SourceSnippet { get; set; }
+    public string? StringLiteral { get; set; }
 }
 
 public class FileMetric
@@ -120,4 +201,16 @@ public class AnalysisSummary
     public Dictionary<string, int> DiagnosticsBySeverity { get; set; } = new();
     public DateTime? StartTimeUtc { get; set; }
     public DateTime? EndTimeUtc { get; set; }
+}
+
+public class RuleMetadata
+{
+    public string RuleId { get; set; } = "";
+    public string ShortDescription { get; set; } = "";
+    public string FullDescription { get; set; } = "";
+    public string? HelpUri { get; set; }
+    public List<string> Tags { get; set; } = new();
+    public List<string> RelatedRules { get; set; } = new();
+    public string? ExampleBad { get; set; }
+    public string? ExampleGood { get; set; }
 }

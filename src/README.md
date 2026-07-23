@@ -166,6 +166,11 @@ dotnet_diagnostic.LOC005.severity = warning
 dotnet_diagnostic.LOC006.severity = suggestion
 dotnet_diagnostic.LOC007.severity = warning
 dotnet_diagnostic.LOC010.severity = suggestion
+dotnet_diagnostic.LOC011.severity = warning
+dotnet_diagnostic.LOC012.severity = warning
+dotnet_diagnostic.LOC013.severity = suggestion
+dotnet_diagnostic.LOC014.severity = warning
+dotnet_diagnostic.LOC015.severity = suggestion
 ```
 
 ### Suppression
@@ -215,7 +220,21 @@ Both platforms require SARIF version 2.1.0. The `dotnet build /p:ErrorLog=` comm
       "driver": {
         "name": "LocalizationAnalyzers",
         "version": "1.0.0",
-        "rules": [...]
+        "rules": [{
+          "id": "LOC001",
+          "name": "LOC001",
+          "shortDescription": { "text": "String literal in conditional expression" },
+          "fullDescription": { "text": "..." },
+          "helpUri": "https://github.com/.../LOC001",
+          "defaultConfiguration": { "level": "warning" },
+          "properties": { "category": "Localization" },
+          "tags": ["behavioral"],
+          "relatedRules": ["CA1303"],
+          "example": {
+            "bad": "if (lang == \"en\") { ... }",
+            "good": "if (culture == Culture.En) { ... }"
+          }
+        }]
       }
     },
     "results": [{
@@ -227,7 +246,12 @@ Both platforms require SARIF version 2.1.0. The `dotnet build /p:ErrorLog=` comm
           "artifactLocation": { "uri": "file:///path/to/File.cs" },
           "region": { "startLine": 10, "startColumn": 15 }
         }
-      }]
+      }],
+      "properties": {
+        "classification": "hardcoded",
+        "sourceSnippet": "if (lang == \"Running\") {",
+        "stringLiteral": "Running"
+      }
     }]
   }]
 }
@@ -274,9 +298,15 @@ dotnet run --project src/LocalizationAnalyzers.Desktop/ --no-build -c Release -f
 
 - Browse to select a `.csproj` file or directory
 - Run analysis with a single click
-- View results in a sortable, filterable table
+- View results in a sortable, filterable table (LOC001-LOC015, plus optional CA rules)
+- **Expandable row details**: Click any row to see:
+  - **Metadata**: Rule ID, severity, classification badge (hardcoded/concatenated/interpolated/etc.), file location
+  - **Source Code**: Offending source line snippet
+  - **String Literal**: The problematic string value
+  - **Rule Details**: Description, help link, related rules, tags
+  - **Code Example**: Bad/good code side-by-side (when available)
 - Summary panel with total files, diagnostics, and execution time
-- Rule filter toggles for LOC001-LOC010
+- Rule filter toggles for all LOC rules (LOC001-LOC015)
 - Export results to SARIF file
 
 ## CI Integration
@@ -323,6 +353,18 @@ dotnet pack
 ```
 
 The NuGet package will be generated in the `bin/Release` directory.
+
+## Future Enhancements
+
+### Rule Metadata (Pending Localization Data)
+
+The following per-rule metadata properties are planned but deferred until localization sample data (RC, RESX files) is analyzed:
+
+- **impact**: localization impact rating (high/medium/low) — requires understanding of real-world string usage patterns
+- **fixability**: whether a rule has an automatic code fix (automatic/manual/none)
+- **ciGate**: whether a rule is enforced in CI pipelines (true/false)
+
+These properties will be added to the SARIF `rules[]` array once we have sufficient data to make informed decisions about their values.
 
 ## License
 

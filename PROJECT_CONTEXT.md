@@ -55,7 +55,7 @@ These are related but **should be built and reasoned about separately** — do n
 **Location:** `src/` (see that folder's own README.md for build/usage details)
 
 - Classifies string literals in C# source as **Behavioral** or **Display** using syntax-level heuristics.
-- Emits standard Roslyn diagnostics:
+- Emits standard Roslyn diagnostics (15 LOC rules + optional CA rules):
   - `LOC001` (Warning) — string literal in a conditional (if/switch/ternary)
   - `LOC002` (Warning) — string literal passed to a data-access/lookup call (Find/Get/Query)
   - `LOC003` (Warning) — string literal in an equality comparison (==/.Equals())
@@ -64,9 +64,15 @@ These are related but **should be built and reasoned about separately** — do n
   - `LOC006` (Info) — string method called without StringComparison
   - `LOC007` (Warning) — hardcoded pluralization logic (ternary comparing Count/Length)
   - `LOC010` (Info) — display string not yet routed through `Localize(...)`
+  - `LOC011` (Warning) — string interpolation in localizable context
+  - `LOC012` (Warning) — hardcoded DateTime format without CultureInfo
+  - `LOC013` (Info) — dynamic/computed resource keys
+  - `LOC014` (Warning) — English-only pluralization logic
+  - `LOC015` (Info) — punctuation concatenated outside translatable strings
 - Includes a **CLI tool** (`SarifCli.cs`) for running analyzers outside the IDE, with per-file metrics (timing, size, line count).
-- Includes a **WPF + WebView2 desktop app** (`LocalizationAnalyzers.Desktop/`) for GUI-based analysis.
-- Diagnostics flow into **SARIF** (`dotnet build /p:ErrorLog=results.sarif`), which SonarQube and Azure DevOps both consume natively.
+- Includes a **WPF + WebView2 desktop app** (`LocalizationAnalyzers.Desktop/`) for GUI-based analysis with expandable row details.
+- Diagnostics flow into **SARIF 2.1.0** (`dotnet build /p:ErrorLog=results.sarif`), which SonarQube and Azure DevOps both consume natively.
+- **Enriched SARIF output**: Results include `classification`, `sourceSnippet`, and `stringLiteral` properties. Rules include `helpUri`, `tags`, `relatedRules`, and `example` (bad/good code snippets).
 - Ships a code fix (lightbulb in IDE) that extracts a LOC010 string into a `Localize("suggested.key")` call.
 - **CI strategy:** Gate builds on *new* LOC001–LOC003 occurrences only (diff against a committed SARIF baseline). Do not fail builds on the entire legacy backlog.
 
@@ -198,7 +204,8 @@ This is the bridge between "the analyzer found a problem" and "the problem is no
 |---|---|---|
 | Tool 1 — Roslyn Analyzer (LOC001–LOC007, LOC010, LOC011–LOC015) + code fix | ✅ Complete — 73 tests passing, NuGet package generated | `src/` |
 | Tool 1 — CLI with per-file metrics | ✅ Complete — SARIF 2.1.0 + invocations[] + fileMetrics[] | `src/SarifCli.cs` |
-| Tool 1 — Desktop App (WPF + WebView2) | ✅ Complete — GUI for running analysis | `src/LocalizationAnalyzers.Desktop/` |
+| Tool 1 — CLI enriched SARIF | ✅ Complete — classification, sourceSnippet, stringLiteral, rule metadata (helpUri, tags, examples) | `src/SarifCli.cs` |
+| Tool 1 — Desktop App (WPF + WebView2) | ✅ Complete — GUI with expandable row details | `src/LocalizationAnalyzers.Desktop/` |
 | Tool 1 — SARIF → SonarQube/Azure DevOps integration | ✅ Complete — SARIF 2.1.0 compatible | `src/README.md` |
 | Tool 1 — CI baseline-gate (fail only on new violations) | Documented approach, tooling not yet built | — |
 | Tool 2 — `dv-extract-strings` CLI | Not started | — |

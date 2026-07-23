@@ -338,21 +338,7 @@ public static class SarifCli
             .SelectMany(a => a.SupportedDiagnostics)
             .GroupBy(d => d.Id)
             .Select(g => g.First())
-            .Select(d => new
-            {
-                id = d.Id,
-                name = d.Id,
-                shortDescription = new { text = d.Title.ToString() },
-                fullDescription = new { text = d.Description.ToString() },
-                defaultConfiguration = new { level = d.DefaultSeverity switch
-                {
-                    DiagnosticSeverity.Error => "error",
-                    DiagnosticSeverity.Warning => "warning",
-                    DiagnosticSeverity.Info => "note",
-                    _ => "warning"
-                } },
-                properties = new { category = d.Category }
-            })
+            .Select(d => GetEnrichedRule(d, includeCaRules))
             .ToList();
 
         var driver = new
@@ -421,6 +407,148 @@ public static class SarifCli
         };
     }
 
+    private static object GetEnrichedRule(DiagnosticDescriptor d, bool includeCaRules)
+    {
+        var ruleId = d.Id;
+        var isCa = ruleId.StartsWith("CA");
+
+        var helpUri = isCa
+            ? $"https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/{ruleId.ToLowerInvariant()}"
+            : $"https://github.com/your-org/LocalizationAnalyzers/blob/main/docs/{ruleId}.md";
+
+        return new
+        {
+            id = ruleId,
+            name = ruleId,
+            shortDescription = new { text = d.Title.ToString() },
+            fullDescription = new { text = d.Description.ToString() },
+            helpUri = helpUri,
+            defaultConfiguration = new { level = d.DefaultSeverity switch
+            {
+                DiagnosticSeverity.Error => "error",
+                DiagnosticSeverity.Warning => "warning",
+                DiagnosticSeverity.Info => "note",
+                _ => "warning"
+            } },
+            properties = new { category = d.Category },
+            tags = GetRuleTags(ruleId),
+            relatedRules = GetRelatedRules(ruleId),
+            example = GetRuleExample(ruleId)
+        };
+    }
+
+    private static string[] GetRuleTags(string ruleId)
+    {
+        return ruleId switch
+        {
+            "LOC001" or "LOC002" or "LOC003" => new[] { "behavioral" },
+            "LOC004" or "LOC005" or "LOC006" or "LOC007" or "LOC011" or "LOC012" or "LOC014" or "LOC015" => new[] { "formatting" },
+            "LOC010" => new[] { "display" },
+            "LOC013" => new[] { "structural" },
+            _ when ruleId.StartsWith("CA") => new[] { "globalization" },
+            _ => Array.Empty<string>()
+        };
+    }
+
+    private static string[] GetRelatedRules(string ruleId)
+    {
+        return ruleId switch
+        {
+            "LOC001" => new[] { "CA1303" },
+            "LOC002" => new[] { "CA1303" },
+            "LOC003" => new[] { "CA1303", "CA1307" },
+            "LOC004" => new[] { "CA1303" },
+            "LOC005" => new[] { "CA1305" },
+            "LOC006" => new[] { "CA1307", "CA1309", "CA1310" },
+            "LOC007" => new[] { "CA1303" },
+            "LOC010" => new[] { "CA1303" },
+            "LOC011" => new[] { "CA1303" },
+            "LOC012" => new[] { "CA1305" },
+            "LOC014" => new[] { "CA1303" },
+            "LOC015" => new[] { "CA1303" },
+            _ => Array.Empty<string>()
+        };
+    }
+
+    private static object GetRuleExample(string ruleId)
+    {
+        return ruleId switch
+        {
+            "LOC001" => new { bad = "if (lang == \"en\") { ... }", good = "if (culture == Culture.En) { ... }" },
+            "LOC002" => new { bad = "db.Find(\"Start Pump\")", good = "db.Find(ObjectKeys.StartPump)" },
+            "LOC003" => new { bad = "bool match = status == \"Running\";", good = "bool match = status == StatusConstants.Running;" },
+            "LOC004" => new { bad = "Console.WriteLine(\"Hello \" + name);", good = "Console.WriteLine(Localize(\"greeting.hello\", name));" },
+            "LOC005" => new { bad = "now.ToString(\"dd/MM/yyyy\")", good = "now.ToString(\"d\", CultureInfo.CurrentCulture)" },
+            "LOC006" => new { bad = "text.Contains(\"hello\")", good = "text.Contains(\"hello\", StringComparison.Ordinal)" },
+            "LOC007" => new { bad = "count == 1 ? \"item\" : \"items\"", good = "Pluralize(count, \"item\", \"items\")" },
+            "LOC010" => new { bad = "label.Text = \"Hello World\"", good = "label.Text = Localize(\"greeting.hello\")" },
+            "LOC011" => new { bad = "$\"Hello {name}\"", good = "Localize(\"greeting.hello\", name)" },
+            "LOC012" => new { bad = "date.ToString(\"MM/dd/yyyy\")", good = "date.ToString(\"d\", CultureInfo.CurrentCulture)" },
+            "LOC013" => new { bad = "localizer[$\"key.{variant}\"]", good = "localizer[\"key.variant\"]" },
+            "LOC014" => new { bad = "count == 1 ? \"file\" : \"files\"", good = "Pluralize(count, \"file\", \"files\")" },
+            "LOC015" => new { bad = "\"Hello \" + name + \"!\"", good = "Localize(\"greeting.hello.name\", name)" },
+            _ => new { bad = "", good = "" }
+        };
+    }
+
+    private static string GetClassification(string ruleId)
+    {
+        return ruleId switch
+        {
+            "LOC001" or "LOC002" or "LOC003" => "hardcoded",
+            "LOC004" or "LOC015" => "concatenated",
+            "LOC011" => "interpolated",
+            "LOC005" or "LOC012" => "format-string",
+            "LOC007" or "LOC014" => "plural-form",
+            "LOC010" => "display-string",
+            "LOC013" => "dynamic-key",
+            "LOC006" => "culture-default",
+            _ when ruleId.StartsWith("CA") => "hardcoded",
+            _ => "unknown"
+        };
+    }
+
+    private static string? GetSourceSnippet(Diagnostic diagnostic)
+    {
+        try
+        {
+            var location = diagnostic.Location;
+            var sourceTree = location.SourceTree;
+            if (sourceTree == null)
+                return null;
+
+            var span = location.GetLineSpan();
+            var lineIndex = span.StartLinePosition.Line;
+            var text = sourceTree.GetText();
+            if (text == null || lineIndex >= text.Lines.Count)
+                return null;
+
+            return text.Lines[lineIndex].ToString().TrimEnd();
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string? GetStringLiteral(Diagnostic diagnostic)
+    {
+        var message = diagnostic.GetMessage();
+        if (string.IsNullOrEmpty(message))
+            return null;
+
+        // Extract string literal from message: "String literal '{value}' used in..."
+        var start = message.IndexOf('\'');
+        if (start < 0)
+            return null;
+        var end = message.IndexOf('\'', start + 1);
+        if (end < 0)
+            return null;
+
+        var value = message.Substring(start + 1, end - start - 1);
+        return string.IsNullOrEmpty(value) ? null : value;
+    }
+
     private static object CreateSarifResult(Diagnostic diagnostic)
     {
         var location = diagnostic.Location;
@@ -456,6 +584,12 @@ public static class SarifCli
                         }
                     }
                 }
+            },
+            properties = new
+            {
+                classification = GetClassification(diagnostic.Id),
+                sourceSnippet = GetSourceSnippet(diagnostic),
+                stringLiteral = GetStringLiteral(diagnostic)
             }
         };
     }
