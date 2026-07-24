@@ -190,5 +190,85 @@ class TestClass
             var dv002s = diagnostics.Where(d => d.Id == "LOC002").ToList();
             Assert.AreEqual(0, dv002s.Count);
         }
+
+        [TestMethod]
+        public async Task DebugFind_ShouldNotReportLOC002()
+        {
+            var source = @"
+class TestClass
+{
+    void TestMethod()
+    {
+        var result = Debug.Find(""test"");
+    }
+}";
+            var diagnostics = await GetDiagnostics(source, new Analyzers.StringInDataAccessAnalyzer());
+            var dv002s = diagnostics.Where(d => d.Id == "LOC002").ToList();
+            Assert.AreEqual(0, dv002s.Count);
+        }
+
+        [TestMethod]
+        public async Task DbgQuery_ShouldNotReportLOC002()
+        {
+            var source = @"
+class TestClass
+{
+    void TestMethod()
+    {
+        var result = Dbg.Query(""test"");
+    }
+}";
+            var diagnostics = await GetDiagnostics(source, new Analyzers.StringInDataAccessAnalyzer());
+            var dv002s = diagnostics.Where(d => d.Id == "LOC002").ToList();
+            Assert.AreEqual(0, dv002s.Count);
+        }
+
+        [TestMethod]
+        public async Task DisposableFind_ShouldNotReportLOC002()
+        {
+            var source = @"
+class TestClass
+{
+    void TestMethod()
+    {
+        var result = Disposable.Find(""test"");
+    }
+}";
+            var diagnostics = await GetDiagnostics(source, new Analyzers.StringInDataAccessAnalyzer());
+            var dv002s = diagnostics.Where(d => d.Id == "LOC002").ToList();
+            Assert.AreEqual(0, dv002s.Count);
+        }
+
+        [TestMethod]
+        public async Task RepositoryFind_ShouldStillReportLOC002()
+        {
+            var source = @"
+class TestClass
+{
+    void TestMethod()
+    {
+        var result = repository.Find(""Start Pump"");
+    }
+}";
+            var diagnostics = await GetDiagnostics(source, new Analyzers.StringInDataAccessAnalyzer());
+            var dv002s = diagnostics.Where(d => d.Id == "LOC002").ToList();
+            Assert.AreEqual(1, dv002s.Count);
+        }
+
+        [TestMethod]
+        public async Task DbContextGetUsers_ShouldStillReportLOC002()
+        {
+            var source = @"
+class TestClass
+{
+    void TestMethod()
+    {
+        var result = dbContext.GetUsers(""admin"");
+    }
+}";
+            var diagnostics = await GetDiagnostics(source, new Analyzers.StringInDataAccessAnalyzer());
+            var dv002s = diagnostics.Where(d => d.Id == "LOC002").ToList();
+            Assert.AreEqual(1, dv002s.Count);
+        }
     }
 }

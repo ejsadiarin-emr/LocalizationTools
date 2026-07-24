@@ -17,10 +17,10 @@ public class MissingStringComparisonAnalyzer : DiagnosticAnalyzer
     private static readonly ImmutableHashSet<string> StringComparisonMethods =
         ImmutableHashSet.Create(
             "Contains", "StartsWith", "EndsWith", "IndexOf",
-            "Replace", "Equals", "Compare", "TrimStart", "TrimEnd");
+            "Replace", "Equals", "Compare");
 
     private static readonly ImmutableHashSet<string> CultureMethods =
-        ImmutableHashSet.Create("ToLower", "ToUpper", "ToLowerInvariant", "ToUpperInvariant");
+        ImmutableHashSet.Create("ToLower", "ToUpper");
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
         ImmutableArray.Create(DiagnosticDescriptors.LOC006);

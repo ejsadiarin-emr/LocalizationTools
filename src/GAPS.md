@@ -78,10 +78,21 @@ These depend on whether they're displayed to users:
 
 ### Category 4: False positives — FIXED
 
-- ~~LOC002 matches `GetHashCode`, `GetType`, `ToString` (not data access)~~ **Fixed**: changed `Contains` to `StartsWith`
-- ~~LOC010 only catches specific UI property names (misses custom properties)~~ Partially addressed
-- ~~LOC010 doesn't catch `ILogger.Log<T>` generic methods~~ **Fixed**: added suffix-based logger class detection
+- ~~LOC002 matches `GetHashCode`, `GetType`, `ToString` (not data access)~~ **Fixed**: added exclusion sets for `GetHashCode`, `GetType`, `ToString`, `GetAwaiter`, `GetEnumerator`
+- ~~LOC002 matches `Debug`, `Dbg`, `Disposable` via `StartsWith("Db")`~~ **Fixed**: added exclusion set for `Debug`, `Dbg`, `Disposable`
+- ~~LOC006 flags `ToLowerInvariant()`/`ToUpperInvariant()`~~ **Fixed**: removed from `CultureMethods` set (intentionally culture-independent)
+- ~~LOC006 flags `TrimStart()`/`TrimEnd()`~~ **Fixed**: removed from `StringComparisonMethods` set (no `StringComparison` overload on netstandard2.0)
+- ~~LOC006 misses static `string.Equals(a, b)`~~ **Fixed**: existing semantic analysis already detects this
+- ~~LOC007 operator precedence bug causes false plurals on any `.Count`/`.Length` expression~~ **Fixed**: added parentheses to fix `&&`/`||` precedence
+- ~~LOC010 flags `config.Text = "setting"` (non-UI type)~~ **Fixed**: added lightweight type-suffix checking for assignment targets
+- ~~LOC010 filename-based test detection misses namespace tests~~ **Fixed**: added namespace-based detection with utility exclusion
+- ~~LOC010 misses `GL.Library`/`GL.Resx` resource references~~ **Fixed**: added to resource reference detection list
 - **NEW**: LOC010 now skips `Debug.WriteLine` / `Trace.WriteLine` (not user-facing)
+
+### Category 5: Known limitations (not false positives)
+
+- **LOC001 `IsTrivialString`**: Filters single CJK characters like `"是"`. This is a false negative for CJK codebases but not a false positive — acceptable trade-off
+- **LOC003 `!=` operator**: LOC003 only handles `==` (`EqualsExpression`), not `!=` (`NotEqualsExpression`). This is a missing detection, not a false positive
 
 ## Recommendations
 

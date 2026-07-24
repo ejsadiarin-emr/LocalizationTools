@@ -45,7 +45,7 @@ class TestClass
         }
 
         [TestMethod]
-        public async Task TernaryWithCountGreaterThanZero_ShouldReportLOC007()
+        public async Task TernaryWithCountGreaterThanZero_ShouldNotReportLOC007()
         {
             var source = @"
 using System.Collections.Generic;
@@ -62,7 +62,7 @@ class TestClass
             var compWithAnalyzers = compilation.WithAnalyzers(new[] { (Microsoft.CodeAnalysis.Diagnostics.DiagnosticAnalyzer)analyzer }.ToImmutableArray());
             var diagnostics = await compWithAnalyzers.GetAnalyzerDiagnosticsAsync();
             var loc007s = diagnostics.Where(d => d.Id == "LOC007").ToList();
-            Assert.AreEqual(1, loc007s.Count);
+            Assert.AreEqual(0, loc007s.Count);
         }
 
         [TestMethod]
@@ -167,6 +167,90 @@ class TestClass
             var diagnostics = await compWithAnalyzers.GetAnalyzerDiagnosticsAsync();
             var loc007s = diagnostics.Where(d => d.Id == "LOC007").ToList();
             Assert.AreEqual(0, loc007s.Count);
+        }
+
+        [TestMethod]
+        public async Task CountGreaterThanOne_ShouldReportLOC007()
+        {
+            var source = @"
+using System.Collections.Generic;
+class TestClass
+{
+    void TestMethod()
+    {
+        var items = new List<string> { ""a"", ""b"" };
+        string label = items.Count > 1 ? ""items"" : ""item"";
+    }
+}";
+            var compilation = CreateCompilation(source);
+            var analyzer = new Analyzers.HardcodedPluralLogicAnalyzer();
+            var compWithAnalyzers = compilation.WithAnalyzers(new[] { (Microsoft.CodeAnalysis.Diagnostics.DiagnosticAnalyzer)analyzer }.ToImmutableArray());
+            var diagnostics = await compWithAnalyzers.GetAnalyzerDiagnosticsAsync();
+            var loc007s = diagnostics.Where(d => d.Id == "LOC007").ToList();
+            Assert.AreEqual(1, loc007s.Count);
+        }
+
+        [TestMethod]
+        public async Task CountGreaterThanZero_ShouldNotReportLOC007()
+        {
+            var source = @"
+using System.Collections.Generic;
+class TestClass
+{
+    void TestMethod()
+    {
+        var items = new List<string> { ""a"", ""b"" };
+        string label = items.Count > 0 ? ""empty"" : ""has items"";
+    }
+}";
+            var compilation = CreateCompilation(source);
+            var analyzer = new Analyzers.HardcodedPluralLogicAnalyzer();
+            var compWithAnalyzers = compilation.WithAnalyzers(new[] { (Microsoft.CodeAnalysis.Diagnostics.DiagnosticAnalyzer)analyzer }.ToImmutableArray());
+            var diagnostics = await compWithAnalyzers.GetAnalyzerDiagnosticsAsync();
+            var loc007s = diagnostics.Where(d => d.Id == "LOC007").ToList();
+            Assert.AreEqual(0, loc007s.Count);
+        }
+
+        [TestMethod]
+        public async Task CountOnRight_ShouldReportLOC007()
+        {
+            var source = @"
+using System.Collections.Generic;
+class TestClass
+{
+    void TestMethod()
+    {
+        var items = new List<string> { ""a"", ""b"" };
+        string label = 1 < items.Count ? ""items"" : ""item"";
+    }
+}";
+            var compilation = CreateCompilation(source);
+            var analyzer = new Analyzers.HardcodedPluralLogicAnalyzer();
+            var compWithAnalyzers = compilation.WithAnalyzers(new[] { (Microsoft.CodeAnalysis.Diagnostics.DiagnosticAnalyzer)analyzer }.ToImmutableArray());
+            var diagnostics = await compWithAnalyzers.GetAnalyzerDiagnosticsAsync();
+            var loc007s = diagnostics.Where(d => d.Id == "LOC007").ToList();
+            Assert.AreEqual(1, loc007s.Count);
+        }
+
+        [TestMethod]
+        public async Task ExistingPluralDetection_ShouldStillWork()
+        {
+            var source = @"
+using System.Collections.Generic;
+class TestClass
+{
+    void TestMethod()
+    {
+        var items = new List<string> { ""a"", ""b"" };
+        string label = items.Count == 1 ? ""1 item"" : items.Count + "" items"";
+    }
+}";
+            var compilation = CreateCompilation(source);
+            var analyzer = new Analyzers.HardcodedPluralLogicAnalyzer();
+            var compWithAnalyzers = compilation.WithAnalyzers(new[] { (Microsoft.CodeAnalysis.Diagnostics.DiagnosticAnalyzer)analyzer }.ToImmutableArray());
+            var diagnostics = await compWithAnalyzers.GetAnalyzerDiagnosticsAsync();
+            var loc007s = diagnostics.Where(d => d.Id == "LOC007").ToList();
+            Assert.AreEqual(1, loc007s.Count);
         }
     }
 }

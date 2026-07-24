@@ -49,11 +49,10 @@ public class HardcodedPluralLogicAnalyzer : DiagnosticAnalyzer
     {
         if (condition is BinaryExpressionSyntax binary)
         {
-            var isCompareToZeroOrOne =
-                IsNumericLiteral(binary.Right, 0) || IsNumericLiteral(binary.Right, 1) ||
-                IsNumericLiteral(binary.Left, 0) || IsNumericLiteral(binary.Left, 1);
+            var isCompareToOne =
+                IsNumericLiteral(binary.Right, 1) || IsNumericLiteral(binary.Left, 1);
 
-            if (isCompareToZeroOrOne && IsCountOrSize(binary.Left) || IsCountOrSize(binary.Right))
+            if (isCompareToOne && (IsCountOrSize(binary.Left) || IsCountOrSize(binary.Right)))
                 return true;
         }
 

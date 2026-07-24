@@ -70,6 +70,14 @@ public class DisplayStringAnalyzer : DiagnosticAnalyzer
         else if (assignment.Left is MemberAccessExpressionSyntax memberAccess)
         {
             propertyName = memberAccess.Name.Identifier.Text;
+
+            var typeInfo = context.SemanticModel.GetTypeInfo(memberAccess.Expression, context.CancellationToken);
+            if (typeInfo.Type != null)
+            {
+                var typeName = typeInfo.Type.Name;
+                if (!IsUiType(typeName))
+                    return;
+            }
         }
 
         if (propertyName is null)
@@ -225,7 +233,7 @@ public class DisplayStringAnalyzer : DiagnosticAnalyzer
             if (current is MemberAccessExpressionSyntax memberAccess)
             {
                 var parentName = memberAccess.Expression.ToString();
-                if (parentName is "Strings" or "Resources" or "Translations")
+                if (parentName is "Strings" or "Resources" or "Translations" or "GL.Library" or "GL.Resx")
                     return true;
             }
             current = current.Parent;
@@ -235,19 +243,60 @@ public class DisplayStringAnalyzer : DiagnosticAnalyzer
 
     private static bool IsTestCode(SyntaxNodeAnalysisContext context)
     {
-        var tree = context.Node.SyntaxTree;
+        var node = context.Node;
+        var namespaceName = GetContainingNamespace(node);
+
+        if (!string.IsNullOrEmpty(namespaceName))
+        {
+            if (namespaceName.Contains(".TestUtilities.") ||
+                namespaceName.Contains(".TestHelpers.") ||
+                namespaceName.Contains(".TestFixtures."))
+            {
+                return false;
+            }
+
+            if (namespaceName.Contains(".Tests.") ||
+                namespaceName.Contains(".Test.") ||
+                namespaceName.Contains(".UnitTests.") ||
+                namespaceName.Contains(".IntegrationTests.") ||
+                namespaceName.EndsWith(".Tests") ||
+                namespaceName.EndsWith(".Test") ||
+                namespaceName.EndsWith(".UnitTests") ||
+                namespaceName.EndsWith(".IntegrationTests"))
+            {
+                return true;
+            }
+        }
+
+        var tree = node.SyntaxTree;
         var filePath = tree.FilePath;
 
         if (string.IsNullOrEmpty(filePath))
             return false;
 
         var fileName = Path.GetFileNameWithoutExtension(filePath);
-        if (fileName.Contains("Test", StringComparison.OrdinalIgnoreCase) ||
-            fileName.Contains("Spec", StringComparison.OrdinalIgnoreCase))
+        if (fileName.EndsWith("Tests", StringComparison.OrdinalIgnoreCase) ||
+            fileName.EndsWith("Test", StringComparison.OrdinalIgnoreCase) ||
+            fileName.EndsWith("Specs", StringComparison.OrdinalIgnoreCase) ||
+            fileName.EndsWith("Spec", StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }
 
         return false;
+    }
+
+    private static string? GetContainingNamespace(SyntaxNode node)
+    {
+        var current = node.Parent;
+        while (current != null)
+        {
+            if (current is NamespaceDeclarationSyntax namespaceDecl)
+            {
+                return namespaceDecl.Name.ToString();
+            }
+            current = current.Parent;
+        }
+        return null;
     }
 }

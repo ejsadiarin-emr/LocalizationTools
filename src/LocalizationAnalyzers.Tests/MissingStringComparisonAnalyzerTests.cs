@@ -208,5 +208,168 @@ class TestClass
             var loc006s = diagnostics.Where(d => d.Id == "LOC006").ToList();
             Assert.AreEqual(0, loc006s.Count);
         }
+
+        [TestMethod]
+        public async Task ToLowerInvariant_ShouldNotReportLOC006()
+        {
+            var source = @"
+class TestClass
+{
+    void TestMethod()
+    {
+        string text = ""Hello World"";
+        string lower = text.ToLowerInvariant();
+    }
+}";
+            var compilation = CreateCompilation(source);
+            var analyzer = new Analyzers.MissingStringComparisonAnalyzer();
+            var compWithAnalyzers = compilation.WithAnalyzers(new[] { (Microsoft.CodeAnalysis.Diagnostics.DiagnosticAnalyzer)analyzer }.ToImmutableArray());
+            var diagnostics = await compWithAnalyzers.GetAnalyzerDiagnosticsAsync();
+            var loc006s = diagnostics.Where(d => d.Id == "LOC006").ToList();
+            Assert.AreEqual(0, loc006s.Count);
+        }
+
+        [TestMethod]
+        public async Task ToUpperInvariant_ShouldNotReportLOC006()
+        {
+            var source = @"
+class TestClass
+{
+    void TestMethod()
+    {
+        string text = ""Hello World"";
+        string upper = text.ToUpperInvariant();
+    }
+}";
+            var compilation = CreateCompilation(source);
+            var analyzer = new Analyzers.MissingStringComparisonAnalyzer();
+            var compWithAnalyzers = compilation.WithAnalyzers(new[] { (Microsoft.CodeAnalysis.Diagnostics.DiagnosticAnalyzer)analyzer }.ToImmutableArray());
+            var diagnostics = await compWithAnalyzers.GetAnalyzerDiagnosticsAsync();
+            var loc006s = diagnostics.Where(d => d.Id == "LOC006").ToList();
+            Assert.AreEqual(0, loc006s.Count);
+        }
+
+        [TestMethod]
+        public async Task TrimStart_ShouldNotReportLOC006()
+        {
+            var source = @"
+class TestClass
+{
+    void TestMethod()
+    {
+        string text = ""  Hello"";
+        string trimmed = text.TrimStart();
+    }
+}";
+            var compilation = CreateCompilation(source);
+            var analyzer = new Analyzers.MissingStringComparisonAnalyzer();
+            var compWithAnalyzers = compilation.WithAnalyzers(new[] { (Microsoft.CodeAnalysis.Diagnostics.DiagnosticAnalyzer)analyzer }.ToImmutableArray());
+            var diagnostics = await compWithAnalyzers.GetAnalyzerDiagnosticsAsync();
+            var loc006s = diagnostics.Where(d => d.Id == "LOC006").ToList();
+            Assert.AreEqual(0, loc006s.Count);
+        }
+
+        [TestMethod]
+        public async Task TrimEnd_ShouldNotReportLOC006()
+        {
+            var source = @"
+class TestClass
+{
+    void TestMethod()
+    {
+        string text = ""Hello  "";
+        string trimmed = text.TrimEnd();
+    }
+}";
+            var compilation = CreateCompilation(source);
+            var analyzer = new Analyzers.MissingStringComparisonAnalyzer();
+            var compWithAnalyzers = compilation.WithAnalyzers(new[] { (Microsoft.CodeAnalysis.Diagnostics.DiagnosticAnalyzer)analyzer }.ToImmutableArray());
+            var diagnostics = await compWithAnalyzers.GetAnalyzerDiagnosticsAsync();
+            var loc006s = diagnostics.Where(d => d.Id == "LOC006").ToList();
+            Assert.AreEqual(0, loc006s.Count);
+        }
+
+        [TestMethod]
+        public async Task StaticStringEqualsWithoutComparison_ShouldReportLOC006()
+        {
+            var source = @"
+class TestClass
+{
+    void TestMethod()
+    {
+        string a = ""hello"";
+        string b = ""hello"";
+        bool equal = string.Equals(a, b);
+    }
+}";
+            var compilation = CreateCompilation(source);
+            var analyzer = new Analyzers.MissingStringComparisonAnalyzer();
+            var compWithAnalyzers = compilation.WithAnalyzers(new[] { (Microsoft.CodeAnalysis.Diagnostics.DiagnosticAnalyzer)analyzer }.ToImmutableArray());
+            var diagnostics = await compWithAnalyzers.GetAnalyzerDiagnosticsAsync();
+            var loc006s = diagnostics.Where(d => d.Id == "LOC006").ToList();
+            Assert.AreEqual(1, loc006s.Count);
+        }
+
+        [TestMethod]
+        public async Task StaticStringEqualsWithComparison_ShouldNotReport()
+        {
+            var source = @"
+using System;
+class TestClass
+{
+    void TestMethod()
+    {
+        string a = ""hello"";
+        string b = ""hello"";
+        bool equal = string.Equals(a, b, StringComparison.Ordinal);
+    }
+}";
+            var compilation = CreateCompilation(source);
+            var analyzer = new Analyzers.MissingStringComparisonAnalyzer();
+            var compWithAnalyzers = compilation.WithAnalyzers(new[] { (Microsoft.CodeAnalysis.Diagnostics.DiagnosticAnalyzer)analyzer }.ToImmutableArray());
+            var diagnostics = await compWithAnalyzers.GetAnalyzerDiagnosticsAsync();
+            var loc006s = diagnostics.Where(d => d.Id == "LOC006").ToList();
+            Assert.AreEqual(0, loc006s.Count);
+        }
+
+        [TestMethod]
+        public async Task ToLower_ShouldStillReportLOC006()
+        {
+            var source = @"
+class TestClass
+{
+    void TestMethod()
+    {
+        string text = ""Hello World"";
+        string lower = text.ToLower();
+    }
+}";
+            var compilation = CreateCompilation(source);
+            var analyzer = new Analyzers.MissingStringComparisonAnalyzer();
+            var compWithAnalyzers = compilation.WithAnalyzers(new[] { (Microsoft.CodeAnalysis.Diagnostics.DiagnosticAnalyzer)analyzer }.ToImmutableArray());
+            var diagnostics = await compWithAnalyzers.GetAnalyzerDiagnosticsAsync();
+            var loc006s = diagnostics.Where(d => d.Id == "LOC006").ToList();
+            Assert.AreEqual(1, loc006s.Count);
+        }
+
+        [TestMethod]
+        public async Task ContainsWithTestString_ShouldStillReportLOC006()
+        {
+            var source = @"
+class TestClass
+{
+    void TestMethod()
+    {
+        string text = ""Hello World"";
+        bool found = text.Contains(""test"");
+    }
+}";
+            var compilation = CreateCompilation(source);
+            var analyzer = new Analyzers.MissingStringComparisonAnalyzer();
+            var compWithAnalyzers = compilation.WithAnalyzers(new[] { (Microsoft.CodeAnalysis.Diagnostics.DiagnosticAnalyzer)analyzer }.ToImmutableArray());
+            var diagnostics = await compWithAnalyzers.GetAnalyzerDiagnosticsAsync();
+            var loc006s = diagnostics.Where(d => d.Id == "LOC006").ToList();
+            Assert.AreEqual(1, loc006s.Count);
+        }
     }
 }

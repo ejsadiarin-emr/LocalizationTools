@@ -25,6 +25,14 @@ public class StringInDataAccessAnalyzer : DiagnosticAnalyzer
             "Db", "Database", "Context", "Repository",
             "DbContext", "DataContext", "UnitOfWork");
 
+    private static readonly ImmutableHashSet<string> ExcludeGetMethods =
+        ImmutableHashSet.Create(
+            "GetHashCode", "GetType", "ToString", "GetAwaiter", "GetEnumerator");
+
+    private static readonly ImmutableHashSet<string> ExcludeDbMethods =
+        ImmutableHashSet.Create(
+            "Debug", "Dbg", "Disposable");
+
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
         ImmutableArray.Create(DiagnosticDescriptors.LOC002);
 
@@ -41,10 +49,15 @@ public class StringInDataAccessAnalyzer : DiagnosticAnalyzer
         var invocation = (InvocationExpressionSyntax)context.Node;
 
         string methodName;
+        string? receiverName = null;
 
         if (invocation.Expression is MemberAccessExpressionSyntax memberAccess)
         {
             methodName = memberAccess.Name.Identifier.Text;
+            if (memberAccess.Expression is IdentifierNameSyntax receiverIdentifier)
+            {
+                receiverName = receiverIdentifier.Identifier.Text;
+            }
         }
         else if (invocation.Expression is IdentifierNameSyntax identifierName)
         {
@@ -55,7 +68,7 @@ public class StringInDataAccessAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        if (!IsDataAccessMethod(methodName))
+        if (!IsDataAccessMethod(methodName, receiverName))
             return;
 
         if (invocation.ArgumentList is null)
@@ -76,15 +89,30 @@ public class StringInDataAccessAnalyzer : DiagnosticAnalyzer
         }
     }
 
-    private static bool IsDataAccessMethod(string methodName)
+    private static bool IsDataAccessMethod(string methodName, string? receiverName = null)
     {
         if (DataAccessMethodNames.Contains(methodName))
             return true;
+
+        if (ExcludeGetMethods.Contains(methodName))
+            return false;
+
+        if (ExcludeDbMethods.Contains(methodName))
+            return false;
 
         foreach (var prefix in DatabaseContextNames)
         {
             if (methodName.StartsWith(prefix))
                 return true;
+        }
+
+        if (receiverName != null)
+        {
+            foreach (var prefix in DatabaseContextNames)
+            {
+                if (receiverName.StartsWith(prefix, System.StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
         }
 
         return false;
