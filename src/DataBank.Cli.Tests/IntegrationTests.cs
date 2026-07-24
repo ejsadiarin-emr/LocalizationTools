@@ -6,7 +6,7 @@ namespace DataBank.Cli.Tests;
 public class IntegrationTests
 {
     private static string SamplesDir => Path.Combine(
-        Directory.GetCurrentDirectory(), "..", "..", "..", "..", "..", "samples");
+        Directory.GetCurrentDirectory(), "..", "..", "..", "..", "..", "databank-samples");
 
     [Fact]
     public void Cli_FullRun_ProducesValidOutput()
@@ -31,7 +31,7 @@ public class IntegrationTests
             });
 
             Assert.NotNull(output);
-            Assert.Equal(1, output.Version);
+            Assert.Equal(2, output.Version);
             Assert.NotEmpty(output.Generated);
             Assert.NotEmpty(output.Entries);
 

@@ -5,7 +5,7 @@ namespace DataBank.Cli.Tests;
 public class RcParserTests
 {
     private static string SamplesDir => Path.Combine(
-        Directory.GetCurrentDirectory(), "..", "..", "..", "..", "..", "samples");
+        Directory.GetCurrentDirectory(), "..", "..", "..", "..", "..", "databank-samples");
 
     [Fact]
     public void Parse_SampleRcFile_ExtractsAllEntries()
@@ -115,5 +115,298 @@ public class RcParserTests
     {
         var map = RcParser.ParseResourceH("nonexistent.h");
         Assert.Empty(map);
+    }
+
+    [Fact]
+    public void Parse_DialogBlock_ExtractsCaptionAndControls()
+    {
+        var rc = """
+            LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+            IDD_ABOUTBOX DIALOG 0, 0, 295, 55
+            STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+            CAPTION "About DeltaV"
+            FONT 8, "MS Sans Serif"
+            BEGIN
+                LTEXT           "Version 5.2",IDC_STATIC,40,14,159,8
+                PUSHBUTTON      "OK",IDOK,238,34,32,14
+            END
+            """;
+        var entries = ParseRcString(rc);
+
+        Assert.Equal(3, entries.Count);
+
+        var caption = entries.First(e => e.Key.StartsWith("CAPTION"));
+        Assert.Equal("About DeltaV", caption.Value);
+        Assert.Equal("en", caption.Locale);
+
+        var ltext = entries.First(e => e.Key.StartsWith("LTEXT"));
+        Assert.Equal("Version 5.2", ltext.Value);
+
+        var pushbtn = entries.First(e => e.Key.StartsWith("PUSHBUTTON"));
+        Assert.Equal("OK", pushbtn.Value);
+    }
+
+    [Fact]
+    public void Parse_DialogExBlock_ExtractsEntries()
+    {
+        var rc = """
+            LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+            IDD_MAIN DIALOGEX 0, 0, 235, 298
+            STYLE DS_SETFONT | DS_MODALFRAME
+            CAPTION "Main Dialog"
+            FONT 8, "MS Sans Serif"
+            BEGIN
+                DEFPUSHBUTTON   "Next ->",IDC_NEXT,65,277,50,14
+                GROUPBOX        "Options",IDC_STATIC,56,165,168,79
+                CTEXT           "Centered Text",IDC_STATIC,40,14,159,8
+            END
+            """;
+        var entries = ParseRcString(rc);
+
+        Assert.Equal(4, entries.Count);
+        Assert.Contains(entries, e => e.Key.StartsWith("CAPTION"));
+        Assert.Contains(entries, e => e.Key.StartsWith("DEFPUSHBUTTON"));
+        Assert.Contains(entries, e => e.Key.StartsWith("GROUPBOX"));
+        Assert.Contains(entries, e => e.Key.StartsWith("CTEXT"));
+    }
+
+    [Fact]
+    public void Parse_DialogControl_EmptyString_Skipped()
+    {
+        var rc = """
+            LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+            IDD_TEST DIALOGEX 0, 0, 200, 100
+            BEGIN
+                LTEXT           "",IDC_STATIC,10,10,100,14
+                PUSHBUTTON      "OK",IDOK,10,30,50,14
+            END
+            """;
+        var entries = ParseRcString(rc);
+
+        // Empty LTEXT should be skipped
+        Assert.Single(entries);
+        Assert.Equal("OK", entries[0].Value);
+    }
+
+    [Fact]
+    public void Parse_DialogControl_WithFormatSpecifier_SetsBehavioral()
+    {
+        var rc = """
+            LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+            IDD_TEST DIALOGEX 0, 0, 200, 100
+            BEGIN
+                LTEXT           "Pressure: %d psi",IDC_STATIC,10,10,100,14
+                PUSHBUTTON      "%s",IDOK,10,30,50,14
+            END
+            """;
+        var entries = ParseRcString(rc);
+
+        Assert.Equal(2, entries.Count);
+        Assert.All(entries, e => Assert.True(e.Metadata.IsBehavioral));
+        Assert.Single(entries[0].Metadata.FormatSpecifiers); // %d in LTEXT
+        Assert.Single(entries[1].Metadata.FormatSpecifiers); // %s in PUSHBUTTON
+    }
+
+    [Fact]
+    public void Parse_DialogControl_NoFormatSpecifier_NotBehavioral()
+    {
+        var rc = """
+            LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+            IDD_TEST DIALOGEX 0, 0, 200, 100
+            BEGIN
+                LTEXT           "Hello World",IDC_STATIC,10,10,100,14
+            END
+            """;
+        var entries = ParseRcString(rc);
+
+        Assert.Single(entries);
+        Assert.False(entries[0].Metadata.IsBehavioral);
+        Assert.Empty(entries[0].Metadata.FormatSpecifiers);
+    }
+
+    [Fact]
+    public void Parse_DialogControl_LiteralDoublePercent_NotFormatSpecifier()
+    {
+        var rc = """
+            LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+            IDD_TEST DIALOGEX 0, 0, 200, 100
+            BEGIN
+                LTEXT           "100%% complete",IDC_STATIC,10,10,100,14
+            END
+            """;
+        var entries = ParseRcString(rc);
+
+        Assert.Single(entries);
+        Assert.False(entries[0].Metadata.IsBehavioral);
+    }
+
+    [Fact]
+    public void Parse_DialogControl_WithSymbolMap_ResolvesIds()
+    {
+        var rc = """
+            LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+            IDD_TEST DIALOGEX 0, 0, 200, 100
+            BEGIN
+                PUSHBUTTON      "Submit",IDC_SUBMIT_BTN,10,30,50,14
+            END
+            """;
+        var symbolMap = new Dictionary<int, string> { { 500, "IDC_SUBMIT_BTN" } };
+        var entries = ParseRcString(rc, symbolMap);
+
+        Assert.Single(entries);
+        Assert.Equal("IDC_SUBMIT_BTN", entries[0].Metadata.RcDefine);
+        Assert.Equal(500, entries[0].Metadata.RcId);
+    }
+
+    [Fact]
+    public void Parse_Dialog_TwoBlocks_BothParsed()
+    {
+        var rc = """
+            LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+            IDD_FIRST DIALOGEX 0, 0, 200, 100
+            BEGIN
+                LTEXT           "First Dialog",IDC_STATIC,10,10,100,14
+            END
+
+            IDD_SECOND DIALOGEX 0, 0, 200, 100
+            BEGIN
+                LTEXT           "Second Dialog",IDC_STATIC,10,10,100,14
+            END
+            """;
+        var entries = ParseRcString(rc);
+
+        Assert.Equal(2, entries.Count);
+        Assert.Contains(entries, e => e.Value == "First Dialog");
+        Assert.Contains(entries, e => e.Value == "Second Dialog");
+    }
+
+    [Fact]
+    public void Parse_DesignInfoBlock_Skipped()
+    {
+        var rc = """
+            LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+            #ifdef APSTUDIO_INVOKED
+            BEGIN
+                IDD_TEST, DIALOG
+            END
+            #endif
+
+            IDD_TEST DIALOGEX 0, 0, 200, 100
+            BEGIN
+                LTEXT           "Real Content",IDC_STATIC,10,10,100,14
+            END
+            """;
+        var entries = ParseRcString(rc);
+
+        Assert.Single(entries);
+        Assert.Equal("Real Content", entries[0].Value);
+    }
+
+    [Fact]
+    public void Parse_DialogWithLanguageDirective_LocaleScoping()
+    {
+        var rc = """
+            LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+            IDD_TEST DIALOGEX 0, 0, 200, 100
+            BEGIN
+                LTEXT           "English",IDC_STATIC,10,10,100,14
+            END
+
+            LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+
+            IDD_TEST DIALOGEX 0, 0, 200, 100
+            BEGIN
+                LTEXT           "French",IDC_STATIC,10,10,100,14
+            END
+            """;
+        var entries = ParseRcString(rc);
+
+        Assert.Equal(2, entries.Count);
+        var enEntry = entries.First(e => e.Locale == "en");
+        Assert.Equal("English", enEntry.Value);
+        var frEntry = entries.First(e => e.Locale == "fr");
+        Assert.Equal("French", frEntry.Value);
+    }
+
+    [Fact]
+    public void Parse_DialogControl_ClassNameSkipped_OnlyTextCaptured()
+    {
+        var rc = """
+            LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+            IDD_TEST DIALOGEX 0, 0, 200, 100
+            BEGIN
+                CONTROL         "My Checkbox",IDC_CHECK,"Button",BS_AUTOCHECKBOX,10,10,100,14
+            END
+            """;
+        var entries = ParseRcString(rc);
+
+        Assert.Single(entries);
+        Assert.Equal("My Checkbox", entries[0].Value);
+        Assert.StartsWith("CONTROL::", entries[0].Key);
+    }
+
+    [Fact]
+    public void Parse_ControlWithEmptyText_Skipped()
+    {
+        var rc = """
+            LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+            IDD_TEST DIALOGEX 0, 0, 200, 100
+            BEGIN
+                CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,10,10,100,14
+            END
+            """;
+        var entries = ParseRcString(rc);
+
+        Assert.Empty(entries);
+    }
+
+    [Fact]
+    public void DetectFormatSpecifiers_MultipleSpecifiers_AllDetected()
+    {
+        var metadata = new DataBank.Cli.Models.EntryMetadata();
+        RcParser.DetectFormatSpecifiers("Value: %s, Count: %d, Price: %.2f", metadata);
+
+        Assert.True(metadata.IsBehavioral);
+        Assert.Equal(3, metadata.FormatSpecifiers.Count);
+        Assert.Contains("%s", metadata.FormatSpecifiers);
+        Assert.Contains("%d", metadata.FormatSpecifiers);
+        Assert.Contains("%.2f", metadata.FormatSpecifiers);
+    }
+
+    [Fact]
+    public void DetectFormatSpecifiers_NoSpecifiers_NotBehavioral()
+    {
+        var metadata = new DataBank.Cli.Models.EntryMetadata();
+        RcParser.DetectFormatSpecifiers("Hello World", metadata);
+
+        Assert.False(metadata.IsBehavioral);
+        Assert.Empty(metadata.FormatSpecifiers);
+    }
+
+    private static List<DataBank.Cli.Models.LocalizedStringEntry> ParseRcString(
+        string rcContent, Dictionary<int, string>? symbolMap = null)
+    {
+        var tempFile = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(tempFile, rcContent);
+            return RcParser.Parse(tempFile, symbolMap);
+        }
+        finally
+        {
+            File.Delete(tempFile);
+        }
     }
 }

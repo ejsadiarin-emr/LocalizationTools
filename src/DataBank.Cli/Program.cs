@@ -1,4 +1,5 @@
 using System.Text.Json;
+using DataBank.Cli.Helpers;
 using DataBank.Cli.Models;
 using DataBank.Cli.Parsers;
 
@@ -12,7 +13,12 @@ public class Program
         string? outputPath = null;
         string? format = null;
         string? resourceH = null;
+        string? encodingOverride = null;
+        string? localeOverride = null;
         bool showStats = false;
+        bool showCoverage = false;
+        string? coverageOutputPath = null;
+        bool verbose = false;
 
         // Simple argument parsing
         for (int i = 0; i < args.Length; i++)
@@ -28,8 +34,23 @@ public class Program
                 case "--resource-h":
                     if (i + 1 < args.Length) resourceH = args[++i];
                     break;
+                case "--encoding":
+                    if (i + 1 < args.Length) encodingOverride = args[++i];
+                    break;
+                case "--locale":
+                    if (i + 1 < args.Length) localeOverride = args[++i];
+                    break;
                 case "--stats" or "-s":
                     showStats = true;
+                    break;
+                case "--coverage":
+                    showCoverage = true;
+                    break;
+                case "--coverage-output":
+                    if (i + 1 < args.Length) coverageOutputPath = args[++i];
+                    break;
+                case "--verbose" or "-v":
+                    verbose = true;
                     break;
                 case "--help" or "-h":
                     PrintUsage();
@@ -60,13 +81,15 @@ public class Program
 
         // Discover and parse files
         var entries = new List<LocalizedStringEntry>();
+        var rootDir = Path.GetFullPath(inputDir);
 
         if (format is null || format.Equals("resx", StringComparison.OrdinalIgnoreCase))
         {
             var resxFiles = Directory.GetFiles(inputDir, "*.resx", SearchOption.AllDirectories);
             foreach (var file in resxFiles)
             {
-                entries.AddRange(ResxParser.Parse(file));
+                if (verbose) Console.Error.WriteLine($"Parsing: {Path.GetRelativePath(rootDir, file)}");
+                entries.AddRange(ResxParser.Parse(file, rootDir));
             }
         }
 
@@ -75,7 +98,30 @@ public class Program
             var rcFiles = Directory.GetFiles(inputDir, "*.rc", SearchOption.AllDirectories);
             foreach (var file in rcFiles)
             {
-                entries.AddRange(RcParser.Parse(file, symbolMap));
+                if (verbose) Console.Error.WriteLine($"Parsing: {Path.GetRelativePath(rootDir, file)}");
+                entries.AddRange(RcParser.Parse(file, symbolMap, rootDir));
+            }
+        }
+
+        if (format is null || format.Equals("fhx", StringComparison.OrdinalIgnoreCase))
+        {
+            var fhxFiles = Directory.GetFiles(inputDir, "*.txt", SearchOption.AllDirectories)
+                .Where(f => Path.GetFileName(f).Equals("AlarmWords.txt", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+            foreach (var file in fhxFiles)
+            {
+                if (verbose) Console.Error.WriteLine($"Parsing: {Path.GetRelativePath(rootDir, file)}");
+                entries.AddRange(FhxParser.Parse(file, localeOverride, encodingOverride, rootDir));
+            }
+        }
+
+        if (format is null || format.Equals("ahc", StringComparison.OrdinalIgnoreCase))
+        {
+            var ahcFiles = Directory.GetFiles(inputDir, "*.ahc", SearchOption.AllDirectories);
+            foreach (var file in ahcFiles)
+            {
+                if (verbose) Console.Error.WriteLine($"Parsing: {Path.GetRelativePath(rootDir, file)}");
+                entries.AddRange(AhcParser.Parse(file, encodingOverride, rootDir));
             }
         }
 
@@ -111,6 +157,42 @@ public class Program
         if (showStats)
         {
             PrintStats(entries);
+        }
+
+        if (showCoverage)
+        {
+            var coverageReport = CoverageAnalyzer.Analyze(entries, rootDir);
+
+            if (coverageOutputPath is not null)
+            {
+                var coverageDir = Path.GetDirectoryName(coverageOutputPath);
+                if (!string.IsNullOrEmpty(coverageDir) && !Directory.Exists(coverageDir))
+                    Directory.CreateDirectory(coverageDir);
+
+                var coverageJson = JsonSerializer.Serialize(coverageReport, options);
+                File.WriteAllText(coverageOutputPath, coverageJson);
+                Console.WriteLine($"Coverage report written to {coverageOutputPath}");
+            }
+            else
+            {
+                Console.WriteLine();
+                Console.WriteLine("=== Coverage Report ===");
+                Console.WriteLine($"Overall completion: {coverageReport.Summary.OverallCompletionPercentage}%");
+                Console.WriteLine($"Total EN keys: {coverageReport.Summary.TotalEnKeys}");
+                Console.WriteLine($"Total translated keys: {coverageReport.Summary.TotalTranslatedKeys}");
+                Console.WriteLine($"Missing keys: {coverageReport.Summary.TotalMissingKeys}");
+                Console.WriteLine($"Orphaned keys: {coverageReport.Summary.TotalOrphanedKeys}");
+
+                if (coverageReport.Summary.ByLocale.Count > 0)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("By locale:");
+                    foreach (var locale in coverageReport.Summary.ByLocale)
+                    {
+                        Console.WriteLine($"  {locale.Locale}: {locale.CompletionPercentage}% ({locale.TranslatedKeys}/{locale.EnKeys})");
+                    }
+                }
+            }
         }
 
         return 0;
@@ -152,9 +234,14 @@ public class Program
         Console.WriteLine();
         Console.WriteLine("Options:");
         Console.WriteLine("  --output, -o <path>    Output file path (default: ./data-bank.json)");
-        Console.WriteLine("  --format, -f <format>  Filter by format: resx or rc");
+        Console.WriteLine("  --format, -f <format>  Filter by format: resx, rc, fhx, ahc");
         Console.WriteLine("  --resource-h <path>    Path to resource.h for .rc symbol resolution");
         Console.WriteLine("  --stats, -s            Print summary statistics");
+        Console.WriteLine("  --coverage             Generate coverage analysis report");
+        Console.WriteLine("  --coverage-output      Write coverage report to file (default: stdout)");
+        Console.WriteLine("  --encoding <enc>       Override file encoding (e.g., windows-1252, cp936)");
+        Console.WriteLine("  --locale <locale>      Override locale for FHX Translated files");
+        Console.WriteLine("  --verbose, -v          Print per-file parsing progress to stderr");
         Console.WriteLine("  --help, -h             Show this help message");
     }
 }

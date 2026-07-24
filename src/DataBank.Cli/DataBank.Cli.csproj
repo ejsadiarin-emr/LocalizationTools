@@ -10,4 +10,13 @@
     <AssemblyName>dv-extract</AssemblyName>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="8.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Helpers\EncodingDetector.cs" Link="Helpers\EncodingDetector.cs" />
+    <Compile Include="..\Helpers\CoverageAnalyzer.cs" Link="Helpers\CoverageAnalyzer.cs" />
+  </ItemGroup>
+
 </Project>

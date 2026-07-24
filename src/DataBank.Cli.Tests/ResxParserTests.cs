@@ -5,7 +5,7 @@ namespace DataBank.Cli.Tests;
 public class ResxParserTests
 {
     private static string SamplesDir => Path.Combine(
-        Directory.GetCurrentDirectory(), "..", "..", "..", "..", "..", "samples");
+        Directory.GetCurrentDirectory(), "..", "..", "..", "..", "..", "databank-samples");
 
     [Fact]
     public void Parse_BaseResxFile_ExtractsAllEntries()

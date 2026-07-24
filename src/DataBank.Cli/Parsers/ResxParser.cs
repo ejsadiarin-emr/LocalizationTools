@@ -9,11 +9,13 @@ public static partial class ResxParser
     private static readonly XNamespace Xsd = "http://www.w3.org/2001/XMLSchema";
     private static readonly XNamespace MsData = "urn:schemas-microsoft-com:xml-msdata";
 
-    public static List<LocalizedStringEntry> Parse(string filePath)
+    public static List<LocalizedStringEntry> Parse(string filePath, string? rootDir = null)
     {
         var entries = new List<LocalizedStringEntry>();
         var locale = DetectLocale(filePath);
-        var relativePath = Path.GetFileName(filePath);
+        var relativePath = rootDir is not null
+            ? Path.GetRelativePath(rootDir, filePath)
+            : Path.GetFileName(filePath);
 
         try
         {
@@ -29,9 +31,9 @@ public static partial class ResxParser
                     entries.Add(entry);
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // TODO: handle malformed XML gracefully
+            Console.Error.WriteLine($"Warning: Failed to parse {filePath}: {ex.Message}");
         }
 
         return entries;
