@@ -3,6 +3,8 @@
 ### Requirement: Frontend connects to DataBank API
 The web frontend (inside WebView2) SHALL establish connection to DataBank REST API endpoints.
 
+> **TEMPORARY NOTE**: For快速 validation, the frontend will load `data-bank.json` directly from disk via C# code-behind instead of calling the API. This allows immediate visual validation without MongoDB/API setup. When ready, replace JSON loading with API fetch calls.
+
 #### Scenario: API base URL configuration
 - **WHEN** web frontend starts
 - **THEN** system reads API base URL from configuration (default `http://localhost:5000`)
@@ -15,6 +17,8 @@ The web frontend (inside WebView2) SHALL establish connection to DataBank REST A
 
 ### Requirement: Frontend fetches entries from API
 The web frontend SHALL retrieve localization entries from the API via fetch().
+
+> **TEMPORARY ALTERNATIVE**: Load entries from `data-bank.json` file via C# code-behind. The JSON file contains the same data structure as the API response.
 
 #### Scenario: Fetch all entries
 - **WHEN** user navigates to table view or dashboard

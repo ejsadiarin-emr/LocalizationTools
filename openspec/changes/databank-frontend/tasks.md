@@ -106,3 +106,47 @@
 - [ ] 10.10 Verify Next/Previous navigation in detail view
 - [ ] 10.11 Verify Back to Table preserves filter state
 - [ ] 10.12 Verify error handling when API is unreachable
+
+---
+
+## TEMPORARY: JSON File Loading Phase (Fast Validation)
+
+> **Purpose**: Quickly validate frontend rendering and UX before MongoDB/API investment
+> **Data Source**: `data-bank.json` output from DataBank CLI tool
+> **Migration**: Replace JSON loading with API fetch when ready
+
+### T1. JSON File Loading Infrastructure
+
+- [ ] T1.1 Add "Load DataBank JSON" button to MainWindow.xaml UI
+- [ ] T1.2 Implement OpenFileDialog in C# code-behind to select `data-bank.json` file
+- [ ] T1.3 Add WebMessageReceived handler for `{ action: 'loadJson' }` message from web frontend
+- [ ] T1.4 Implement JSON file reading and parsing in C# (System.Text.Json)
+- [ ] T1.5 Post parsed entries array to web frontend via `{ action: 'loadData', entries: [...] }`
+- [ ] T1.6 Add error handling for invalid JSON or missing file
+
+### T2. Web Frontend JSON Loading
+
+- [ ] T2.1 Add `loadDataFromJson()` function in app.js that listens for `loadData` message
+- [ ] T2.2 Store received entries in `allEntries` cache variable
+- [ ] T2.3 Trigger dashboard/table render after data load
+- [ ] T2.4 Add loading state during file read operation
+- [ ] T2.5 Display success message with entry count after load
+
+### T3. Simplified Data Flow (No API)
+
+- [ ] T3.1 Remove API connectivity check on startup (temporarily)
+- [ ] T3.2 Remove API base URL configuration (temporarily)
+- [ ] T3.3 Keep all client-side filtering/search/pagination logic unchanged
+- [ ] T3.4 Keep all dashboard statistics computation unchanged
+- [ ] T3.5 Keep all Chart.js/Fuse.js integration unchanged
+
+### T4. Verification of Temporary Phase
+
+- [ ] T4.1 Verify WPF app launches and shows "Load DataBank JSON" button
+- [ ] T4.2 Verify file dialog opens and allows selecting `data-bank.json`
+- [ ] T4.3 Verify JSON is parsed and entries are displayed in table
+- [ ] T4.4 Verify locale filter shows all unique locales from loaded data
+- [ ] T4.5 Verify format filter shows all unique formats (resx, rc, fhx, ahc)
+- [ ] T4.6 Verify search works on loaded data
+- [ ] T4.7 Verify dashboard shows correct statistics from loaded data
+- [ ] T4.8 Verify entry detail view shows all metadata from loaded data

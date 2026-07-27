@@ -3,6 +3,8 @@
 ### Requirement: Table displays localization entries
 The system SHALL display a table in the web frontend (inside WebView2) showing all localization entries with required columns.
 
+> **TEMPORARY NOTE**: For快速 validation, entries are loaded from `data-bank.json` file via C# code-behind instead of API. The table rendering, filtering, and search logic remain identical regardless of data source.
+
 #### Scenario: Table renders with all columns
 - **WHEN** user navigates to table view
 - **THEN** web frontend fetches entries from DataBank API (`GET /api/entries`)

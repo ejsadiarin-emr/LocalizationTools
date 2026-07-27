@@ -56,3 +56,44 @@ None - this is entirely new functionality with no existing spec changes needed.
 - Connects to DataBank API service (separate deployment or local)
 - Web frontend loaded locally via WebView2 (no IIS/Kestrel needed)
 - No backend code changes required
+
+---
+
+## Temporary Phase: JSON File Loading (Fast Validation)
+
+> **NOTE**: This section documents a temporary approach for快速 idea validation. The full API/MongoDB integration remains the end goal.
+
+### Why Temporary Phase
+
+Before investing in MongoDB + web API service, we want to quickly validate:
+1. How the data renders in the frontend table view
+2. Whether the filtering/search UX works as expected
+3. If the data model (keys, locale, source, metadata) meets UI requirements
+
+### Temporary Approach
+
+Instead of calling the DataBank API, the frontend will:
+1. Load `data-bank.json` directly from the local filesystem via WebView2
+2. Parse the JSON and display entries in the table view
+3. Support filtering by locale, format, and search by key/source string
+
+### What Changes
+
+- **Data Source**: Load `data-bank.json` from disk instead of API
+- **No API Required**: Skip MongoDB and web service for now
+- **Simplified C# Code-Behind**: Handle file dialog to select JSON file, read and parse, post to web frontend
+
+### What Remains the Same
+
+- Table view UI, filtering, search, color coding
+- Dashboard statistics (computed from loaded JSON)
+- Entry detail view
+- All client-side logic (Chart.js, Fuse.js)
+
+### Migration Path
+
+When ready for full implementation:
+1. Replace JSON file loading with API fetch calls
+2. Add MongoDB storage layer
+3. Add web API service endpoints
+4. Frontend UI remains unchanged (only data source changes)

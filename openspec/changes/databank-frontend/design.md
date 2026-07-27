@@ -114,6 +114,13 @@ The DataBank system has a CLI tool for extracting localization data and a REST A
   - React state/context: Only if using React
   - Redux/MobX: Overkill for this scope
 
+**8. Temporary Data Source: JSON File Loading**
+- **Decision**: For快速 validation, load `data-bank.json` directly from disk via C# code-behind instead of calling API
+- **Rationale**: Allows immediate visual validation without MongoDB/API setup
+- **Pattern**: C# handles file I/O (OpenFileDialog → read JSON → parse → post to WebView2), web frontend receives parsed entries array
+- **Migration**: When API is ready, replace `window.chrome.webview.postMessage({ action: 'loadData', entries })` with `fetch('/api/entries')`
+- **File Detection**: CLI output `data-bank.json` contains all entries with source format, locale, key, value, metadata
+
 ## Risks / Trade-offs
 
 **[Risk] WebView2 Runtime Availability** →
