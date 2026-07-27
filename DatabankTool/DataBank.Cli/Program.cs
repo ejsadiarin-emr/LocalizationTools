@@ -129,6 +129,16 @@ public class Program
             }
         }
 
+        if (format is null || format.Equals("json", StringComparison.OrdinalIgnoreCase))
+        {
+            var jsonFiles = Directory.GetFiles(inputDir, "translate.*.json", SearchOption.AllDirectories);
+            foreach (var file in jsonFiles)
+            {
+                if (verbose) Console.Error.WriteLine($"Parsing: {Path.GetRelativePath(rootDir, file)}");
+                entries.AddRange(JsonParser.Parse(file, rootDir));
+            }
+        }
+
         if (entries.Count == 0)
         {
             Console.WriteLine("No localization entries found.");
@@ -244,7 +254,7 @@ public class Program
         Console.WriteLine();
         Console.WriteLine("Options:");
         Console.WriteLine("  --output, -o <path>    Output file path (default: ./data-bank.json)");
-        Console.WriteLine("  --format, -f <format>  Filter by format: resx, rc, fhx, ahc");
+        Console.WriteLine("  --format, -f <format>  Filter by format: resx, rc, fhx, ahc, json");
         Console.WriteLine("  --resource-h <path>    Path to resource.h for .rc symbol resolution");
         Console.WriteLine("  --stats, -s            Print summary statistics");
         Console.WriteLine("  --coverage             Generate coverage analysis report");

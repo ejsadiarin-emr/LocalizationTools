@@ -109,3 +109,4 @@ test-artifacts/
 **/*.lscache
 .opencode
 .env
+**/*/wwwroot
