@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataBank Tool</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>DataBank Tool</h1>
+        </header>
+        <main>
+            <section class="input-section">
+                <h2>Select Directory</h2>
+                <button id="browseBtn" class="btn">Browse...</button>
+                <div id="selectedPath" class="path-display">No directory selected</div>
+            </section>
+            <section class="action-section">
+                <button id="runBtn" class="btn btn-primary" disabled>Run Extraction</button>
+            </section>
+            <section class="output-section">
+                <h2>Results</h2>
+                <pre id="output" class="output-area">Select a directory and run extraction to see results.</pre>
+            </section>
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

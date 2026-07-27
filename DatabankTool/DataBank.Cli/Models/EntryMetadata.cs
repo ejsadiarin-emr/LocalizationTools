@@ -8,4 +8,6 @@ public class EntryMetadata
     public bool IsBehavioral { get; set; }
     public List<string> FormatSpecifiers { get; set; } = [];
     public bool DoNotTranslate { get; set; }
+    public bool IsTranslated { get; set; }
+    public TranslationStatus TranslationStatus { get; set; } = TranslationStatus.Untranslated;
 }

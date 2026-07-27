@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using DataBank.Cli.Models;
 
 namespace DataBank.Cli.Tests;
@@ -6,7 +7,7 @@ namespace DataBank.Cli.Tests;
 public class IntegrationTests
 {
     private static string SamplesDir => Path.Combine(
-        Directory.GetCurrentDirectory(), "..", "..", "..", "..", "..", "databank-samples");
+        Directory.GetCurrentDirectory(), "..", "..", "..", "..", "..", "l10n-files");
 
     [Fact]
     public void Cli_FullRun_ProducesValidOutput()
@@ -27,7 +28,8 @@ public class IntegrationTests
             var json = File.ReadAllText(outputPath);
             var output = JsonSerializer.Deserialize<DataBankOutput>(json, new JsonSerializerOptions
             {
-                PropertyNameCaseInsensitive = true
+                PropertyNameCaseInsensitive = true,
+                Converters = { new JsonStringEnumConverter() }
             });
 
             Assert.NotNull(output);
@@ -66,7 +68,8 @@ public class IntegrationTests
             var json = File.ReadAllText(outputPath);
             var output = JsonSerializer.Deserialize<DataBankOutput>(json, new JsonSerializerOptions
             {
-                PropertyNameCaseInsensitive = true
+                PropertyNameCaseInsensitive = true,
+                Converters = { new JsonStringEnumConverter() }
             });
 
             Assert.NotNull(output);
@@ -100,6 +103,81 @@ public class IntegrationTests
         finally
         {
             Directory.Delete(emptyDir, true);
+            if (File.Exists(outputPath))
+                File.Delete(outputPath);
+        }
+    }
+
+    [Fact]
+    public void Cli_FlagUntranslated_ProducesOutputWithTranslationFields()
+    {
+        var outputPath = Path.Combine(Path.GetTempPath(), $"databank-test-{Guid.NewGuid():N}.json");
+
+        try
+        {
+            var exitCode = DataBank.Cli.Program.Main([
+                SamplesDir,
+                "--output", outputPath,
+                "--flag-untranslated"
+            ]);
+
+            Assert.Equal(0, exitCode);
+            Assert.True(File.Exists(outputPath));
+
+            var json = File.ReadAllText(outputPath);
+            var output = JsonSerializer.Deserialize<DataBankOutput>(json, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                Converters = { new JsonStringEnumConverter() }
+            });
+
+            Assert.NotNull(output);
+            Assert.NotNull(output.TranslationSummary);
+
+            Assert.NotEmpty(output.Entries);
+            Assert.All(output.Entries, e =>
+            {
+                Assert.True(e.Metadata.IsTranslated || !e.Metadata.IsTranslated);
+            });
+
+            Assert.True(output.TranslationSummary.Overall.Translated >= 0);
+            Assert.True(output.TranslationSummary.Overall.Untranslated >= 0);
+            Assert.NotEmpty(output.TranslationSummary.ByLocale);
+        }
+        finally
+        {
+            if (File.Exists(outputPath))
+                File.Delete(outputPath);
+        }
+    }
+
+    [Fact]
+    public void Cli_WithoutFlagUntranslated_SummaryIsNull()
+    {
+        var outputPath = Path.Combine(Path.GetTempPath(), $"databank-test-{Guid.NewGuid():N}.json");
+
+        try
+        {
+            var exitCode = DataBank.Cli.Program.Main([
+                SamplesDir,
+                "--output", outputPath
+            ]);
+
+            Assert.Equal(0, exitCode);
+            Assert.True(File.Exists(outputPath));
+
+            var json = File.ReadAllText(outputPath);
+            var output = JsonSerializer.Deserialize<DataBankOutput>(json, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                Converters = { new JsonStringEnumConverter() }
+            });
+
+            Assert.NotNull(output);
+            Assert.Null(output.TranslationSummary);
+        }
+        finally
+        {
             if (File.Exists(outputPath))
                 File.Delete(outputPath);
         }

@@ -1,7 +1,7 @@
-.PHONY: build build-analyzer build-cli build-desktop test clean analyze analyze-test analyze-test-ca restore pack run-desktop publish-desktop ci
+.PHONY: build build-analyzer build-cli build-desktop test clean analyze analyze-test analyze-test-ca restore pack run-desktop publish-desktop ci build-databank build-databank-cli build-databank-desktop run-databank-desktop test-databank clean-databank restore-databank
 
 # Default target
-all: build
+all: build build-databank
 
 # Restore dependencies
 restore:
@@ -66,3 +66,30 @@ analyze-test-ca: build-cli
 
 # Full CI pipeline
 ci: restore build test analyze
+
+# ---------------------------------------------------------------------------------
+# DatabankTool targets (CLI + Desktop + Tests)
+# ---------------------------------------------------------------------------------
+
+restore-databank:
+	dotnet restore DatabankTool/DatabankTool.sln
+
+build-databank: build-databank-cli build-databank-desktop
+
+build-databank-cli:
+	dotnet build DatabankTool/DataBank.Cli/DataBank.Cli.csproj -c Release
+
+build-databank-desktop:
+	dotnet build DatabankTool/DataBank.Desktop/DataBank.Desktop.csproj -c Release
+
+run-databank-desktop: build-databank-desktop
+	dotnet run --project DatabankTool/DataBank.Desktop/DataBank.Desktop.csproj -c Release --no-build
+
+test-databank:
+	dotnet test DatabankTool/DataBank.Cli.Tests/DataBank.Cli.Tests.csproj
+
+clean-databank:
+	dotnet clean DatabankTool/DatabankTool.sln -c Release
+	rm -rf DatabankTool/DataBank.Cli/bin DatabankTool/DataBank.Cli/obj
+	rm -rf DatabankTool/DataBank.Cli.Tests/bin DatabankTool/DataBank.Cli.Tests/obj
+	rm -rf DatabankTool/DataBank.Desktop/bin DatabankTool/DataBank.Desktop/obj

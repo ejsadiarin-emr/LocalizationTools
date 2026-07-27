@@ -19,6 +19,7 @@ public class Program
         bool showCoverage = false;
         string? coverageOutputPath = null;
         bool verbose = false;
+        bool flagUntranslated = false;
 
         // Simple argument parsing
         for (int i = 0; i < args.Length; i++)
@@ -51,6 +52,9 @@ public class Program
                     break;
                 case "--verbose" or "-v":
                     verbose = true;
+                    break;
+                case "--flag-untranslated":
+                    flagUntranslated = true;
                     break;
                 case "--help" or "-h":
                     PrintUsage();
@@ -143,10 +147,16 @@ public class Program
             Entries = entries
         };
 
+        if (flagUntranslated)
+        {
+            output.TranslationSummary = TranslationStatusAnalyzer.Analyze(entries);
+        }
+
         var options = new JsonSerializerOptions
         {
             WriteIndented = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
         };
 
         var json = JsonSerializer.Serialize(output, options);
@@ -242,6 +252,7 @@ public class Program
         Console.WriteLine("  --encoding <enc>       Override file encoding (e.g., windows-1252, cp936)");
         Console.WriteLine("  --locale <locale>      Override locale for FHX Translated files");
         Console.WriteLine("  --verbose, -v          Print per-file parsing progress to stderr");
+        Console.WriteLine("  --flag-untranslated    Flag entries with translation status analysis");
         Console.WriteLine("  --help, -h             Show this help message");
     }
 }
