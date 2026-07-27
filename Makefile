@@ -1,4 +1,4 @@
-.PHONY: build build-analyzer build-cli build-desktop test clean analyze analyze-test analyze-test-ca restore pack run-desktop publish-desktop ci build-databank build-databank-cli build-databank-desktop run-databank-desktop test-databank clean-databank restore-databank
+.PHONY: build build-analyzer build-cli build-desktop test clean analyze analyze-test analyze-test-ca restore pack run-desktop publish-desktop ci build-databank build-databank-cli build-databank-desktop run-databank run-databank-desktop test-databank clean-databank restore-databank
 
 # Default target
 all: build build-databank
@@ -78,6 +78,9 @@ build-databank: build-databank-cli build-databank-desktop
 
 build-databank-cli:
 	dotnet build DatabankTool/DataBank.Cli/DataBank.Cli.csproj -c Release
+
+run-databank: build-databank-cli
+	dotnet run --project DatabankTool/DataBank.Cli/DataBank.Cli.csproj -c Release --no-build $(ARGS)
 
 build-databank-desktop:
 	dotnet build DatabankTool/DataBank.Desktop/DataBank.Desktop.csproj -c Release
