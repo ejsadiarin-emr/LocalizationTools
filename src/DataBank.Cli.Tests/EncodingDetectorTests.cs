@@ -152,6 +152,20 @@ public class EncodingDetectorTests
     }
 
     [Fact]
+    public void ReadFile_EncodingMismatch_ProducesReplacementCharacters()
+    {
+        var tempFile = Path.GetTempFileName();
+        try
+        {
+            // Invalid UTF-8 continuation bytes (0xFE, 0xFF) produce U+FFFD when decoded as UTF-8
+            File.WriteAllBytes(tempFile, [0x48, 0x65, 0x6C, 0x6C, 0x6F, 0xFE, 0xFF]);
+            var content = EncodingDetector.ReadFile(tempFile, "utf-8");
+            Assert.Contains('\uFFFD', content);
+        }
+        finally { File.Delete(tempFile); }
+    }
+
+    [Fact]
     public void Detect_BomTakesPrecedenceOverPragma()
     {
         var tempFile = Path.GetTempFileName();

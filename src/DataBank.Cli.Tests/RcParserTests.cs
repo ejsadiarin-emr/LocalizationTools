@@ -490,6 +490,32 @@ PUSHBUTTON ""OK"", IDOK, 280, 5, 30, 14
         Assert.Contains("::1", key2);
     }
 
+    [Fact]
+    public void Parse_ControlElement_WithIdcStatic_UsesPositionalIndex()
+    {
+        var rc = """
+            LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+            IDD_TEST DIALOGEX 0, 0, 320, 200
+            BEGIN
+                LTEXT           "Label",IDC_STATIC,10,10,100,15
+                CONTROL         "Checkbox",IDC_STATIC,"Static",SS_BLACKFRAME,10,30,100,15
+                PUSHBUTTON      "OK",IDOK,280,5,30,14
+            END
+            """;
+        var entries = ParseRcString(rc);
+
+        var idcStaticEntries = entries.Where(e => e.Key.Contains("IDC_STATIC")).ToList();
+        Assert.Equal(2, idcStaticEntries.Count);
+
+        var ltextKey = idcStaticEntries.First(e => e.Key.StartsWith("LTEXT")).Key;
+        var controlKey = idcStaticEntries.First(e => e.Key.StartsWith("CONTROL")).Key;
+
+        Assert.Contains("::0", ltextKey);
+        Assert.Contains("::1", controlKey);
+        Assert.NotEqual(ltextKey, controlKey);
+    }
+
     private static List<DataBank.Cli.Models.LocalizedStringEntry> ParseRcString(
         string rcContent, Dictionary<int, string>? symbolMap = null)
     {

@@ -14,7 +14,7 @@ The FHX parser SHALL detect locale from file content or require `--locale` overr
 #### Scenario: Non-EN directory without override
 - **WHEN** an FHX file is in a directory named `Translated`
 - **AND** no `--locale` override is provided
-- **THEN** the parser SHALL log a warning: `Warning: FHX file in non-EN directory without --locale override. Detected locale: "translated". Use --locale to specify the actual locale.`
+- **THEN** the parser SHALL log a warning: `Warning: Could not determine locale for {filePath}. Use --locale to specify.`
 - **AND** the detected locale SHALL be `unknown`
 
 #### Scenario: Content-based locale detection (best-effort)

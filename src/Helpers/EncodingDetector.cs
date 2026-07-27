@@ -96,7 +96,14 @@ public static class EncodingDetector
             ? GetEncodingByName(encodingOverride)
             : Detect(filePath);
 
-        return File.ReadAllText(filePath, encoding);
+        var content = File.ReadAllText(filePath, encoding);
+
+        if (content.Contains('\uFFFD'))
+        {
+            Console.Error.WriteLine($"Warning: Encoding mismatch detected in {filePath}. Consider using --encoding override.");
+        }
+
+        return content;
     }
 
     private static Encoding GetEncodingByName(string name)

@@ -12,7 +12,7 @@ The RC parser SHALL use a state-machine quote parser that correctly handles esca
 - **THEN** the extracted string SHALL be `Say "hello"`
 
 #### Scenario: String with embedded quotes
-- **WHEN** the input is `CAPTION "File "Open" Dialog"`
+- **WHEN** the input is `CAPTION "File ""Open"" Dialog"`
 - **THEN** the extracted string SHALL be `File "Open" Dialog`
 
 #### Scenario: Empty string
