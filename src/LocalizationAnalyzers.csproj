@@ -48,14 +48,17 @@
     <Compile Remove="LocalizationAnalyzers.Desktop\**" />
     <Compile Remove="DataBank.Cli\**" />
     <Compile Remove="DataBank.Cli.Tests\**" />
+    <Compile Remove="Helpers\**" />
     <EmbeddedResource Remove="LocalizationAnalyzers.Tests\**" />
     <EmbeddedResource Remove="LocalizationAnalyzers.Desktop\**" />
     <EmbeddedResource Remove="DataBank.Cli\**" />
     <EmbeddedResource Remove="DataBank.Cli.Tests\**" />
+    <EmbeddedResource Remove="Helpers\**" />
     <None Remove="LocalizationAnalyzers.Tests\**" />
     <None Remove="LocalizationAnalyzers.Desktop\**" />
     <None Remove="DataBank.Cli\**" />
     <None Remove="DataBank.Cli.Tests\**" />
+    <None Remove="Helpers\**" />
   </ItemGroup>
 
   <ItemGroup>
