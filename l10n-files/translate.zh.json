@@ -1,0 +1,5 @@
+{
+  "LocalizationIsWorking": "本地化服务已设置并正常运行",
+  "AnimationBadStatus": "{} 的动画返回了状态为坏的值",
+  "AnimationUnknownValue": "{} 的动画返回了未知值"
+}

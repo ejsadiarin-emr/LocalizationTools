@@ -1,0 +1,5 @@
+{
+    "LocalizationIsWorking": "The Localization service is setup and working",
+    "AnimationBadStatus": "Animation for {} returned a value with bad status",
+    "AnimationUnknownValue": "Animation for {} returned an unknown value"
+}
