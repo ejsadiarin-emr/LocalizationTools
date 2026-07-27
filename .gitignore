@@ -83,6 +83,11 @@ apps/orchestrator/backend/wwwroot/
 # Local data
 data/
 
+# DataBank CLI output files
+data-bank.json
+*-test.json
+l10n-output*.json
+
 # Temporary session files
 session-*.md
 retain.md
@@ -103,5 +108,4 @@ test-artifacts/
 
 **/*.lscache
 .opencode
-openspec
 .env

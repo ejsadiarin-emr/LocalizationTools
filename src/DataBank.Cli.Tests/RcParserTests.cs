@@ -395,6 +395,101 @@ public class RcParserTests
         Assert.Empty(metadata.FormatSpecifiers);
     }
 
+    [Fact]
+    public void ExtractQuotedString_SimpleQuoted_ReturnsContent()
+    {
+        var result = RcParser.ExtractQuotedString("CAPTION \"Hello World\"", "CAPTION".Length);
+        Assert.Equal("Hello World", result);
+    }
+
+    [Fact]
+    public void ExtractQuotedString_EscapedQuotes_ReturnsUnescaped()
+    {
+        var result = RcParser.ExtractQuotedString("CAPTION \"Hello \"\"World\"\"\"", "CAPTION".Length);
+        Assert.Equal("Hello \"World\"", result);
+    }
+
+    [Fact]
+    public void ExtractQuotedString_UnclosedQuote_ReturnsNull()
+    {
+        var result = RcParser.ExtractQuotedString("CAPTION \"Hello World", "CAPTION".Length);
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void ExtractQuotedString_EmptyQuoted_ReturnsEmpty()
+    {
+        var result = RcParser.ExtractQuotedString("CAPTION \"\"", "CAPTION".Length);
+        Assert.Equal("", result);
+    }
+
+    [Fact]
+    public void Parse_CaptionWithEscapedQuotes_ParsesCorrectly()
+    {
+        var rcContent = @"
+#include ""resource.h""
+IDD_ABOUTBOX DIALOGEX 0, 0, 320, 200
+CAPTION ""About """"DeltaV"""" Configuration""
+LTEXT ""Info"", IDC_STATIC, 10, 10, 200, 15
+";
+        var entries = ParseRcString(rcContent);
+
+        var caption = entries.First(e => e.Key == "CAPTION::IDD_ABOUTBOX");
+        Assert.Equal("About \"DeltaV\" Configuration", caption.Value);
+    }
+
+    [Fact]
+    public void Parse_EnAndTranslated_SameDialogName_ProducesMatchingKeys()
+    {
+        var enRc = @"
+#include ""resource.h""
+IDD_ABOUTBOX DIALOGEX 0, 0, 320, 200
+CAPTION ""About DeltaV""
+LTEXT ""Version 5.2"", IDC_STATIC, 10, 10, 200, 15
+PUSHBUTTON ""OK"", IDOK, 280, 5, 30, 14
+";
+        var translatedRc = @"
+#include ""resource.h""
+IDD_ABOUTBOX DIALOGEX 0, 0, 320, 200
+CAPTION ""About DeltaV Workstation""
+LTEXT ""Version 5.2"", IDC_STATIC, 10, 10, 200, 15
+PUSHBUTTON ""OK"", IDOK, 280, 5, 30, 14
+";
+        var enEntries = ParseRcString(enRc);
+        var translatedEntries = ParseRcString(translatedRc);
+
+        var enKeys = enEntries.Select(e => e.Key).OrderBy(k => k).ToList();
+        var translatedKeys = translatedEntries.Select(e => e.Key).OrderBy(k => k).ToList();
+
+        Assert.Equal(enKeys, translatedKeys);
+    }
+
+    [Fact]
+    public void Parse_MultipleIdcStatic_UsesPositionalIndex()
+    {
+        var rc = """
+            LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+            IDD_TEST DIALOGEX 0, 0, 320, 200
+            CAPTION "Test Dialog"
+            BEGIN
+                LTEXT           "First",IDC_STATIC,10,10,100,15
+                LTEXT           "Second",IDC_STATIC,10,30,100,15
+                PUSHBUTTON      "OK",IDOK,280,5,30,14
+            END
+            """;
+        var entries = ParseRcString(rc);
+
+        var ltexts = entries.Where(e => e.Key.StartsWith("LTEXT")).ToList();
+        Assert.Equal(2, ltexts.Count);
+
+        var key1 = ltexts[0].Key;
+        var key2 = ltexts[1].Key;
+        Assert.NotEqual(key1, key2);
+        Assert.Contains("::0", key1);
+        Assert.Contains("::1", key2);
+    }
+
     private static List<DataBank.Cli.Models.LocalizedStringEntry> ParseRcString(
         string rcContent, Dictionary<int, string>? symbolMap = null)
     {

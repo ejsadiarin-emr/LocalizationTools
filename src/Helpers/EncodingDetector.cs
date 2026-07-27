@@ -1,9 +1,12 @@
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace DataBank.Cli.Helpers;
 
 public static class EncodingDetector
 {
+    private static readonly Regex PragmaCodePagePattern = new(@"#pragma\s+code_page\s*\(\s*(\d+|""[^""]+"")\s*\)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
     public static Encoding Detect(string filePath)
     {
         if (!File.Exists(filePath))
@@ -27,12 +30,64 @@ public static class EncodingDetector
             if (b0 == 0xFE && b1 == 0xFF)
                 return Encoding.BigEndianUnicode; // UTF-16BE
 
+            stream.Position = 0;
+            var pragmaEncoding = DetectPragmaCodePage(stream);
+            if (pragmaEncoding is not null)
+                return pragmaEncoding;
+
             return Encoding.UTF8;
         }
         catch
         {
             return Encoding.UTF8;
         }
+    }
+
+    internal static Encoding? DetectPragmaCodePage(Stream stream)
+    {
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+        using var reader = new StreamReader(stream, Encoding.ASCII, detectEncodingFromByteOrderMarks: false, bufferSize: 2048, leaveOpen: true);
+        var header = new char[1024];
+        var charsRead = reader.Read(header, 0, header.Length);
+        var headerText = new string(header, 0, charsRead);
+
+        var match = PragmaCodePagePattern.Match(headerText);
+        if (!match.Success)
+            return null;
+
+        var codePageStr = match.Groups[1].Value.Trim('"');
+        if (int.TryParse(codePageStr, out var codePage))
+            return GetEncodingByCodePage(codePage);
+
+        return null;
+    }
+
+    internal static Encoding GetEncodingByCodePage(int codePage)
+    {
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+        return codePage switch
+        {
+            65001 => Encoding.UTF8,
+            1200 => Encoding.Unicode,
+            1201 => Encoding.BigEndianUnicode,
+            1252 => Encoding.GetEncoding(1252),
+            936 => Encoding.GetEncoding(936),
+            950 => Encoding.GetEncoding(950),
+            949 => Encoding.GetEncoding(949),
+            932 => Encoding.GetEncoding(932),
+            1250 => Encoding.GetEncoding(1250),
+            1251 => Encoding.GetEncoding(1251),
+            1253 => Encoding.GetEncoding(1253),
+            1254 => Encoding.GetEncoding(1254),
+            1255 => Encoding.GetEncoding(1255),
+            1256 => Encoding.GetEncoding(1256),
+            1257 => Encoding.GetEncoding(1257),
+            1258 => Encoding.GetEncoding(1258),
+            874 => Encoding.GetEncoding(874),
+            _ => Encoding.GetEncoding(codePage)
+        };
     }
 
     public static string ReadFile(string filePath, string? encodingOverride = null)

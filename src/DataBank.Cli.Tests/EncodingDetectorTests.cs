@@ -102,4 +102,71 @@ public class EncodingDetectorTests
         }
         finally { File.Delete(tempFile); }
     }
+
+    [Fact]
+    public void Detect_PragmaCodePage936_ReturnsGb2312()
+    {
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        var tempFile = Path.GetTempFileName();
+        try
+        {
+            var content = "#pragma code_page(936)\r\nSTRINGTABLE\r\nBEGIN\r\nIDS_TEST \"Hello\"\r\nEND";
+            var utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+            File.WriteAllBytes(tempFile, utf8NoBom.GetBytes(content));
+            var encoding = EncodingDetector.Detect(tempFile);
+            Assert.Equal(Encoding.GetEncoding(936), encoding);
+        }
+        finally { File.Delete(tempFile); }
+    }
+
+    [Fact]
+    public void Detect_PragmaCodePage1252_ReturnsWindows1252()
+    {
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        var tempFile = Path.GetTempFileName();
+        try
+        {
+            var content = "#pragma code_page(1252)\r\nSTRINGTABLE\r\nBEGIN\r\nIDS_TEST \"Hello\"\r\nEND";
+            var utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+            File.WriteAllBytes(tempFile, utf8NoBom.GetBytes(content));
+            var encoding = EncodingDetector.Detect(tempFile);
+            Assert.Equal(Encoding.GetEncoding(1252), encoding);
+        }
+        finally { File.Delete(tempFile); }
+    }
+
+    [Fact]
+    public void Detect_PragmaCodePageQuoted_ReturnsCorrectEncoding()
+    {
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        var tempFile = Path.GetTempFileName();
+        try
+        {
+            var content = "#pragma code_page(\"936\")\r\nSTRINGTABLE\r\nBEGIN\r\nIDS_TEST \"Hello\"\r\nEND";
+            var utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+            File.WriteAllBytes(tempFile, utf8NoBom.GetBytes(content));
+            var encoding = EncodingDetector.Detect(tempFile);
+            Assert.Equal(Encoding.GetEncoding(936), encoding);
+        }
+        finally { File.Delete(tempFile); }
+    }
+
+    [Fact]
+    public void Detect_BomTakesPrecedenceOverPragma()
+    {
+        var tempFile = Path.GetTempFileName();
+        try
+        {
+            var header = "#pragma code_page(936)\r\n";
+            var bom = new byte[] { 0xEF, 0xBB, 0xBF };
+            var bodyBytes = Encoding.UTF8.GetBytes(header);
+            var allBytes = new byte[bom.Length + bodyBytes.Length];
+            Buffer.BlockCopy(bom, 0, allBytes, 0, bom.Length);
+            Buffer.BlockCopy(bodyBytes, 0, allBytes, bom.Length, bodyBytes.Length);
+            File.WriteAllBytes(tempFile, allBytes);
+            var encoding = EncodingDetector.Detect(tempFile);
+            Assert.Equal(Encoding.UTF8, encoding);
+        }
+        finally { File.Delete(tempFile); }
+    }
 }

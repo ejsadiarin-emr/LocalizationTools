@@ -123,20 +123,42 @@ public class FhxParserTests
     public void DetectLocale_EnDirectory_ReturnsEn()
     {
         var path = Path.Combine("some", "path", "FHX", "EN", "AlarmWords.txt");
-        Assert.Equal("en", FhxParser.DetectLocale(path));
+        Assert.Equal("en", FhxParser.DetectLocale(path, ""));
     }
 
     [Fact]
     public void DetectLocale_WithOverride_ReturnsOverride()
     {
         var path = Path.Combine("some", "path", "FHX", "EN", "AlarmWords.txt");
-        Assert.Equal("de", FhxParser.DetectLocale(path, localeOverride: "de"));
+        Assert.Equal("de", FhxParser.DetectLocale(path, "", localeOverride: "de"));
     }
 
     [Fact]
-    public void DetectLocale_OtherDirectory_ReturnsLowercase()
+    public void DetectLocale_JpDirectory_ReturnsJa()
     {
         var path = Path.Combine("some", "path", "FHX", "JP", "AlarmWords.txt");
-        Assert.Equal("jp", FhxParser.DetectLocale(path));
+        Assert.Equal("ja", FhxParser.DetectLocale(path, ""));
+    }
+
+    [Fact]
+    public void DetectLocale_TranslatedDirectory_ReturnsUnknown()
+    {
+        var path = Path.Combine("some", "path", "FHX", "Translated", "AlarmWords.txt");
+        Assert.Equal("unknown", FhxParser.DetectLocale(path, ""));
+    }
+
+    [Fact]
+    public void DetectLocale_UnknownDir_WithLangTag_ReturnsMapped()
+    {
+        var path = Path.Combine("some", "path", "FHX", "Translated", "AlarmWords.txt");
+        var content = "@Key@\t\"context\"\tSome value // lang=zh-CN";
+        Assert.Equal("zh-Hans", FhxParser.DetectLocale(path, content));
+    }
+
+    [Fact]
+    public void NormalizeLangTag_ZhHans_ReturnsZhHans()
+    {
+        Assert.Equal("zh-Hans", FhxParser.NormalizeLangTag("zh-CN"));
+        Assert.Equal("zh-Hans", FhxParser.NormalizeLangTag("zh-Hans"));
     }
 }

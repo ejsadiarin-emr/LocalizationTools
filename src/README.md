@@ -366,6 +366,16 @@ The following per-rule metadata properties are planned but deferred until locali
 
 These properties will be added to the SARIF `rules[]` array once we have sufficient data to make informed decisions about their values.
 
+### Binary Format Parsers (GRF & iFix DLL)
+
+Two file formats in the l10n-files test set require specialized binary parsers that are not yet implemented:
+
+- **GRF (`.grf`)**: GE iFix graphic files — OLE Compound Documents with embedded VBA and proprietary stream formats. Would require OpenMcdf (NuGet) for OLE container access and reverse-engineering of iFix-specific stream layouts (CONTROLSAVESTREAM, TabStripStorage, etc.). Best-effort string extraction is feasible but low-confidence.
+
+- **iFix DLLs (`.dll`)**: Compiled .NET satellite assemblies containing localized error strings. Would require AsmResolver (NuGet) or System.Resources.ResourceManager for runtime extraction. Only Translated versions exist in the test set — no EN source counterpart means coverage analysis is impossible without also providing the EN assembly.
+
+These parsers are deferred pending prioritization and availability of EN/Translated file pairs for coverage analysis.
+
 ## License
 
 MIT

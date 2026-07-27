@@ -6,6 +6,14 @@ namespace DataBank.Cli.Parsers;
 
 public static partial class RcParser
 {
+    /// <summary>
+    /// Parses an RC resource file into localized string entries.
+    /// Key formats:
+    ///   CAPTION:     "CAPTION::{dialogName}"
+    ///   LTEXT/etc:   "{controlType}::{dialogName}::{defineName}" (e.g., "LTEXT::IDD_ABOUTBOX::IDC_STATIC::0")
+    ///   CONTROL:     "CONTROL::{dialogName}::{defineName}"
+    ///   STRINGTABLE: "{defineName}" (e.g., "IDS_WELCOME")
+    /// </summary>
     public static List<LocalizedStringEntry> Parse(string filePath, Dictionary<int, string>? symbolMap = null, string? rootDir = null, string? encodingOverride = null)
     {
         var entries = new List<LocalizedStringEntry>();
@@ -24,6 +32,8 @@ public static partial class RcParser
             var inStringTable = false;
             var inDialog = false;
             var inDesignInfo = false;
+            var currentDialogName = "";
+            var dialogControlIndex = 0;
 
             foreach (var rawLine in lines)
             {
@@ -80,6 +90,8 @@ public static partial class RcParser
                 if (!inStringTable && DialogStartPattern().IsMatch(line))
                 {
                     inDialog = true;
+                    currentDialogName = ExtractDialogName(line);
+                    dialogControlIndex = 0;
 
                     // Check for CAPTION on the same line as DIALOGEX
                     var captionMatch = DialogCaptionPattern().Match(line);
@@ -89,8 +101,8 @@ public static partial class RcParser
                         if (captionValue.Length > 0)
                         {
                             entries.Add(CreateDialogEntry(
-                                captionValue, currentLocale, relativePath,
-                                "CAPTION", encodingName));
+                                captionValue, currentLocale,
+                                currentDialogName, "CAPTION", encodingName));
                         }
                     }
                     continue;
@@ -114,14 +126,14 @@ public static partial class RcParser
                         if (captionValue is not null && captionValue.Length > 0)
                         {
                             entries.Add(CreateDialogEntry(
-                                captionValue, currentLocale, relativePath,
-                                "CAPTION", encodingName));
+                                captionValue, currentLocale,
+                                currentDialogName, "CAPTION", encodingName));
                         }
                         continue;
                     }
 
                     // Extract strings from control elements
-                    var controlEntry = ParseDialogControl(line, currentLocale, relativePath, symbolMap, encodingName);
+                    var controlEntry = ParseDialogControl(line, currentLocale, currentDialogName, ref dialogControlIndex, symbolMap, encodingName);
                     if (controlEntry is not null)
                         entries.Add(controlEntry);
                 }
@@ -136,24 +148,24 @@ public static partial class RcParser
     }
 
     private static LocalizedStringEntry CreateDialogEntry(
-        string value, string locale, string relativePath,
+        string value, string locale, string dialogName,
         string controlType, string encodingName)
     {
-        var key = $"{controlType}::{relativePath}::{value}";
+        var key = $"{controlType}::{dialogName}";
         var metadata = new EntryMetadata();
         DetectFormatSpecifiers(value, metadata);
 
         return new LocalizedStringEntry
         {
-            Id = $"rc::{relativePath}::{key}",
+            Id = $"rc::{dialogName}::{key}",
             Key = key,
             Value = value,
             Locale = locale,
             Source = new SourceInfo
             {
                 Format = "rc",
-                File = relativePath,
-                Path = relativePath,
+                File = dialogName,
+                Path = dialogName,
                 Encoding = encodingName
             },
             Metadata = metadata
@@ -161,8 +173,8 @@ public static partial class RcParser
     }
 
     private static LocalizedStringEntry? ParseDialogControl(
-        string line, string locale, string relativePath,
-        Dictionary<int, string>? symbolMap, string encodingName)
+        string line, string locale, string dialogName,
+        ref int controlIndex, Dictionary<int, string>? symbolMap, string encodingName)
     {
         // LTEXT "text",IDC_xxx,x,y,w,h
         // PUSHBUTTON "text",IDC_xxx,x,y,w,h
@@ -179,7 +191,14 @@ public static partial class RcParser
             var controlType = textMatch.Groups[1].Value.ToUpperInvariant();
             var idPart = textMatch.Groups[3].Value;
             var (numericId, defineName) = ResolveId(idPart, symbolMap);
-            var key = $"{controlType}::{relativePath}::{defineName ?? idPart}";
+            var key = $"{controlType}::{dialogName}::{defineName ?? idPart}";
+
+            // Disambiguate IDC_STATIC with positional index
+            if (string.Equals(defineName ?? idPart, "IDC_STATIC", StringComparison.OrdinalIgnoreCase))
+            {
+                key = $"{controlType}::{dialogName}::IDC_STATIC::{controlIndex}";
+            }
+            controlIndex++;
 
             var metadata = new EntryMetadata
             {
@@ -190,15 +209,15 @@ public static partial class RcParser
 
             return new LocalizedStringEntry
             {
-                Id = $"rc::{relativePath}::{key}",
+                Id = $"rc::{dialogName}::{key}",
                 Key = key,
                 Value = value,
                 Locale = locale,
                 Source = new SourceInfo
                 {
                     Format = "rc",
-                    File = relativePath,
-                    Path = relativePath,
+                    File = dialogName,
+                    Path = dialogName,
                     Encoding = encodingName
                 },
                 Metadata = metadata
@@ -215,7 +234,14 @@ public static partial class RcParser
 
             var idPart = controlMatch.Groups[2].Value;
             var (numericId, defineName) = ResolveId(idPart, symbolMap);
-            var key = $"CONTROL::{relativePath}::{defineName ?? idPart}";
+            var key = $"CONTROL::{dialogName}::{defineName ?? idPart}";
+
+            // Disambiguate IDC_STATIC with positional index
+            if (string.Equals(defineName ?? idPart, "IDC_STATIC", StringComparison.OrdinalIgnoreCase))
+            {
+                key = $"CONTROL::{dialogName}::IDC_STATIC::{controlIndex}";
+            }
+            controlIndex++;
 
             var metadata = new EntryMetadata
             {
@@ -226,15 +252,15 @@ public static partial class RcParser
 
             return new LocalizedStringEntry
             {
-                Id = $"rc::{relativePath}::{key}",
+                Id = $"rc::{dialogName}::{key}",
                 Key = key,
                 Value = value,
                 Locale = locale,
                 Source = new SourceInfo
                 {
                     Format = "rc",
-                    File = relativePath,
-                    Path = relativePath,
+                    File = dialogName,
+                    Path = dialogName,
                     Encoding = encodingName
                 },
                 Metadata = metadata
@@ -242,6 +268,13 @@ public static partial class RcParser
         }
 
         return null;
+    }
+
+    private static string ExtractDialogName(string line)
+    {
+        // Match: IDD_ABOUTBOX DIALOGEX 0, 0, 295, 55
+        var match = DialogNamePattern().Match(line);
+        return match.Success ? match.Groups[1].Value : "UNKNOWN_DIALOG";
     }
 
     private static (int numericId, string? defineName) ResolveId(string idPart, Dictionary<int, string>? symbolMap)
@@ -269,17 +302,40 @@ public static partial class RcParser
         return (numericId, defineName);
     }
 
-    private static string? ExtractQuotedString(string line, int startIndex)
+    internal static string? ExtractQuotedString(string line, int startIndex)
     {
-        var quoteStart = line.IndexOf('"', startIndex);
-        if (quoteStart < 0)
+        var i = startIndex;
+        while (i < line.Length && char.IsWhiteSpace(line[i]))
+            i++;
+
+        if (i >= line.Length || line[i] != '"')
             return null;
 
-        var quoteEnd = line.LastIndexOf('"');
-        if (quoteEnd <= quoteStart)
-            return null;
+        i++; // skip opening quote
+        var result = new System.Text.StringBuilder();
+        while (i < line.Length)
+        {
+            var ch = line[i];
+            if (ch == '"')
+            {
+                if (i + 1 < line.Length && line[i + 1] == '"')
+                {
+                    result.Append('"');
+                    i += 2;
+                }
+                else
+                {
+                    return result.ToString();
+                }
+            }
+            else
+            {
+                result.Append(ch);
+                i++;
+            }
+        }
 
-        return line[(quoteStart + 1)..quoteEnd];
+        return null;
     }
 
     internal static void DetectFormatSpecifiers(string value, EntryMetadata metadata)
@@ -488,6 +544,9 @@ public static partial class RcParser
 
     [GeneratedRegex(@"^\s*\w+\s+DIALOG(EX)?\s")]
     private static partial Regex DialogStartPattern();
+
+    [GeneratedRegex(@"^\s*(\w+)\s+DIALOG(EX)?\s")]
+    private static partial Regex DialogNamePattern();
 
     [GeneratedRegex(@"CAPTION\s+""([^""]*)""")]
     private static partial Regex DialogCaptionPattern();
