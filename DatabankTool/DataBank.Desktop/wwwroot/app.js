@@ -36,24 +36,17 @@
 
             btn.classList.add('active');
             document.getElementById('tab-' + targetTab).classList.add('active');
-
-            if (targetTab === 'grf-files') {
-                window.chrome.webview.postMessage({ action: 'loadGrfFiles' });
-            }
         });
     });
 
-    // --- WebView2 Message Listener ---
-    window.chrome.webview.addEventListener('message', function (event) {
-        var data = event.data;
-        if (data.action === 'loadData') {
+    // --- WebView2 Message Handler ---
+    function handleMessage(data) {
+        if (data && data.action === 'loadData') {
             allEntries = data.entries || [];
             currentPage = 1;
             onDataLoaded();
-        } else if (data.action === 'loadGrfFiles') {
-            renderGrfFiles(data.files || []);
         }
-    });
+    }
 
     function renderGrfFiles(files) {
         var container = document.getElementById('grf-file-list');
@@ -76,10 +69,37 @@
         });
     }
 
+    function renderGrfTab() {
+        var grfEntries = allEntries.filter(function (e) {
+            return e.source && e.source.format === 'grf';
+        });
+        var container = document.getElementById('grf-file-list');
+        var noGrfMessage = document.getElementById('no-grf-message');
+        container.innerHTML = '';
+
+        if (grfEntries.length === 0) {
+            noGrfMessage.classList.remove('hidden');
+            return;
+        }
+
+        noGrfMessage.classList.add('hidden');
+        grfEntries.forEach(function (entry) {
+            var item = document.createElement('div');
+            item.className = 'grf-file-item';
+            var comment = (entry.metadata && entry.metadata.comment) || '';
+            item.innerHTML =
+                '<span class="grf-file-name">' + escapeHtml(entry.key) + '.grf</span>' +
+                '<span class="grf-folder-badge">' + escapeHtml(entry.locale) + '</span>' +
+                (comment ? '<span class="grf-comment">' + escapeHtml(comment) + '</span>' : '');
+            container.appendChild(item);
+        });
+    }
+
     function onDataLoaded() {
         populateFilters();
         applyFilters();
         updateDashboard();
+        renderGrfTab();
         noDataMessage.classList.add('hidden');
     }
 
@@ -383,10 +403,6 @@
 
     // Expose function for C# ExecuteScriptAsync to call
     window.receiveDataFromCSharp = function (data) {
-        if (data && data.action === 'loadData') {
-            allEntries = data.entries || [];
-            currentPage = 1;
-            onDataLoaded();
-        }
+        handleMessage(data);
     };
 })();

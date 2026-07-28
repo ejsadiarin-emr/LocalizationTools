@@ -8,7 +8,6 @@ public static class FileDetector
         [".rc"] = "rc",
         [".fhx"] = "fhx",
         [".ahc"] = "ahc",
-        [".json"] = "json",
         [".grf"] = "grf"
     };
 
@@ -18,12 +17,11 @@ public static class FileDetector
         if (ExtensionMap.TryGetValue(ext, out var format))
             return format;
 
-        var dirName = Path.GetFileName(Path.GetDirectoryName(filePath) ?? "");
-        if (string.Equals(dirName, "Fhx", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(ext, ".txt", StringComparison.OrdinalIgnoreCase) && IsFhxFile(filePath))
             return "fhx";
 
-        if (string.Equals(ext, ".txt", StringComparison.OrdinalIgnoreCase) && IsFhxContent(filePath))
-            return "fhx";
+        if (string.Equals(ext, ".json", StringComparison.OrdinalIgnoreCase))
+            return "json";
 
         return null;
     }
@@ -51,17 +49,15 @@ public static class FileDetector
         return results;
     }
 
-    private static bool IsFhxContent(string filePath)
+    private static bool IsFhxFile(string filePath)
     {
-        try
+        var dir = Path.GetDirectoryName(filePath);
+        while (dir is not null)
         {
-            using var reader = new StreamReader(filePath);
-            var firstLine = reader.ReadLine();
-            return firstLine is not null && firstLine.StartsWith("@Key@\t");
+            if (string.Equals(Path.GetFileName(dir), "FHX", StringComparison.OrdinalIgnoreCase))
+                return true;
+            dir = Path.GetDirectoryName(dir);
         }
-        catch
-        {
-            return false;
-        }
+        return false;
     }
 }

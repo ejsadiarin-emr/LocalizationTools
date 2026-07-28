@@ -116,6 +116,9 @@ public class Program
                 case "json":
                     entries.AddRange(JsonParser.Parse(file, rootDir));
                     break;
+                case "grf":
+                    entries.AddRange(GrfParser.Parse(file, rootDir));
+                    break;
             }
         }
 

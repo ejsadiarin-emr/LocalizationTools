@@ -78,9 +78,8 @@ ci: restore build test analyze
 #   make run-databank INPUT_DIR=./l10n-files ARGS="--output ./out/data-bank.json --stats"
 #   make run-databank INPUT_DIR=./l10n-files ARGS="--format resx --verbose"
 #
+# INPUT_DIR is required and should point to a folder containing resource files.
 # Supported file formats: resx, rc, fhx, ahc, json
-
-INPUT_DIR ?= .
 
 restore-databank:
 	dotnet restore DatabankTool/DatabankTool.sln
@@ -91,6 +90,9 @@ build-databank-cli:
 	dotnet build DatabankTool/DataBank.Cli/DataBank.Cli.csproj -c Release
 
 run-databank: build-databank-cli
+ifndef INPUT_DIR
+	$(error INPUT_DIR is required. Usage: make run-databank INPUT_DIR=./l10n-files)
+endif
 	dotnet run --project DatabankTool/DataBank.Cli/DataBank.Cli.csproj -c Release --no-build --input-dir $(INPUT_DIR) $(ARGS)
 
 build-databank-desktop:

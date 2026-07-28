@@ -90,14 +90,53 @@ public class FileDetectorTests : IDisposable
     }
 
     [Fact]
-    public void DetectFormat_TxtFileWithFhxContent_ReturnsFhx()
+    public void DetectFormat_FHXAllCapsDirMatch_ReturnsFhx()
+    {
+        var fhxDir = Path.Combine(_testDir, "FHX");
+        Directory.CreateDirectory(fhxDir);
+        var filePath = Path.Combine(fhxDir, "data.txt");
+        File.WriteAllText(filePath, "some content");
+
+        var result = FileDetector.DetectFormat(filePath);
+
+        Assert.Equal("fhx", result);
+    }
+
+    [Fact]
+    public void DetectFormat_NestedFhxDir_WalksUpAncestors()
+    {
+        var nestedDir = Path.Combine(_testDir, "FHX", "EN");
+        Directory.CreateDirectory(nestedDir);
+        var filePath = Path.Combine(nestedDir, "AlarmWords.txt");
+        File.WriteAllText(filePath, "some content");
+
+        var result = FileDetector.DetectFormat(filePath);
+
+        Assert.Equal("fhx", result);
+    }
+
+    [Fact]
+    public void DetectFormat_NestedFhxTranslatedDir_WalksUpAncestors()
+    {
+        var nestedDir = Path.Combine(_testDir, "FHX", "Translated", "Chinese");
+        Directory.CreateDirectory(nestedDir);
+        var filePath = Path.Combine(nestedDir, "AlarmWords.txt");
+        File.WriteAllText(filePath, "some content");
+
+        var result = FileDetector.DetectFormat(filePath);
+
+        Assert.Equal("fhx", result);
+    }
+
+    [Fact]
+    public void DetectFormat_TxtFileWithFhxContent_ReturnsNull()
     {
         var filePath = Path.Combine(_testDir, "data.txt");
         File.WriteAllText(filePath, "@Key@\t\"context\"\tSome value");
 
         var result = FileDetector.DetectFormat(filePath);
 
-        Assert.Equal("fhx", result);
+        Assert.Null(result);
     }
 
     [Fact]

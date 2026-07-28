@@ -44,9 +44,6 @@ public partial class MainWindow : Window
                     case "loadJson":
                         HandleLoadJson();
                         break;
-                    case "loadGrfFiles":
-                        HandleLoadGrfFiles();
-                        break;
                 }
             }
         }
@@ -102,43 +99,6 @@ public partial class MainWindow : Window
                 StatusText.Text = $"Error: {ex.Message}";
                 MessageBox.Show($"Failed to load JSON: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-        }
-    }
-
-    private void HandleLoadGrfFiles()
-    {
-        try
-        {
-            var grfRoot = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "l10n-files", "GRF");
-            var files = new List<object>();
-
-            if (Directory.Exists(grfRoot))
-            {
-                foreach (var folder in Directory.GetDirectories(grfRoot))
-                {
-                    var folderName = Path.GetFileName(folder);
-                    foreach (var file in Directory.GetFiles(folder, "*.grf"))
-                    {
-                        files.Add(new
-                        {
-                            fileName = Path.GetFileName(file),
-                            folder = folderName
-                        });
-                    }
-                }
-            }
-
-            var payload = JsonSerializer.Serialize(new
-            {
-                action = "loadGrfFiles",
-                files = files
-            });
-            var escapedPayload = JsonSerializer.Serialize(payload);
-            WebView.CoreWebView2.ExecuteScriptAsync($"window.receiveDataFromCSharp(JSON.parse({escapedPayload}))");
-        }
-        catch (Exception ex)
-        {
-            StatusText.Text = $"Error loading GRF files: {ex.Message}";
         }
     }
 }
