@@ -26,6 +26,7 @@ public static class FhxParser
                 : Path.GetFileName(filePath);
 
             var locale = DetectLocale(filePath, content, localeOverride);
+            var isDntFile = FileHelper.HasDntInFilename(filePath);
 
             foreach (var rawLine in content.Split(["\r\n", "\n", "\r"], StringSplitOptions.None))
             {
@@ -33,7 +34,7 @@ public static class FhxParser
                 if (string.IsNullOrWhiteSpace(line))
                     continue;
 
-                var entry = ParseLine(line, locale, relativePath);
+                var entry = ParseLine(line, locale, relativePath, isDntFile);
                 if (entry is not null)
                     entries.Add(entry);
             }
@@ -46,7 +47,7 @@ public static class FhxParser
         return entries;
     }
 
-    private static LocalizedStringEntry? ParseLine(string line, string locale, string relativePath)
+    private static LocalizedStringEntry? ParseLine(string line, string locale, string relativePath, bool isDntFile)
     {
         // Format: @Key@\t"context"\tValue
         var parts = line.Split('\t');
@@ -63,7 +64,8 @@ public static class FhxParser
         // Value is everything after the second tab (may contain tabs)
         var value = parts.Length >= 3 ? string.Join("\t", parts.Skip(2)).Trim() : string.Empty;
 
-        var doNotTranslate = context.Contains("do NOT translate", StringComparison.OrdinalIgnoreCase);
+        // File-level DNT takes precedence; otherwise check context-based detection
+        var doNotTranslate = isDntFile || context.Contains("do NOT translate", StringComparison.OrdinalIgnoreCase);
 
         var metadata = new EntryMetadata
         {

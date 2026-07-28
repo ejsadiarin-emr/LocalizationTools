@@ -17,6 +17,8 @@ public static class AhcParser
                 ? Path.GetRelativePath(rootDir, filePath)
                 : Path.GetFileName(filePath);
 
+            var isDntFile = FileHelper.HasDntInFilename(filePath);
+
             var doc = XDocument.Parse(content);
             if (doc.Root is null)
                 return entries;
@@ -45,7 +47,7 @@ public static class AhcParser
                         File = relativePath,
                         Path = relativePath
                     },
-                    Metadata = new EntryMetadata()
+                    Metadata = new EntryMetadata { DoNotTranslate = isDntFile }
                 });
             }
         }

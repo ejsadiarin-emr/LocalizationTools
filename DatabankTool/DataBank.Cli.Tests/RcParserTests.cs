@@ -530,4 +530,38 @@ PUSHBUTTON ""OK"", IDOK, 280, 5, 30, 14
             File.Delete(tempFile);
         }
     }
+
+    [Fact]
+    public void Parse_DntFilename_AllEntriesMarkedDoNotTranslate()
+    {
+        var rc = """
+            LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+            IDD_TEST DIALOGEX 0, 0, 200, 100
+            BEGIN
+                LTEXT           "Hello",IDC_STATIC,10,10,100,14
+                PUSHBUTTON      "OK",IDOK,10,30,50,14
+            END
+            """;
+        var tempFile = Path.GetTempFileName();
+        try
+        {
+            // Rename to have DNT in filename
+            var dntFile = Path.ChangeExtension(tempFile, "-DNT.rc");
+            File.Move(tempFile, dntFile);
+            File.WriteAllText(dntFile, rc);
+
+            var entries = RcParser.Parse(dntFile);
+
+            Assert.Equal(2, entries.Count);
+            Assert.All(entries, e => Assert.True(e.Metadata.DoNotTranslate));
+        }
+        finally
+        {
+            if (File.Exists(tempFile))
+                File.Delete(tempFile);
+            if (File.Exists(Path.ChangeExtension(tempFile, "-DNT.rc")))
+                File.Delete(Path.ChangeExtension(tempFile, "-DNT.rc"));
+        }
+    }
 }

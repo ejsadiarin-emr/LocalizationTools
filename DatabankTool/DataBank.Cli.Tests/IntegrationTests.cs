@@ -182,4 +182,74 @@ public class IntegrationTests
                 File.Delete(outputPath);
         }
     }
+
+    [Fact]
+    public void Cli_DntFiles_AllEntriesMarkedDoNotTranslate()
+    {
+        var testDir = Path.Combine(Path.GetTempPath(), $"databank-dnt-test-{Guid.NewGuid():N}");
+        var outputPath = Path.Combine(Path.GetTempPath(), $"databank-test-{Guid.NewGuid():N}.json");
+
+        try
+        {
+            Directory.CreateDirectory(testDir);
+
+            // Create a DNT RC file
+            var rcContent = @"
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+IDD_TEST DIALOGEX 0, 0, 200, 100
+BEGIN
+    LTEXT           ""Hello"",IDC_STATIC,10,10,100,14
+    PUSHBUTTON      ""OK"",IDOK,10,30,50,14
+END
+";
+            File.WriteAllText(Path.Combine(testDir, "Test-DNT.rc"), rcContent);
+
+            // Create a non-DNT RC file
+            var normalRcContent = @"
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+IDD_NORMAL DIALOGEX 0, 0, 200, 100
+BEGIN
+    LTEXT           ""Normal"",IDC_STATIC,10,10,100,14
+END
+";
+            File.WriteAllText(Path.Combine(testDir, "Normal.rc"), normalRcContent);
+
+            var exitCode = DataBank.Cli.Program.Main([
+                testDir,
+                "--output", outputPath
+            ]);
+
+            Assert.Equal(0, exitCode);
+            Assert.True(File.Exists(outputPath));
+
+            var json = File.ReadAllText(outputPath);
+            var output = JsonSerializer.Deserialize<DataBankOutput>(json, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                Converters = { new JsonStringEnumConverter() }
+            });
+
+            Assert.NotNull(output);
+            Assert.NotEmpty(output.Entries);
+
+            // All entries from DNT file should be marked DoNotTranslate
+            var dntFileEntries = output.Entries.Where(e => e.Source.File.Contains("DNT")).ToList();
+            Assert.NotEmpty(dntFileEntries);
+            Assert.All(dntFileEntries, e => Assert.True(e.Metadata.DoNotTranslate));
+
+            // Entries from normal file should not be marked DoNotTranslate
+            var normalFileEntries = output.Entries.Where(e => e.Source.File == "Normal.rc").ToList();
+            Assert.NotEmpty(normalFileEntries);
+            Assert.All(normalFileEntries, e => Assert.False(e.Metadata.DoNotTranslate));
+        }
+        finally
+        {
+            if (Directory.Exists(testDir))
+                Directory.Delete(testDir, true);
+            if (File.Exists(outputPath))
+                File.Delete(outputPath);
+        }
+    }
 }

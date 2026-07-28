@@ -22,6 +22,7 @@ public static partial class RcParser
             : Path.GetFileName(filePath);
 
         var encodingName = encodingOverride ?? EncodingDetector.Detect(filePath).WebName;
+        var isDntFile = FileHelper.HasDntInFilename(filePath);
 
         try
         {
@@ -80,7 +81,7 @@ public static partial class RcParser
 
                 if (inStringTable)
                 {
-                    var entry = ParseStringEntry(line, currentLocale, relativePath, symbolMap, encodingName);
+                    var entry = ParseStringEntry(line, currentLocale, relativePath, symbolMap, encodingName, isDntFile);
                     if (entry is not null)
                         entries.Add(entry);
                     continue;
@@ -102,7 +103,7 @@ public static partial class RcParser
                         {
                             entries.Add(CreateDialogEntry(
                                 captionValue, currentLocale,
-                                currentDialogName, "CAPTION", encodingName));
+                                currentDialogName, "CAPTION", relativePath, encodingName, isDntFile));
                         }
                     }
                     continue;
@@ -127,13 +128,13 @@ public static partial class RcParser
                         {
                             entries.Add(CreateDialogEntry(
                                 captionValue, currentLocale,
-                                currentDialogName, "CAPTION", encodingName));
+                                currentDialogName, "CAPTION", relativePath, encodingName, isDntFile));
                         }
                         continue;
                     }
 
                     // Extract strings from control elements
-                    var controlEntry = ParseDialogControl(line, currentLocale, currentDialogName, ref dialogControlIndex, symbolMap, encodingName);
+                    var controlEntry = ParseDialogControl(line, currentLocale, currentDialogName, relativePath, ref dialogControlIndex, symbolMap, encodingName, isDntFile);
                     if (controlEntry is not null)
                         entries.Add(controlEntry);
                 }
@@ -149,23 +150,23 @@ public static partial class RcParser
 
     private static LocalizedStringEntry CreateDialogEntry(
         string value, string locale, string dialogName,
-        string controlType, string encodingName)
+        string controlType, string relativePath, string encodingName, bool isDntFile)
     {
         var key = $"{controlType}::{dialogName}";
-        var metadata = new EntryMetadata();
+        var metadata = new EntryMetadata { DoNotTranslate = isDntFile };
         DetectFormatSpecifiers(value, metadata);
 
         return new LocalizedStringEntry
         {
-            Id = $"rc::{dialogName}::{key}",
+            Id = $"rc::{relativePath}::{key}",
             Key = key,
             Value = value,
             Locale = locale,
             Source = new SourceInfo
             {
                 Format = "rc",
-                File = dialogName,
-                Path = dialogName,
+                File = relativePath,
+                Path = relativePath,
                 Encoding = encodingName
             },
             Metadata = metadata
@@ -173,8 +174,8 @@ public static partial class RcParser
     }
 
     private static LocalizedStringEntry? ParseDialogControl(
-        string line, string locale, string dialogName,
-        ref int controlIndex, Dictionary<int, string>? symbolMap, string encodingName)
+        string line, string locale, string dialogName, string relativePath,
+        ref int controlIndex, Dictionary<int, string>? symbolMap, string encodingName, bool isDntFile)
     {
         // LTEXT "text",IDC_xxx,x,y,w,h
         // PUSHBUTTON "text",IDC_xxx,x,y,w,h
@@ -203,21 +204,22 @@ public static partial class RcParser
             var metadata = new EntryMetadata
             {
                 RcId = numericId,
-                RcDefine = defineName
+                RcDefine = defineName,
+                DoNotTranslate = isDntFile
             };
             DetectFormatSpecifiers(value, metadata);
 
             return new LocalizedStringEntry
             {
-                Id = $"rc::{dialogName}::{key}",
+                Id = $"rc::{relativePath}::{key}",
                 Key = key,
                 Value = value,
                 Locale = locale,
                 Source = new SourceInfo
                 {
                     Format = "rc",
-                    File = dialogName,
-                    Path = dialogName,
+                    File = relativePath,
+                    Path = relativePath,
                     Encoding = encodingName
                 },
                 Metadata = metadata
@@ -246,21 +248,22 @@ public static partial class RcParser
             var metadata = new EntryMetadata
             {
                 RcId = numericId,
-                RcDefine = defineName
+                RcDefine = defineName,
+                DoNotTranslate = isDntFile
             };
             DetectFormatSpecifiers(value, metadata);
 
             return new LocalizedStringEntry
             {
-                Id = $"rc::{dialogName}::{key}",
+                Id = $"rc::{relativePath}::{key}",
                 Key = key,
                 Value = value,
                 Locale = locale,
                 Source = new SourceInfo
                 {
                     Format = "rc",
-                    File = dialogName,
-                    Path = dialogName,
+                    File = relativePath,
+                    Path = relativePath,
                     Encoding = encodingName
                 },
                 Metadata = metadata
@@ -410,7 +413,7 @@ public static partial class RcParser
 
     private static LocalizedStringEntry? ParseStringEntry(
         string line, string locale, string relativePath,
-        Dictionary<int, string>? symbolMap, string encodingName)
+        Dictionary<int, string>? symbolMap, string encodingName, bool isDntFile)
     {
         // Match: IDS_WELCOME "Welcome" or 100 "Welcome"
         var match = StringEntryPattern().Match(line);
@@ -447,7 +450,8 @@ public static partial class RcParser
         var metadata = new EntryMetadata
         {
             RcId = numericId,
-            RcDefine = defineName
+            RcDefine = defineName,
+            DoNotTranslate = isDntFile
         };
         DetectFormatSpecifiers(value, metadata);
 

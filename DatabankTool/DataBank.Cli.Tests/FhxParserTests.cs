@@ -210,4 +210,54 @@ public class FhxParserTests
         var path = Path.Combine("Code_Locale", "French", "Fhx", "AlarmWords.txt");
         Assert.Equal("fr", FhxParser.DetectLocale(path, ""));
     }
+
+    [Fact]
+    public void Parse_DntFilename_AllEntriesMarkedDoNotTranslate()
+    {
+        var fhxContent = "@Key1@\t\"context\"\tValue1\n@Key2@\t\"context\"\tValue2";
+        var tempFile = Path.GetTempFileName();
+        try
+        {
+            // Rename to have DNT in filename
+            var dntFile = Path.ChangeExtension(tempFile, "-DNT.fhx");
+            File.Move(tempFile, dntFile);
+            File.WriteAllText(dntFile, fhxContent);
+
+            var entries = FhxParser.Parse(dntFile);
+
+            Assert.Equal(2, entries.Count);
+            Assert.All(entries, e => Assert.True(e.Metadata.DoNotTranslate));
+        }
+        finally
+        {
+            if (File.Exists(tempFile))
+                File.Delete(tempFile);
+            if (File.Exists(Path.ChangeExtension(tempFile, "-DNT.fhx")))
+                File.Delete(Path.ChangeExtension(tempFile, "-DNT.fhx"));
+        }
+    }
+
+    [Fact]
+    public void Parse_DntFilename_PreservesContextBasedDetection()
+    {
+        // File without DNT in filename, but has "do NOT translate" in context
+        var fhxContent = "@Key1@\t\"do NOT translate\"\tValue1\n@Key2@\t\"context\"\tValue2";
+        var tempFile = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(tempFile, fhxContent);
+
+            var entries = FhxParser.Parse(tempFile);
+
+            Assert.Equal(2, entries.Count);
+            var dntEntry = entries.First(e => e.Key == "@Key1@");
+            Assert.True(dntEntry.Metadata.DoNotTranslate);
+            var normalEntry = entries.First(e => e.Key == "@Key2@");
+            Assert.False(normalEntry.Metadata.DoNotTranslate);
+        }
+        finally
+        {
+            File.Delete(tempFile);
+        }
+    }
 }

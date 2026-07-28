@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using DataBank.Cli.Helpers;
 using DataBank.Cli.Models;
 
 namespace DataBank.Cli.Parsers;
@@ -17,6 +18,8 @@ public static partial class ResxParser
             ? Path.GetRelativePath(rootDir, filePath)
             : Path.GetFileName(filePath);
 
+        var isDntFile = FileHelper.HasDntInFilename(filePath);
+
         try
         {
             var doc = XDocument.Load(filePath);
@@ -26,7 +29,7 @@ public static partial class ResxParser
 
             foreach (var dataElement in root.Elements("data"))
             {
-                var entry = ParseDataElement(dataElement, locale, relativePath);
+                var entry = ParseDataElement(dataElement, locale, relativePath, isDntFile);
                 if (entry is not null)
                     entries.Add(entry);
             }
@@ -40,7 +43,7 @@ public static partial class ResxParser
     }
 
     private static LocalizedStringEntry? ParseDataElement(
-        XElement dataElement, string locale, string relativePath)
+        XElement dataElement, string locale, string relativePath, bool isDntFile)
     {
         var name = dataElement.Attribute("name")?.Value;
         if (string.IsNullOrEmpty(name))
@@ -76,7 +79,8 @@ public static partial class ResxParser
             },
             Metadata = new EntryMetadata
             {
-                Comment = comment
+                Comment = comment,
+                DoNotTranslate = isDntFile
             }
         };
     }

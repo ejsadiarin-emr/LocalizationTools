@@ -1,4 +1,5 @@
 using System.Text.Json;
+using DataBank.Cli.Helpers;
 using DataBank.Cli.Models;
 
 namespace DataBank.Cli.Parsers;
@@ -13,6 +14,7 @@ public static class JsonParser
             : Path.GetFileName(filePath);
 
         var locale = DetectLocale(filePath);
+        var isDntFile = FileHelper.HasDntInFilename(filePath);
 
         try
         {
@@ -46,7 +48,7 @@ public static class JsonParser
                         File = relativePath,
                         Path = relativePath
                     },
-                    Metadata = new EntryMetadata()
+                    Metadata = new EntryMetadata { DoNotTranslate = isDntFile }
                 });
             }
         }
