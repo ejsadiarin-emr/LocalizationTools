@@ -1,18 +1,18 @@
 ## ADDED Requirements
 
 ### Requirement: Coverage summary endpoint
-The system SHALL provide a GET endpoint at `/api/coverage` that returns coverage summary information.
+The system SHALL provide a GET endpoint at `/api/stats/coverage` that returns coverage summary information.
 
 #### Scenario: Get coverage summary
-- **WHEN** client sends GET request to `/api/coverage`
+- **WHEN** client sends GET request to `/api/stats/coverage`
 - **THEN** system returns CoverageReport object with coverage metrics for all locales
 
 #### Scenario: Coverage by locale
-- **WHEN** client sends GET request to `/api/coverage?locale=en-US`
+- **WHEN** client sends GET request to `/api/stats/coverage?locale=en-US`
 - **THEN** system returns coverage data specific to "en-US" locale
 
 #### Scenario: Coverage by format
-- **WHEN** client sends GET request to `/api/coverage?format=resx`
+- **WHEN** client sends GET request to `/api/stats/coverage?format=resx`
 - **THEN** system returns coverage data for entries from .resx files only
 
 ### Requirement: Statistics endpoint
