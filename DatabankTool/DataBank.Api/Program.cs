@@ -1,9 +1,10 @@
-using DataBank.Api.Services;
+using DataBank.Api.Endpoints;
+using DataBank.Api.Repositories;
 using Microsoft.OpenApi.Models;
+using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -26,9 +27,16 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddSingleton<IDataBankService, FileDataBankService>();
-builder.Services.AddSingleton<IExtractionService, ExtractionService>();
-builder.Services.AddSingleton<IStatisticsService, StatisticsService>();
+var mongoConnectionString = builder.Configuration["MongoDb:ConnectionString"] ?? "mongodb://localhost:27017";
+var mongoDatabaseName = builder.Configuration["MongoDb:DatabaseName"] ?? "databank";
+
+builder.Services.AddSingleton<IMongoClient>(new MongoClient(mongoConnectionString));
+builder.Services.AddSingleton(sp =>
+{
+    var client = sp.GetRequiredService<IMongoClient>();
+    return client.GetDatabase(mongoDatabaseName);
+});
+builder.Services.AddScoped<IDataBankRepository, MongoDataBankRepository>();
 
 var app = builder.Build();
 
@@ -43,7 +51,14 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowConfiguredOrigins");
-app.MapControllers();
+
+app.MapEntriesEndpoints();
+app.MapMetadataEndpoints();
+app.MapSessionsEndpoints();
+app.MapExtractionEndpoints();
+app.MapStatsEndpoints();
+app.MapExportEndpoints();
+
 app.MapHealthChecks("/health");
 
 app.Run();
