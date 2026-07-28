@@ -10,21 +10,102 @@
     <div class="container">
         <header>
             <h1>DataBank Tool</h1>
+            <div class="tab-nav">
+                <button class="tab-btn active" data-tab="databank">DataBank</button>
+                <button class="tab-btn" data-tab="grf-files">GRF Files</button>
+            </div>
         </header>
-        <main>
-            <section class="input-section">
-                <h2>Select Directory</h2>
-                <button id="browseBtn" class="btn">Browse...</button>
-                <div id="selectedPath" class="path-display">No directory selected</div>
+
+        <!-- DataBank Tab Content -->
+        <div id="tab-databank" class="tab-content active">
+
+        <!-- Dashboard Section -->
+        <section id="dashboard-section">
+            <h2>Dashboard</h2>
+            <div id="dashboard-cards" class="cards">
+                <div class="card">
+                    <div class="card-label">Total Entries</div>
+                    <div class="card-value" id="stat-total">0</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Locales</div>
+                    <div class="card-value" id="stat-locales">0</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Formats</div>
+                    <div class="card-value" id="stat-formats">0</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Translated</div>
+                    <div class="card-value card-success" id="stat-translated">0</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Untranslated</div>
+                    <div class="card-value card-error" id="stat-untranslated">0</div>
+                </div>
+            </div>
+            <h3>Locale Breakdown</h3>
+            <div id="locale-stats"></div>
+        </section>
+
+        <!-- Table Section -->
+        <section id="table-section">
+            <h2>Entries</h2>
+            <div class="filter-bar">
+                <select id="locale-filter">
+                    <option value="">All Locales</option>
+                </select>
+                <select id="format-filter">
+                    <option value="">All Formats</option>
+                </select>
+                <select id="status-filter">
+                    <option value="">All Status</option>
+                    <option value="translated">Translated</option>
+                    <option value="untranslated">Untranslated</option>
+                    <option value="do-not-translate">Do Not Translate</option>
+                </select>
+                <input type="text" id="search-input" placeholder="Search key or value...">
+            </div>
+            <div class="table-wrapper">
+                <table id="entries-table">
+                    <thead>
+                        <tr>
+                            <th data-sort="key">Key <span class="sort-arrow"></span></th>
+                            <th data-sort="sourceFile">Source <span class="sort-arrow"></span></th>
+                            <th data-sort="value">Translation <span class="sort-arrow"></span></th>
+                            <th data-sort="locale">Locale <span class="sort-arrow"></span></th>
+                            <th data-sort="format">Format <span class="sort-arrow"></span></th>
+                            <th data-sort="status">Status <span class="sort-arrow"></span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                    </tbody>
+                </table>
+            </div>
+            <div id="pagination" class="pagination"></div>
+            <div id="no-data-message" class="no-data">No data loaded - click "Load DataBank JSON" button above</div>
+        </section>
+
+        <!-- Detail Panel -->
+        <div id="detail-panel" class="detail-panel hidden">
+            <div class="detail-header">
+                <h2>Entry Detail</h2>
+                <button id="detail-close" class="btn">Close</button>
+            </div>
+            <div id="detail-content" class="detail-content"></div>
+        </div>
+
+        </div> <!-- End DataBank Tab -->
+
+        <!-- GRF Files Tab Content -->
+        <div id="tab-grf-files" class="tab-content">
+            <section id="grf-section">
+                <h2>GRF Files</h2>
+                <div id="grf-file-list" class="grf-list"></div>
+                <div id="no-grf-message" class="no-data">No GRF files found</div>
             </section>
-            <section class="action-section">
-                <button id="runBtn" class="btn btn-primary" disabled>Run Extraction</button>
-            </section>
-            <section class="output-section">
-                <h2>Results</h2>
-                <pre id="output" class="output-area">Select a directory and run extraction to see results.</pre>
-            </section>
-        </main>
+        </div>
+
     </div>
     <script src="app.js"></script>
 </body>
