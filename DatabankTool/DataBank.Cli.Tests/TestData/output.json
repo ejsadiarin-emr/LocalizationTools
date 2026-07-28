@@ -323,14 +323,14 @@
       }
     },
     {
-      "id": "resx::Messages.zh-Hans.resx::WelcomeMessage",
+      "id": "resx::Messages.zh-CN.resx::WelcomeMessage",
       "key": "WelcomeMessage",
       "value": "\u6B22\u8FCE\u4F7F\u7528 DeltaV",
-      "locale": "zh-Hans",
+      "locale": "zh-CN",
       "source": {
         "format": "resx",
-        "file": "Messages.zh-Hans.resx",
-        "path": "Messages.zh-Hans.resx"
+        "file": "Messages.zh-CN.resx",
+        "path": "Messages.zh-CN.resx"
       },
       "metadata": {
         "comment": null,
@@ -339,14 +339,14 @@
       }
     },
     {
-      "id": "resx::Messages.zh-Hans.resx::ErrorMessage",
+      "id": "resx::Messages.zh-CN.resx::ErrorMessage",
       "key": "ErrorMessage",
       "value": "\u53D1\u751F\u9519\u8BEF",
-      "locale": "zh-Hans",
+      "locale": "zh-CN",
       "source": {
         "format": "resx",
-        "file": "Messages.zh-Hans.resx",
-        "path": "Messages.zh-Hans.resx"
+        "file": "Messages.zh-CN.resx",
+        "path": "Messages.zh-CN.resx"
       },
       "metadata": {
         "comment": null,
@@ -355,14 +355,14 @@
       }
     },
     {
-      "id": "resx::Messages.zh-Hans.resx::StatusRunning",
+      "id": "resx::Messages.zh-CN.resx::StatusRunning",
       "key": "StatusRunning",
       "value": "\u8FD0\u884C\u4E2D",
-      "locale": "zh-Hans",
+      "locale": "zh-CN",
       "source": {
         "format": "resx",
-        "file": "Messages.zh-Hans.resx",
-        "path": "Messages.zh-Hans.resx"
+        "file": "Messages.zh-CN.resx",
+        "path": "Messages.zh-CN.resx"
       },
       "metadata": {
         "comment": null,
@@ -371,14 +371,14 @@
       }
     },
     {
-      "id": "resx::Messages.zh-Hans.resx::StatusIdle",
+      "id": "resx::Messages.zh-CN.resx::StatusIdle",
       "key": "StatusIdle",
       "value": "\u7A7A\u95F2",
-      "locale": "zh-Hans",
+      "locale": "zh-CN",
       "source": {
         "format": "resx",
-        "file": "Messages.zh-Hans.resx",
-        "path": "Messages.zh-Hans.resx"
+        "file": "Messages.zh-CN.resx",
+        "path": "Messages.zh-CN.resx"
       },
       "metadata": {
         "comment": null,
@@ -387,14 +387,14 @@
       }
     },
     {
-      "id": "resx::Messages.zh-Hans.resx::ButtonSubmit",
+      "id": "resx::Messages.zh-CN.resx::ButtonSubmit",
       "key": "ButtonSubmit",
       "value": "\u63D0\u4EA4",
-      "locale": "zh-Hans",
+      "locale": "zh-CN",
       "source": {
         "format": "resx",
-        "file": "Messages.zh-Hans.resx",
-        "path": "Messages.zh-Hans.resx"
+        "file": "Messages.zh-CN.resx",
+        "path": "Messages.zh-CN.resx"
       },
       "metadata": {
         "comment": null,
@@ -403,14 +403,14 @@
       }
     },
     {
-      "id": "resx::Messages.zh-Hans.resx::ButtonCancel",
+      "id": "resx::Messages.zh-CN.resx::ButtonCancel",
       "key": "ButtonCancel",
       "value": "\u53D6\u6D88",
-      "locale": "zh-Hans",
+      "locale": "zh-CN",
       "source": {
         "format": "resx",
-        "file": "Messages.zh-Hans.resx",
-        "path": "Messages.zh-Hans.resx"
+        "file": "Messages.zh-CN.resx",
+        "path": "Messages.zh-CN.resx"
       },
       "metadata": {
         "comment": null,
@@ -419,14 +419,14 @@
       }
     },
     {
-      "id": "resx::Messages.zh-Hans.resx::PressureHigh",
+      "id": "resx::Messages.zh-CN.resx::PressureHigh",
       "key": "PressureHigh",
       "value": "\u538B\u529B\u8FC7\u9AD8",
-      "locale": "zh-Hans",
+      "locale": "zh-CN",
       "source": {
         "format": "resx",
-        "file": "Messages.zh-Hans.resx",
-        "path": "Messages.zh-Hans.resx"
+        "file": "Messages.zh-CN.resx",
+        "path": "Messages.zh-CN.resx"
       },
       "metadata": {
         "comment": null,
@@ -435,14 +435,14 @@
       }
     },
     {
-      "id": "resx::Messages.zh-Hans.resx::PressureLow",
+      "id": "resx::Messages.zh-CN.resx::PressureLow",
       "key": "PressureLow",
       "value": "\u538B\u529B\u8FC7\u4F4E",
-      "locale": "zh-Hans",
+      "locale": "zh-CN",
       "source": {
         "format": "resx",
-        "file": "Messages.zh-Hans.resx",
-        "path": "Messages.zh-Hans.resx"
+        "file": "Messages.zh-CN.resx",
+        "path": "Messages.zh-CN.resx"
       },
       "metadata": {
         "comment": null,
@@ -451,14 +451,14 @@
       }
     },
     {
-      "id": "resx::Messages.zh-Hans.resx::TemperatureFormat",
+      "id": "resx::Messages.zh-CN.resx::TemperatureFormat",
       "key": "TemperatureFormat",
       "value": "\u6E29\u5EA6\uFF1A{0}\u00B0C",
-      "locale": "zh-Hans",
+      "locale": "zh-CN",
       "source": {
         "format": "resx",
-        "file": "Messages.zh-Hans.resx",
-        "path": "Messages.zh-Hans.resx"
+        "file": "Messages.zh-CN.resx",
+        "path": "Messages.zh-CN.resx"
       },
       "metadata": {
         "comment": null,

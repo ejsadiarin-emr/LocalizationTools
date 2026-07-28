@@ -70,6 +70,14 @@ ci: restore build test analyze
 # ---------------------------------------------------------------------------------
 # DatabankTool targets (CLI + Desktop + Tests)
 # ---------------------------------------------------------------------------------
+# Databank CLI usage:
+#   make run-databank INPUT_DIR=./l10n-files
+#   make run-databank INPUT_DIR=./l10n-files ARGS="--output ./out/data-bank.json --stats"
+#   make run-databank INPUT_DIR=./l10n-files ARGS="--format resx --verbose"
+#
+# Supported file formats: resx, rc, fhx, ahc, json
+
+INPUT_DIR ?= .
 
 restore-databank:
 	dotnet restore DatabankTool/DatabankTool.sln
@@ -80,7 +88,7 @@ build-databank-cli:
 	dotnet build DatabankTool/DataBank.Cli/DataBank.Cli.csproj -c Release
 
 run-databank: build-databank-cli
-	dotnet run --project DatabankTool/DataBank.Cli/DataBank.Cli.csproj -c Release --no-build $(ARGS)
+	dotnet run --project DatabankTool/DataBank.Cli/DataBank.Cli.csproj -c Release --no-build --input-dir $(INPUT_DIR) $(ARGS)
 
 build-databank-desktop:
 	dotnet build DatabankTool/DataBank.Desktop/DataBank.Desktop.csproj -c Release

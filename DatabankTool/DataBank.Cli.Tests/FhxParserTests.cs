@@ -152,13 +152,62 @@ public class FhxParserTests
     {
         var path = Path.Combine("some", "path", "FHX", "Translated", "AlarmWords.txt");
         var content = "@Key@\t\"context\"\tSome value // lang=zh-CN";
-        Assert.Equal("zh-Hans", FhxParser.DetectLocale(path, content));
+        Assert.Equal("zh-CN", FhxParser.DetectLocale(path, content));
     }
 
     [Fact]
     public void NormalizeLangTag_ZhHans_ReturnsZhHans()
     {
-        Assert.Equal("zh-Hans", FhxParser.NormalizeLangTag("zh-CN"));
-        Assert.Equal("zh-Hans", FhxParser.NormalizeLangTag("zh-Hans"));
+        Assert.Equal("zh-CN", FhxParser.NormalizeLangTag("zh-CN"));
+        Assert.Equal("zh-CN", FhxParser.NormalizeLangTag("zh-CN"));
+    }
+
+    [Fact]
+    public void DetectLocaleFromFilePath_FrenchDirectory_ReturnsFr()
+    {
+        var path = Path.Combine("Code_Locale", "French", "Fhx", "AlarmWords.txt");
+        Assert.Equal("fr", FhxParser.DetectLocaleFromFilePath(path));
+    }
+
+    [Fact]
+    public void DetectLocaleFromFilePath_RussianDirectory_ReturnsRu()
+    {
+        var path = Path.Combine("Code_Locale", "Russian", "Fhx", "AlarmWords.txt");
+        Assert.Equal("ru", FhxParser.DetectLocaleFromFilePath(path));
+    }
+
+    [Fact]
+    public void DetectLocaleFromFilePath_ChineseDirectory_ReturnsZhHans()
+    {
+        var path = Path.Combine("Code_Locale", "Chinese", "Fhx", "AlarmWords.txt");
+        Assert.Equal("zh-CN", FhxParser.DetectLocaleFromFilePath(path));
+    }
+
+    [Fact]
+    public void DetectLocaleFromFilePath_JapaneseDirectory_ReturnsJa()
+    {
+        var path = Path.Combine("Code_Locale", "Japanese", "Fhx", "AlarmWords.txt");
+        Assert.Equal("ja", FhxParser.DetectLocaleFromFilePath(path));
+    }
+
+    [Fact]
+    public void DetectLocaleFromFilePath_LtkDirectory_ReturnsLt()
+    {
+        var path = Path.Combine("Code_Locale", "LTK", "Fhx", "AlarmWords.txt");
+        Assert.Equal("lt", FhxParser.DetectLocaleFromFilePath(path));
+    }
+
+    [Fact]
+    public void DetectLocaleFromFilePath_NoLocaleDirectory_ReturnsNull()
+    {
+        var path = Path.Combine("Code", "fhx", "alarmTypes.fhx");
+        Assert.Null(FhxParser.DetectLocaleFromFilePath(path));
+    }
+
+    [Fact]
+    public void DetectLocale_FilePathWithFrenchDirectory_ReturnsFr()
+    {
+        var path = Path.Combine("Code_Locale", "French", "Fhx", "AlarmWords.txt");
+        Assert.Equal("fr", FhxParser.DetectLocale(path, ""));
     }
 }

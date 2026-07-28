@@ -11,7 +11,7 @@ public static class FhxParser
 
     /// <summary>
     /// Parses an FHX file into localized string entries.
-    /// Locale detection order: --locale override → parent directory name → langtag in content → "unknown".
+    /// Locale detection order: --locale override → filepath path components → langtag in content → "unknown".
     /// Use --locale when the directory name is not a valid BCP47 locale (e.g., "Translated").
     /// </summary>
     public static List<LocalizedStringEntry> Parse(string filePath, string? localeOverride = null, string? encodingOverride = null, string? rootDir = null)
@@ -93,14 +93,9 @@ public static class FhxParser
         if (localeOverride is not null)
             return localeOverride;
 
-        var parentDir = Path.GetFileName(Path.GetDirectoryName(filePath));
-
-        if (!string.IsNullOrEmpty(parentDir))
-        {
-            var mapped = MapDirectoryNameToLocale(parentDir);
-            if (mapped is not null)
-                return mapped;
-        }
+        var pathLocale = DetectLocaleFromFilePath(filePath);
+        if (pathLocale is not null)
+            return pathLocale;
 
         var contentLocale = DetectLocaleFromContent(content);
         if (contentLocale is not null)
@@ -110,26 +105,45 @@ public static class FhxParser
         return "unknown";
     }
 
+    internal static string? DetectLocaleFromFilePath(string filePath)
+    {
+        var directory = Path.GetDirectoryName(filePath);
+        if (string.IsNullOrEmpty(directory))
+            return null;
+
+        var pathParts = directory.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+        foreach (var part in pathParts)
+        {
+            var mapped = MapDirectoryNameToLocale(part);
+            if (mapped is not null)
+                return mapped;
+        }
+
+        return null;
+    }
+
     internal static string? MapDirectoryNameToLocale(string dirName)
     {
         return dirName.ToUpperInvariant() switch
         {
-            "EN" => "en",
-            "ZH-CN" or "ZHHANS" or "ZH-HANS" => "zh-Hans",
-            "ZH-TW" or "ZH-HANT" => "zh-Hant",
-            "JA" or "JP" or "JPN" => "ja",
-            "KO" or "KOR" => "ko",
-            "DE" or "DEU" => "de",
-            "FR" or "FRA" => "fr",
-            "ES" or "ESP" => "es",
-            "PT" or "PTB" => "pt-BR",
-            "RU" or "RUS" => "ru",
-            "IT" or "ITA" => "it",
-            "NL" or "NLD" => "nl",
-            "PL" or "PLK" => "pl",
-            "CS" or "CSY" => "cs",
-            "HU" or "HUN" => "hu",
-            "TR" or "TRK" => "tr",
+            "EN" or "ENGLISH" => "en",
+            "ZH-CN" or "ZHHANS" or "ZH-HANS" or "CHINESE" or "CHINESE (SIMPLIFIED)" => "zh-CN",
+            "ZH-TW" or "ZH-HANT" or "CHINESE (TRADITIONAL)" => "zh-TW",
+            "JA" or "JP" or "JPN" or "JAPANESE" => "ja",
+            "KO" or "KOR" or "KOREAN" => "ko",
+            "DE" or "DEU" or "GERMAN" => "de",
+            "FR" or "FRA" or "FRENCH" => "fr",
+            "ES" or "ESP" or "SPANISH" => "es",
+            "PT" or "PTB" or "PORTUGUESE" or "PORTUGUESE (BRAZIL)" => "pt-BR",
+            "RU" or "RUS" or "RUSSIAN" => "ru",
+            "IT" or "ITA" or "ITALIAN" => "it",
+            "NL" or "NLD" or "DUTCH" => "nl",
+            "PL" or "PLK" or "POLISH" => "pl",
+            "CS" or "CSY" or "CZECH" => "cs",
+            "HU" or "HUN" or "HUNGARIAN" => "hu",
+            "TR" or "TRK" or "TURKISH" => "tr",
+            "LTK" => "lt",
             _ => null
         };
     }
@@ -161,9 +175,9 @@ public static class FhxParser
         return lang switch
         {
             "en" => "en",
-            "zh" when parts.Length > 1 && parts[1] is "cn" or "chs" or "hans" => "zh-Hans",
-            "zh" when parts.Length > 1 && parts[1] is "tw" or "cht" or "hant" => "zh-Hant",
-            "zh" => "zh-Hans",
+            "zh" when parts.Length > 1 && parts[1] is "cn" or "chs" or "hans" => "zh-CN",
+            "zh" when parts.Length > 1 && parts[1] is "tw" or "cht" or "hant" => "zh-TW",
+            "zh" => "zh-CN",
             "ja" or "jp" or "jpn" => "ja",
             "ko" or "kor" => "ko",
             "de" or "deu" => "de",

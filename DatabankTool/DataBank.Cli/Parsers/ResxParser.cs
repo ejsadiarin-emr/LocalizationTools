@@ -86,13 +86,26 @@ public static partial class ResxParser
         var fileName = Path.GetFileNameWithoutExtension(filePath);
 
         // Pattern: Messages.fr.resx → fr
-        // Pattern: Messages.zh-Hans.resx → zh-Hans
+        // Pattern: Messages.zh-CN.resx → zh-CN
         // Pattern: Messages.resx → en (base)
         var match = ResxLocalePattern().Match(fileName);
         if (match.Success)
-            return match.Groups[1].Value;
+        {
+            var locale = match.Groups[1].Value;
+            return NormalizeChineseLocale(locale);
+        }
 
         return "en";
+    }
+
+    private static string NormalizeChineseLocale(string locale)
+    {
+        return locale.ToLowerInvariant() switch
+        {
+            "zh-hans" or "zh-chs" => "zh-CN",
+            "zh-hant" or "zh-cht" => "zh-TW",
+            _ => locale
+        };
     }
 
     [GeneratedRegex(@"\.([a-zA-Z]{2}(?:-[a-zA-Z0-9]+)?)$")]

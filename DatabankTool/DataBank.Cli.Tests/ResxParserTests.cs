@@ -5,7 +5,7 @@ namespace DataBank.Cli.Tests;
 public class ResxParserTests
 {
     private static string SamplesDir => Path.Combine(
-        Directory.GetCurrentDirectory(), "..", "..", "..", "..", "..", "databank-samples");
+        Directory.GetCurrentDirectory(), "..", "..", "..", "TestData");
 
     [Fact]
     public void Parse_BaseResxFile_ExtractsAllEntries()
@@ -30,11 +30,11 @@ public class ResxParserTests
     [Fact]
     public void Parse_ChineseResxFile_DetectsComplexLocale()
     {
-        var filePath = Path.Combine(SamplesDir, "resx", "Messages.zh-Hans.resx");
+        var filePath = Path.Combine(SamplesDir, "resx", "Messages.zh-CN.resx");
         var entries = ResxParser.Parse(filePath);
 
         Assert.NotEmpty(entries);
-        Assert.All(entries, e => Assert.Equal("zh-Hans", e.Locale));
+        Assert.All(entries, e => Assert.Equal("zh-CN", e.Locale));
     }
 
     [Fact]
@@ -105,7 +105,7 @@ public class ResxParserTests
     [Fact]
     public void DetectLocale_ComplexLocale_ReturnsZhHans()
     {
-        Assert.Equal("zh-Hans", ResxParser.DetectLocale("Messages.zh-Hans.resx"));
+        Assert.Equal("zh-CN", ResxParser.DetectLocale("Messages.zh-CN.resx"));
     }
 
     [Fact]

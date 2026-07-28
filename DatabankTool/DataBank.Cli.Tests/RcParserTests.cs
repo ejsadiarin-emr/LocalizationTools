@@ -5,7 +5,7 @@ namespace DataBank.Cli.Tests;
 public class RcParserTests
 {
     private static string SamplesDir => Path.Combine(
-        Directory.GetCurrentDirectory(), "..", "..", "..", "..", "..", "databank-samples");
+        Directory.GetCurrentDirectory(), "..", "..", "..", "TestData");
 
     [Fact]
     public void Parse_SampleRcFile_ExtractsAllEntries()
@@ -101,7 +101,7 @@ public class RcParserTests
     [Fact]
     public void MapLanguageToLocale_ChineseSimplified_ReturnsZhHans()
     {
-        Assert.Equal("zh-Hans", RcParser.MapLanguageToLocale("LANG_CHINESE", "SUBLANG_CHINESE_SIMPLIFIED"));
+        Assert.Equal("zh-CN", RcParser.MapLanguageToLocale("LANG_CHINESE", "SUBLANG_CHINESE_SIMPLIFIED"));
     }
 
     [Fact]
