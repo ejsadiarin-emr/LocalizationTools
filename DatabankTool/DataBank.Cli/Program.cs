@@ -90,55 +90,32 @@ public class Program
         var entries = new List<LocalizedStringEntry>();
         var rootDir = Path.GetFullPath(inputDir);
 
-        if (format is null || format.Equals("resx", StringComparison.OrdinalIgnoreCase))
-        {
-            var resxFiles = Directory.GetFiles(inputDir, "*.resx", SearchOption.AllDirectories);
-            foreach (var file in resxFiles)
-            {
-                if (verbose) Console.Error.WriteLine($"Parsing: {Path.GetRelativePath(rootDir, file)}");
-                entries.AddRange(ResxParser.Parse(file, rootDir));
-            }
-        }
+        var detectedFiles = FileDetector.DiscoverFiles(inputDir);
 
-        if (format is null || format.Equals("rc", StringComparison.OrdinalIgnoreCase))
+        foreach (var (file, detectedFormat) in detectedFiles)
         {
-            var rcFiles = Directory.GetFiles(inputDir, "*.rc", SearchOption.AllDirectories);
-            foreach (var file in rcFiles)
-            {
-                if (verbose) Console.Error.WriteLine($"Parsing: {Path.GetRelativePath(rootDir, file)}");
-                entries.AddRange(RcParser.Parse(file, symbolMap, rootDir));
-            }
-        }
+            if (format is not null && !format.Equals(detectedFormat, StringComparison.OrdinalIgnoreCase))
+                continue;
 
-        if (format is null || format.Equals("fhx", StringComparison.OrdinalIgnoreCase))
-        {
-            var fhxFiles = Directory.GetFiles(inputDir, "*.txt", SearchOption.AllDirectories)
-                .Where(f => Path.GetFileName(f).Equals("AlarmWords.txt", StringComparison.OrdinalIgnoreCase))
-                .ToList();
-            foreach (var file in fhxFiles)
-            {
-                if (verbose) Console.Error.WriteLine($"Parsing: {Path.GetRelativePath(rootDir, file)}");
-                entries.AddRange(FhxParser.Parse(file, localeOverride, encodingOverride, rootDir));
-            }
-        }
+            if (verbose) Console.Error.WriteLine($"Parsing: {Path.GetRelativePath(rootDir, file)}");
 
-        if (format is null || format.Equals("ahc", StringComparison.OrdinalIgnoreCase))
-        {
-            var ahcFiles = Directory.GetFiles(inputDir, "*.ahc", SearchOption.AllDirectories);
-            foreach (var file in ahcFiles)
+            switch (detectedFormat)
             {
-                if (verbose) Console.Error.WriteLine($"Parsing: {Path.GetRelativePath(rootDir, file)}");
-                entries.AddRange(AhcParser.Parse(file, encodingOverride, rootDir));
-            }
-        }
-
-        if (format is null || format.Equals("json", StringComparison.OrdinalIgnoreCase))
-        {
-            var jsonFiles = Directory.GetFiles(inputDir, "translate.*.json", SearchOption.AllDirectories);
-            foreach (var file in jsonFiles)
-            {
-                if (verbose) Console.Error.WriteLine($"Parsing: {Path.GetRelativePath(rootDir, file)}");
-                entries.AddRange(JsonParser.Parse(file, rootDir));
+                case "resx":
+                    entries.AddRange(ResxParser.Parse(file, rootDir));
+                    break;
+                case "rc":
+                    entries.AddRange(RcParser.Parse(file, symbolMap, rootDir));
+                    break;
+                case "fhx":
+                    entries.AddRange(FhxParser.Parse(file, localeOverride, encodingOverride, rootDir));
+                    break;
+                case "ahc":
+                    entries.AddRange(AhcParser.Parse(file, encodingOverride, rootDir));
+                    break;
+                case "json":
+                    entries.AddRange(JsonParser.Parse(file, rootDir));
+                    break;
             }
         }
 

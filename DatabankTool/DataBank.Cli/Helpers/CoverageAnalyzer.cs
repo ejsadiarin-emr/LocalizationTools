@@ -140,8 +140,7 @@ public static partial class CoverageAnalyzer
 
     private static bool IsSupportedFormat(string filePath)
     {
-        var ext = Path.GetExtension(filePath).ToLowerInvariant();
-        return ext is ".rc" or ".resx" or ".txt" or ".ahc" or ".json";
+        return FileDetector.DetectFormat(filePath) is not null;
     }
 
     private static Dictionary<string, string> MatchFilePairs(
