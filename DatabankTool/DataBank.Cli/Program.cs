@@ -26,6 +26,9 @@ public class Program
         {
             switch (args[i])
             {
+                case "--input-dir":
+                    if (i + 1 < args.Length) inputDir = args[++i];
+                    break;
                 case "--output" or "-o":
                     if (i + 1 < args.Length) outputPath = args[++i];
                     break;
@@ -250,9 +253,10 @@ public class Program
     {
         Console.WriteLine("dv-extract - Localization string extractor");
         Console.WriteLine();
-        Console.WriteLine("Usage: dv-extract [input-directory] [options]");
+        Console.WriteLine("Usage: dv-extract [options]");
         Console.WriteLine();
         Console.WriteLine("Options:");
+        Console.WriteLine("  --input-dir <path>     Input directory to scan (default: current directory)");
         Console.WriteLine("  --output, -o <path>    Output file path (default: ./data-bank.json)");
         Console.WriteLine("  --format, -f <format>  Filter by format: resx, rc, fhx, ahc, json");
         Console.WriteLine("  --resource-h <path>    Path to resource.h for .rc symbol resolution");
@@ -264,5 +268,10 @@ public class Program
         Console.WriteLine("  --verbose, -v          Print per-file parsing progress to stderr");
         Console.WriteLine("  --flag-untranslated    Flag entries with translation status analysis");
         Console.WriteLine("  --help, -h             Show this help message");
+        Console.WriteLine();
+        Console.WriteLine("Examples:");
+        Console.WriteLine("  dv-extract --input-dir ./l10n-files");
+        Console.WriteLine("  dv-extract --input-dir ./l10n-files --output ./out/data-bank.json --stats");
+        Console.WriteLine("  dv-extract --input-dir ./l10n-files --format resx --verbose");
     }
 }
