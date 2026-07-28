@@ -43,6 +43,9 @@ pack: build-analyzer
 pack-tool: build-cli
 	dotnet pack src/LocalizationAnalyzers.csproj -c Release --no-build -p:TargetFrameworks=net10.0 -p:PackAsDotnetTool=true
 
+pack-tool-2: build-cli
+	dotnet pack src/LocalizationAnalyzers.csproj -c Release --no-build -p:TargetFrameworks=net10.0 -p:PackAsDotnetTool=true
+
 # ---------------------------------------------------------------------------------
 # Build desktop app (WPF + WebView2)
 build-desktop:
