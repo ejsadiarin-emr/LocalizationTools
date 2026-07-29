@@ -89,7 +89,7 @@ data-bank.json
 l10n-output*.json
 
 # Temporary session files
-session-*.md
+# session-*.md
 retain.md
 
 .playwright-mcp
