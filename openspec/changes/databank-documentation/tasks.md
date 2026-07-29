@@ -1,16 +1,21 @@
 ## 1. Research and Preparation
 
-- [ ] 1.1 Review existing DataBank source code (Program.cs, parsers, models) to gather accurate CLI information.
-- [ ] 1.2 Examine sample input files (resx, rc, fhx, ahc) to create realistic examples.
-- [ ] 1.3 Review DataBank.Desktop project structure (App.xaml, MainWindow, WebView2 setup) for Desktop docs.
-- [ ] 1.4 Review DataBank.Api project structure for API documentation reference.
+- [x] 1.1 Review existing DataBank source code (Program.cs, parsers, models) to gather accurate CLI information.
+- [x] 1.2 Examine sample input files (resx, rc, fhx, ahc) to create realistic examples.
+- [x] 1.3 Review DataBank.Desktop project structure (App.xaml, MainWindow, WebView2 setup) for Desktop docs.
+- [x] 1.4 Review DataBank.Api project structure for API documentation reference.
 
 ## 2. Create Top-Level DatabankTool README
 
-- [ ] 2.1 Create `DatabankTool/README.md` with overview of the DatabankTool directory.
-- [ ] 2.2 Describe each sub-project: DataBank.Cli, DataBank.Desktop, DataBank.Api.
-- [ ] 2.3 Add links to each sub-project's README.
-- [ ] 2.4 Note that API documentation is provided via Swagger/OpenAPI.
+- [x] 2.1 Create `DatabankTool/README.md` with overview of the DatabankTool directory.
+- [x] 2.2 Describe each sub-project: DataBank.Cli, DataBank.Desktop, DataBank.Api, DataBank.Import.
+- [x] 2.3 Add links to each sub-project's README.
+- [x] 2.4 Note that API documentation is provided via Swagger/OpenAPI.
+- [x] 2.5 Add Quick How to Run section with make commands, docker-compose, MongoDB Compass instructions.
+- [x] 2.6 Add architecture diagram showing data flow.
+- [x] 2.7 Add API endpoints reference table.
+- [x] 2.8 Add CLI reference with all flags.
+- [x] 2.9 Add common workflows section.
 
 ## 3. Create CLI README Structure
 
@@ -38,14 +43,15 @@
 
 - [ ] 7.1 Document .resx format (XML resource files, locale detection via filename).
 - [ ] 7.2 Document .rc format (Windows resource files, symbol resolution via resource.h).
-- [ ] 7.3 Document .fhx format (AlarmWords.txt files, locale detection via content/override).
+- [ ] 7.3 Document .fhx format (AlarmWords.txt files, locale detection from content/override).
 - [ ] 7.4 Document .ahc format (Alarm history files, encoding detection).
-- [ ] 7.5 Provide example input and output for each format.
+- [ ] 7.5 Document .json format (JSON translation files).
+- [ ] 7.6 Document .grf format (DeltaV GRF template files).
 
 ## 8. Write CLI Output Format Section
 
 - [ ] 8.1 Document data-bank.json schema (generated, entries[]).
-- [ ] 8.2 Document each entry field (key, sourceString, locale, source, metadata).
+- [ ] 8.2 Document each entry field (key, value, locale, source, metadata).
 - [ ] 8.3 Provide realistic example output snippet.
 
 ## 9. Write Common Workflows Section
@@ -67,6 +73,8 @@
 - [ ] 11.2 Explain RcParser: resource.h symbol resolution, string table parsing.
 - [ ] 11.3 Explain FhxParser: AlarmWords.txt parsing, locale detection from content.
 - [ ] 11.4 Explain AhcParser: binary/text parsing, encoding detection.
+- [ ] 11.5 Explain JsonParser: JSON translation file parsing.
+- [ ] 11.6 Explain GrfParser: GRF template file parsing.
 
 ## 12. Write Coverage Analysis Section
 
@@ -88,15 +96,16 @@
 - [ ] 14.4 Provide build commands (`dotnet build` from `DatabankTool/DataBank.Desktop/`).
 - [ ] 14.5 Document how to run the app (`dotnet run`, built executable).
 - [ ] 14.6 Describe architecture: WPF host + WebView2 + IPC pattern.
-- [ ] 14.7 Document development setup and debugging tips.
-- [ ] 14.8 Describe project structure and key files.
+- [ ] 14.7 Document Local and Remote modes with mode persistence.
+- [ ] 14.8 Document development setup and debugging tips.
+- [ ] 14.9 Describe project structure and key files.
 
 ## 15. Update PROJECT_CONTEXT.md
 
 - [ ] 15.1 Change Tool 2 status from "Not started" to "Complete".
-- [ ] 15.2 Update Tool 2 description to match actual implementation (4 parsers, not SARIF-based).
+- [ ] 15.2 Update Tool 2 description to match actual implementation (6 parsers, not SARIF-based).
 - [ ] 15.3 Note the actual output format (richer than originally spec'd).
-- [ ] 15.4 Add note that Desktop (WPF+WebView2) and API (ASP.NET Core) frontends are now available.
+- [ ] 15.4 Add note that Desktop (WPF+WebView2), API (ASP.NET Core), and Import tool are now available.
 
 ## 16. Review and Finalize
 
