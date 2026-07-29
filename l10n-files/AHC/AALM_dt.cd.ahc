@@ -1,9 +1,10 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <ContextualDisplay Name="AALM_dt" Path="Graphics.ContextualDisplays.Emerson.Detail" SchemaVersion="14.3.1.11971">
   <Metadata>
     <LastEditUser>Emerson</LastEditUser>
     <LastEditTime>07/08/2026 12:00:00.000 UTC-05:00</LastEditTime>
   </Metadata>
+
   <Title>
     <LanguageValues>
       <LanguageValue Name="en">
@@ -20,6 +21,7 @@
       </LanguageValue>
     </LanguageValues>
   </Title>
+
   <Description>
     <LanguageValues>
       <LanguageValue Name="en">
@@ -36,7 +38,9 @@
       </LanguageValue>
     </LanguageValues>
   </Description>
+
   <ContainedElements>
+
     <Gem Name="CD_MOD_INFO1" Definition="Library.CD_MOD_INFO">
       <Height>
         <Value>557496</Value>
@@ -47,6 +51,7 @@
       <X>
         <Value>411226</Value>
       </X>
+
       <Variables>
         <GraphicVariable Name="Tag" VariableType="ControlTagName">
           <InitialValue>
@@ -55,6 +60,7 @@
         </GraphicVariable>
       </Variables>
     </Gem>
+
     <Text Name="txtLimits">
       <Font>
         <Reference>GL.Library.S_HeaderFont</Reference>
@@ -99,6 +105,7 @@
         <Value>737357</Value>
       </Y>
     </Text>
+
     <Text Name="txtAlarms">
       <Font>
         <Reference>GL.Library.S_HeaderFont</Reference>
@@ -112,6 +119,7 @@
       <Label>
         <Reference>GL.Library.S_Alarms</Reference>
       </Label>
+
       <Title>
         <Value>
           <LanguageValues>
@@ -130,6 +138,7 @@
           </LanguageValues>
         </Value>
       </Title>
+
       <VerticalTextAlignment>
         <Value>Center</Value>
       </VerticalTextAlignment>
@@ -143,6 +152,7 @@
         <Value>737357</Value>
       </Y>
     </Text>
+
     <Text Name="txtMisc">
       <Font>
         <Reference>GL.Library.S_HeaderFont</Reference>
@@ -187,6 +197,7 @@
         <Value>2126920</Value>
       </Y>
     </Text>
+
     <Text Name="txtDiagnostics">
       <Font>
         <Reference>GL.Library.S_HeaderFont</Reference>
@@ -231,6 +242,7 @@
         <Value>2280016</Value>
       </Y>
     </Text>
+
     <Gem Name="CD_LABEL_SCALEDVALUE1" Definition="Library.CD_LABEL_SCALEDVALUE">
       <Height>
         <Value>160464</Value>
@@ -320,6 +332,7 @@
         </GraphicVariable>
       </Variables>
     </Gem>
+
     <Gem Name="CD_LABEL_SCALEDVALUE2" Definition="Library.CD_LABEL_SCALEDVALUE">
       <Height>
         <Value>160464</Value>
@@ -409,6 +422,7 @@
         </GraphicVariable>
       </Variables>
     </Gem>
+
     <Gem Name="CD_LABEL_SCALEDVALUE3" Definition="Library.CD_LABEL_SCALEDVALUE">
       <Height>
         <Value>160464</Value>
@@ -498,6 +512,7 @@
         </GraphicVariable>
       </Variables>
     </Gem>
+
     <Gem Name="CD_LABEL_SCALEDVALUE4" Definition="Library.CD_LABEL_SCALEDVALUE">
       <Height>
         <Value>160464</Value>
@@ -587,6 +602,7 @@
         </GraphicVariable>
       </Variables>
     </Gem>
+
     <Gem Name="CD_LABEL_SCALEDVALUE5" Definition="Library.CD_LABEL_SCALEDVALUE">
       <Height>
         <Value>160464</Value>
@@ -676,6 +692,7 @@
         </GraphicVariable>
       </Variables>
     </Gem>
+
     <Gem Name="CD_LABEL_SCALEDVALUE6" Definition="Library.CD_LABEL_SCALEDVALUE">
       <Height>
         <Value>160464</Value>
@@ -765,6 +782,7 @@
         </GraphicVariable>
       </Variables>
     </Gem>
+
     <Gem Name="CD_LABEL_VALUE8" Definition="Library.CD_LABEL_VALUE">
       <Height>
         <Value>160464</Value>
@@ -834,6 +852,7 @@
         </GraphicVariable>
       </Variables>
     </Gem>
+
     <Gem Name="CD_ALARM_DATA1" Definition="Library.CD_ALARM_DATA">
       <Height>
         <Value>202692</Value>
@@ -865,6 +884,7 @@
         </GraphicVariable>
       </Variables>
     </Gem>
+
     <Gem Name="CD_ALARM_DATA2" Definition="Library.CD_ALARM_DATA">
       <Height>
         <Value>202692</Value>
@@ -896,6 +916,7 @@
         </GraphicVariable>
       </Variables>
     </Gem>
+
     <Gem Name="CD_ALARM_DATA3" Definition="Library.CD_ALARM_DATA">
       <Height>
         <Value>202692</Value>
@@ -927,6 +948,7 @@
         </GraphicVariable>
       </Variables>
     </Gem>
+
     <Gem Name="CD_ALARM_DATA4" Definition="Library.CD_ALARM_DATA">
       <Height>
         <Value>202692</Value>
@@ -958,6 +980,7 @@
         </GraphicVariable>
       </Variables>
     </Gem>
+
     <Gem Name="CD_ALARM_DATA5" Definition="Library.CD_ALARM_DATA">
       <Height>
         <Value>202692</Value>
@@ -989,6 +1012,7 @@
         </GraphicVariable>
       </Variables>
     </Gem>
+
     <Gem Name="CD_ALARM_DATA6" Definition="Library.CD_ALARM_DATA">
       <Height>
         <Value>202692</Value>
@@ -1020,6 +1044,7 @@
         </GraphicVariable>
       </Variables>
     </Gem>
+
     <Gem Name="CD_ALARM_DATA7" Definition="Library.CD_ALARM_DATA">
       <Height>
         <Value>202692</Value>
@@ -1051,6 +1076,7 @@
         </GraphicVariable>
       </Variables>
     </Gem>
+
     <Gem Name="CD_ALM_PRI_ADJ1" Definition="Library.CD_ALM_PRI_ADJ">
       <Height>
         <Value>160464</Value>
@@ -1072,6 +1098,7 @@
         </GraphicVariable>
       </Variables>
     </Gem>
+
     <CheckBox Name="chkboxEnable">
       <DataSource>
         <Value>DLSYS[Dsp.Tag+'/'+Dsp.Context1+'/ENABLE.CV']</Value>
@@ -1130,6 +1157,7 @@
         <Value>2280031</Value>
       </Y>
     </CheckBox>
+
     <Text Name="txtEnable">
       <Font>
         <Reference>GL.Library.S_InfoTextFont</Reference>
@@ -1174,6 +1202,7 @@
         <Value>2280031</Value>
       </Y>
     </Text>
+
     <Gem Name="CD_DIAGNOSTICS1" Definition="Library.CD_DIAGNOSTICS">
       <Height>
         <Value>2478024</Value>
@@ -1195,6 +1224,7 @@
         </GraphicVariable>
       </Variables>
     </Gem>
+
     <Gem Name="CD_COND_ALM1" Definition="Library.CD_COND_ALM">
       <Height>
         <Value>155448</Value>
@@ -1231,6 +1261,7 @@
         </GraphicVariable>
       </Variables>
     </Gem>
+
     <Text Name="txtEnab">
       <Font>
         <Reference>GL.Library.S_InfoTextFont</Reference>
@@ -1335,6 +1366,7 @@
         <Value>737362</Value>
       </Y>
     </Text>
+
     <Gem Name="SG_Alarms1" Definition="Library.SG_Alarms">
       <Height>
         <Value>182880</Value>
@@ -1366,6 +1398,7 @@
         </GraphicVariable>
       </Variables>
     </Gem>
+
   </ContainedElements>
   <EventHandlers>
     <EventHandler Event="OnOpen">
@@ -1395,9 +1428,11 @@ GL.Library.F_SetHistoryTag(Dsp.Tag);</ExpressionString>
   <LockAspectRatio>
     <Value>True</Value>
   </LockAspectRatio>
+
   <ContextualDisplayType>
     <Value>Detail</Value>
   </ContextualDisplayType>
+
   <Tag>
     <GsLocalizedString>
       <LanguageValues>
@@ -1416,6 +1451,7 @@ GL.Library.F_SetHistoryTag(Dsp.Tag);</ExpressionString>
       </LanguageValues>
     </GsLocalizedString>
   </Tag>
+
   <Context1Description>
     <GsLocalizedString>
       <LanguageValues>
