@@ -1,4 +1,4 @@
-.PHONY: build build-analyzer build-cli build-desktop test clean analyze analyze-test analyze-test-ca restore pack run-desktop publish-desktop ci build-databank build-databank-cli build-databank-desktop run-databank run-databank-desktop test-databank clean-databank restore-databank
+.PHONY: build build-analyzer build-cli build-desktop test clean analyze analyze-test analyze-test-ca restore pack run-desktop publish-desktop ci build-databank build-databank-cli build-databank-desktop run-databank run-databank-desktop test-databank clean-databank restore-databank start-mongo stop-mongo run-databank-api run-databank-stack
 
 # Default target
 all: build build-databank
@@ -109,3 +109,40 @@ clean-databank:
 	rm -rf DatabankTool/DataBank.Cli/bin DatabankTool/DataBank.Cli/obj
 	rm -rf DatabankTool/DataBank.Cli.Tests/bin DatabankTool/DataBank.Cli.Tests/obj
 	rm -rf DatabankTool/DataBank.Desktop/bin DatabankTool/DataBank.Desktop/obj
+
+# ---------------------------------------------------------------------------------
+# Databank API + MongoDB targets (via docker-compose)
+# ---------------------------------------------------------------------------------
+COMPOSE_FILE := DatabankTool/docker-compose.yml
+MONGO_PORT := 27017
+API_PORT := 5000
+
+# Start MongoDB via docker-compose
+start-mongo:
+	@echo "Starting MongoDB container..."
+	docker compose -f $(COMPOSE_FILE) up -d mongodb
+	@echo "MongoDB started on port $(MONGO_PORT)"
+
+# Stop MongoDB via docker-compose
+stop-mongo:
+	@echo "Stopping MongoDB container..."
+	docker compose -f $(COMPOSE_FILE) down
+	@echo "MongoDB stopped"
+
+# Build and run the API server
+run-databank-api: build-databank-cli
+	@echo "Starting DataBank API on port $(API_PORT)..."
+	@echo "Swagger UI: http://localhost:$(API_PORT)/swagger"
+	dotnet run --project DatabankTool/DataBank.Api/DataBank.Api.csproj -c Release
+
+# Start both MongoDB and API (full stack)
+run-databank-stack: start-mongo
+	@echo ""
+	@echo "=== DataBank Stack ==="
+	@echo "MongoDB:  localhost:$(MONGO_PORT)"
+	@echo "API:      http://localhost:$(API_PORT)"
+	@echo "Swagger:  http://localhost:$(API_PORT)/swagger"
+	@echo ""
+	@echo "Press Ctrl+C to stop, then run 'make stop-mongo' to cleanup"
+	@echo ""
+	$(MAKE) run-databank-api

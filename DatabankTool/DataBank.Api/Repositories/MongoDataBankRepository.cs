@@ -22,7 +22,7 @@ public class MongoDataBankRepository : IDataBankRepository
     {
         var entryKeys = Builders<DataBankEntryDocument>.IndexKeys;
         _entries.Indexes.CreateOne(new CreateIndexModel<DataBankEntryDocument>(
-            entryKeys.Ascending(e => e.Key),
+            entryKeys.Ascending(e => e.Key).Ascending(e => e.Locale),
             new CreateIndexOptions { Unique = true }));
         _entries.Indexes.CreateOne(new CreateIndexModel<DataBankEntryDocument>(
             entryKeys.Ascending(e => e.Locale)));
@@ -89,6 +89,32 @@ public class MongoDataBankRepository : IDataBankRepository
     {
         if (entries.Count == 0) return;
         await _entries.InsertManyAsync(entries);
+    }
+
+    public async Task<int> ReplaceOrInsertManyAsync(List<DataBankEntryDocument> entries)
+    {
+        if (entries.Count == 0) return 0;
+
+        const int batchSize = 1000;
+        int totalReplaced = 0;
+
+        for (int i = 0; i < entries.Count; i += batchSize)
+        {
+            var batch = entries.Skip(i).Take(batchSize).ToList();
+            var models = batch.Select(entry => new ReplaceOneModel<DataBankEntryDocument>(
+                Builders<DataBankEntryDocument>.Filter.And(
+                    Builders<DataBankEntryDocument>.Filter.Eq(e => e.Key, entry.Key),
+                    Builders<DataBankEntryDocument>.Filter.Eq(e => e.Locale, entry.Locale)),
+                entry)
+            {
+                IsUpsert = true
+            }).ToList();
+
+            var result = await _entries.BulkWriteAsync(models);
+            totalReplaced += (int)(result.Upserts.Count + result.ModifiedCount);
+        }
+
+        return totalReplaced;
     }
 
     public async Task<bool> UpdateEntryAsync(string id, DataBankEntryDocument entry)

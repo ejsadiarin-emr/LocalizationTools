@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Text.Json;
 using DataBank.Api.Models;
 using DataBank.Api.Repositories;
 using DataBank.Cli.Models;
@@ -13,10 +14,10 @@ public static class ExtractionEndpoints
 
     public static void MapExtractionEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/extract")
+        var extractGroup = app.MapGroup("/api/extract")
             .WithTags("Extraction");
 
-        group.MapPost("/", async (
+        extractGroup.MapPost("/", async (
             ExtractRequest request,
             IDataBankRepository repository) =>
         {
@@ -36,7 +37,7 @@ public static class ExtractionEndpoints
         .WithName("StartExtraction")
         .WithDescription("Trigger file parsing and data extraction into MongoDB");
 
-        group.MapGet("/{jobId}", (string jobId) =>
+        extractGroup.MapGet("/{jobId}", (string jobId) =>
         {
             if (!Jobs.TryGetValue(jobId, out var job))
                 return Results.NotFound(new { error = $"Job '{jobId}' not found." });
@@ -45,6 +46,118 @@ public static class ExtractionEndpoints
         })
         .WithName("GetExtractionJobStatus")
         .WithDescription("Get the status of an extraction job");
+
+        var importGroup = app.MapGroup("/api/import")
+            .WithTags("Import");
+
+        importGroup.MapPost("/", async (
+            IFormFile file,
+            IDataBankRepository repository) =>
+        {
+            if (file == null || file.Length == 0)
+                return Results.BadRequest(new { error = "No file uploaded." });
+
+            if (!file.FileName.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+                return Results.BadRequest(new { error = "File must be a JSON file." });
+
+            try
+            {
+                using var stream = file.OpenReadStream();
+                using var reader = new StreamReader(stream);
+                var json = await reader.ReadToEndAsync();
+
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                    Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
+                };
+                var dataBank = JsonSerializer.Deserialize<DataBankOutput>(json, options);
+
+                if (dataBank?.Entries == null)
+                    return Results.BadRequest(new { error = "Invalid JSON structure." });
+
+                var entries = dataBank.Entries.Select(e => new DataBankEntryDocument
+                {
+                    Id = e.Id,
+                    Key = e.Key,
+                    Value = e.Value,
+                    Locale = e.Locale,
+                    Source = new SourceInfoDocument
+                    {
+                        Format = e.Source.Format,
+                        File = e.Source.File,
+                        Path = e.Source.Path,
+                        Encoding = e.Source.Encoding
+                    },
+                    Metadata = new EntryMetadataDocument
+                    {
+                        Comment = e.Metadata.Comment,
+                        RcId = e.Metadata.RcId,
+                        RcDefine = e.Metadata.RcDefine,
+                        IsBehavioral = e.Metadata.IsBehavioral,
+                        FormatSpecifiers = e.Metadata.FormatSpecifiers,
+                        DoNotTranslate = e.Metadata.DoNotTranslate,
+                        IsTranslated = e.Metadata.IsTranslated,
+                        TranslationStatus = e.Metadata.TranslationStatus.ToString()
+                    }
+                }).ToList();
+
+                var importedCount = await repository.ReplaceOrInsertManyAsync(entries);
+
+                var metadata = await repository.GetMetadataAsync() ?? new DataBankMetadataDocument { Id = "default" };
+                metadata.Version = dataBank.Version;
+                metadata.Generated = dataBank.Generated ?? DateTime.UtcNow.ToString("o");
+                metadata.EntryCount = (int)await repository.GetEntryCountAsync();
+                await repository.UpdateMetadataAsync(metadata);
+
+                return Results.Ok(new
+                {
+                    success = true,
+                    entryCount = importedCount,
+                    version = dataBank.Version
+                });
+            }
+            catch (JsonException ex)
+            {
+                return Results.BadRequest(new { error = $"Invalid JSON format: {ex.Message}" });
+            }
+            catch (Exception ex)
+            {
+                return Results.Problem(new { error = $"Import failed: {ex.Message}" }.ToString());
+            }
+        })
+        .DisableAntiforgery()
+        .WithName("ImportDataBankJson")
+        .WithDescription("Import a data-bank.json file into MongoDB");
+
+        var healthGroup = app.MapGroup("/api/health")
+            .WithTags("Health");
+
+        healthGroup.MapGet("/", async (IDataBankRepository repository) =>
+        {
+            try
+            {
+                var entryCount = await repository.GetEntryCountAsync();
+                var metadata = await repository.GetMetadataAsync();
+
+                return Results.Ok(new
+                {
+                    status = "healthy",
+                    entryCount,
+                    version = metadata?.Version ?? 0
+                });
+            }
+            catch (Exception ex)
+            {
+                return Results.Json(new
+                {
+                    status = "unhealthy",
+                    error = ex.Message
+                }, statusCode: 503);
+            }
+        })
+        .WithName("HealthCheck")
+        .WithDescription("Check API health and MongoDB connectivity");
     }
 
     private static async Task RunExtraction(ExtractionJob job, string[]? filePatterns, IDataBankRepository repository)

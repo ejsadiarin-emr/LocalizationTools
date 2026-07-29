@@ -13,9 +13,31 @@
         <Border Grid.Row="0" Background="#252526" Padding="8">
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="DataBank Tool" Foreground="#cccccc" FontSize="16" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                
+                <TextBlock Text="Mode:" Foreground="#cccccc" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <RadioButton x:Name="LocalModeRadio" Content="Local" IsChecked="True" GroupName="Mode"
+                             Foreground="#cccccc" FontSize="12" VerticalAlignment="Center" Margin="0,0,12,0"
+                             Checked="ModeRadio_Checked"/>
+                <RadioButton x:Name="RemoteModeRadio" Content="Remote" GroupName="Mode"
+                             Foreground="#cccccc" FontSize="12" VerticalAlignment="Center" Margin="0,0,16,0"
+                             Checked="ModeRadio_Checked"/>
+                
                 <Button x:Name="LoadJsonBtn" Content="Load DataBank JSON" Click="LoadJsonBtn_Click"
                         Padding="12,6" Background="#0e639c" Foreground="White" BorderBrush="#0e639c"
                         FontSize="13" VerticalAlignment="Center"/>
+                
+                <Button x:Name="ConnectApiBtn" Content="Connect to API" Click="ConnectApiBtn_Click"
+                        Padding="12,6" Background="#2ea043" Foreground="White" BorderBrush="#2ea043"
+                        FontSize="13" VerticalAlignment="Center" Visibility="Collapsed"/>
+                
+                <Button x:Name="RetryBtn" Content="Retry" Click="RetryBtn_Click"
+                        Padding="12,6" Background="#d29922" Foreground="White" BorderBrush="#d29922"
+                        FontSize="13" VerticalAlignment="Center" Visibility="Collapsed"/>
+                
+                <Button x:Name="SwitchToLocalBtn" Content="Switch to Local" Click="SwitchToLocalBtn_Click"
+                        Padding="12,6" Background="#6c757d" Foreground="White" BorderBrush="#6c757d"
+                        FontSize="13" VerticalAlignment="Center" Visibility="Collapsed"/>
+                
                 <TextBlock x:Name="StatusText" Text="No data loaded" Foreground="#888888" FontSize="12"
                            VerticalAlignment="Center" Margin="16,0,0,0"/>
             </StackPanel>

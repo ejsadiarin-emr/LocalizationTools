@@ -11,6 +11,7 @@ public interface IDataBankRepository
     Task<List<DataBankEntryDocument>> GetEntriesByLocaleAsync(string locale);
     Task<DataBankEntryDocument> CreateEntryAsync(DataBankEntryDocument entry);
     Task InsertManyEntriesAsync(List<DataBankEntryDocument> entries);
+    Task<int> ReplaceOrInsertManyAsync(List<DataBankEntryDocument> entries);
     Task<bool> UpdateEntryAsync(string id, DataBankEntryDocument entry);
     Task<bool> DeleteEntryAsync(string id);
     Task<long> GetEntryCountAsync(string? locale = null);

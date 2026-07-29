@@ -59,6 +59,4 @@ app.MapExtractionEndpoints();
 app.MapStatsEndpoints();
 app.MapExportEndpoints();
 
-app.MapHealthChecks("/health");
-
 app.Run();
