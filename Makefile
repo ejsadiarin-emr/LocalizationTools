@@ -143,6 +143,13 @@ run-databank-stack: start-mongo
 	@echo "API:      http://localhost:$(API_PORT)"
 	@echo "Swagger:  http://localhost:$(API_PORT)/swagger"
 	@echo ""
+	@echo "After import with: make import-data"
 	@echo "Press Ctrl+C to stop, then run 'make stop-mongo' to cleanup"
 	@echo ""
 	$(MAKE) run-databank-api
+
+# Import data-bank.json into MongoDB via API (run in separate terminal after stack starts)
+import-data:
+	@echo "Importing data-bank.json into MongoDB..."
+	curl -X POST http://localhost:$(API_PORT)/api/import -F "file=@data-bank.json"
+	@echo ""

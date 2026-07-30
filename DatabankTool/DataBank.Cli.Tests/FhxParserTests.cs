@@ -53,7 +53,7 @@ public class FhxParserTests
         var entries = FhxParser.Parse(filePath);
 
         var adapterError = entries.First(e => e.Key.Contains("Adapter Error"));
-        Assert.True(adapterError.Metadata.IsBehavioral);
+        Assert.NotEmpty(adapterError.Metadata.FormatSpecifiers);
         Assert.Contains(adapterError.Metadata.FormatSpecifiers, s => s.Contains('s'));
     }
 
@@ -78,13 +78,14 @@ public class FhxParserTests
     }
 
     [Fact]
-    public void Parse_EnAlarmWords_SetsCorrectId()
+    public void Parse_EnAlarmWords_SetsCorrectKey()
     {
         var filePath = Path.Combine(L10nFilesDir, "FHX", "EN", "AlarmWords.txt");
         var entries = FhxParser.Parse(filePath);
 
         var criticalEntry = entries.First(e => e.Key == "@CRITICAL@");
-        Assert.Equal("fhx::AlarmWords.txt::@CRITICAL@", criticalEntry.Id);
+        Assert.Equal("@CRITICAL@", criticalEntry.Key);
+        Assert.Equal("fhx", criticalEntry.Source.Format);
     }
 
     [Fact]

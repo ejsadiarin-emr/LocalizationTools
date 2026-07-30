@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text.RegularExpressions;
 using DataBank.Cli.Helpers;
 using DataBank.Cli.Models;
@@ -10,13 +9,12 @@ public static class FhxParser
     private static readonly Regex LangTagPattern = new(@"\blang(?:uage)?[:=]\s*(""([a-zA-Z\-]+)""|([a-zA-Z\-]+))", RegexOptions.Compiled);
 
     /// <summary>
-    /// Parses an FHX file into localized string entries.
-    /// Locale detection order: --locale override → filepath path components → langtag in content → "unknown".
-    /// Use --locale when the directory name is not a valid BCP47 locale (e.g., "Translated").
+    /// Parses an FHX file into raw localized string entries (one per key per locale).
+    /// Use EntryGrouper.GroupByKey() to collapse into grouped entries.
     /// </summary>
-    public static List<LocalizedStringEntry> Parse(string filePath, string? localeOverride = null, string? encodingOverride = null, string? rootDir = null)
+    public static List<RawLocalizedEntry> Parse(string filePath, string? localeOverride = null, string? encodingOverride = null, string? rootDir = null)
     {
-        var entries = new List<LocalizedStringEntry>();
+        var entries = new List<RawLocalizedEntry>();
 
         try
         {
@@ -47,7 +45,7 @@ public static class FhxParser
         return entries;
     }
 
-    private static LocalizedStringEntry? ParseLine(string line, string locale, string relativePath, bool isDntFile)
+    private static RawLocalizedEntry? ParseLine(string line, string locale, string relativePath, bool isDntFile)
     {
         // Format: @Key@\t"context"\tValue
         var parts = line.Split('\t');
@@ -74,9 +72,8 @@ public static class FhxParser
 
         RcParser.DetectFormatSpecifiers(value, metadata);
 
-        return new LocalizedStringEntry
+        return new RawLocalizedEntry
         {
-            Id = $"fhx::{relativePath}::{key}",
             Key = key,
             Value = value,
             Locale = locale,

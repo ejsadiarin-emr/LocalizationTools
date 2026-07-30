@@ -4,9 +4,8 @@ public class CreateEntryRequest
 {
     public string? Id { get; set; }
     public string? Key { get; set; }
-    public string? Value { get; set; }
-    public string? Locale { get; set; }
-    public DataBank.Cli.Models.SourceInfo? Source { get; set; }
+    public List<LocaleValueDocument>? Values { get; set; }
+    public Dictionary<string, SourceInfoDocument>? Sources { get; set; }
     public DataBank.Cli.Models.EntryMetadata? Metadata { get; set; }
 }
 
@@ -22,4 +21,14 @@ public class ExtractRequest
 {
     public string SourceDirectory { get; set; } = string.Empty;
     public string[]? FilePatterns { get; set; }
+}
+
+public class UpdateLocaleValueRequest
+{
+    public string Value { get; set; } = string.Empty;
+}
+
+public class BulkUpdateValuesRequest
+{
+    public List<LocaleValueDocument> Values { get; set; } = [];
 }

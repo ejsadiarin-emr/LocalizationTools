@@ -70,30 +70,41 @@ public class Program
             {
                 try
                 {
+                    // Build Values array
+                    var valuesArray = new BsonArray();
+                    foreach (var val in entry.Values)
+                    {
+                        valuesArray.Add(new BsonDocument
+                        {
+                            { "Locale", val.Locale },
+                            { "Value", val.Value }
+                        });
+                    }
+
+                    // Build Sources dictionary
+                    var sourcesDoc = new BsonDocument();
+                    foreach (var kvp in entry.Sources)
+                    {
+                        sourcesDoc.Add(kvp.Key, new BsonDocument
+                        {
+                            { "Format", kvp.Value.Format },
+                            { "File", kvp.Value.File },
+                            { "Path", kvp.Value.Path }
+                        });
+                    }
+
                     var doc = new BsonDocument
                     {
-                        { "_id", entry.Id },
+                        { "_id", entry.Key },
                         { "Key", entry.Key },
-                        { "Value", entry.Value },
-                        { "Locale", entry.Locale },
-                        { "Source", new BsonDocument
-                            {
-                                { "Format", entry.Source.Format },
-                                { "File", entry.Source.File },
-                                { "Path", entry.Source.Path },
-                                { "Encoding", entry.Source.Encoding is null ? BsonNull.Value : entry.Source.Encoding }
-                            }
-                        },
+                        { "Values", valuesArray },
+                        { "Sources", sourcesDoc },
                         { "Metadata", new BsonDocument
                             {
                                 { "Comment", entry.Metadata.Comment is null ? BsonNull.Value : entry.Metadata.Comment },
-                                { "RcId", entry.Metadata.RcId is null ? BsonNull.Value : BsonValue.Create(entry.Metadata.RcId.Value) },
-                                { "RcDefine", entry.Metadata.RcDefine is null ? BsonNull.Value : entry.Metadata.RcDefine },
-                                { "IsBehavioral", entry.Metadata.IsBehavioral },
                                 { "FormatSpecifiers", new BsonArray(entry.Metadata.FormatSpecifiers ?? []) },
                                 { "DoNotTranslate", entry.Metadata.DoNotTranslate },
-                                { "IsTranslated", entry.Metadata.IsTranslated },
-                                { "TranslationStatus", entry.Metadata.TranslationStatus }
+                                { "IsTranslated", entry.Metadata.IsTranslated }
                             }
                         }
                     };
@@ -101,7 +112,7 @@ public class Program
                 }
                 catch (Exception ex)
                 {
-                    Console.Error.WriteLine($"  Error processing entry {entry.Id}: {ex.Message}");
+                    Console.Error.WriteLine($"  Error processing entry {entry.Key}: {ex.Message}");
                     errors++;
                 }
             }
@@ -150,10 +161,15 @@ public class LocalizedStringEntryInput
 {
     public string Id { get; set; } = string.Empty;
     public string Key { get; set; } = string.Empty;
-    public string Value { get; set; } = string.Empty;
-    public string Locale { get; set; } = string.Empty;
-    public SourceInfoInput Source { get; set; } = new();
+    public List<LocaleValueInput> Values { get; set; } = [];
+    public Dictionary<string, SourceInfoInput> Sources { get; set; } = [];
     public EntryMetadataInput Metadata { get; set; } = new();
+}
+
+public class LocaleValueInput
+{
+    public string Locale { get; set; } = string.Empty;
+    public string Value { get; set; } = string.Empty;
 }
 
 public class SourceInfoInput
@@ -161,17 +177,12 @@ public class SourceInfoInput
     public string Format { get; set; } = string.Empty;
     public string File { get; set; } = string.Empty;
     public string Path { get; set; } = string.Empty;
-    public string? Encoding { get; set; }
 }
 
 public class EntryMetadataInput
 {
     public string? Comment { get; set; }
-    public int? RcId { get; set; }
-    public string? RcDefine { get; set; }
-    public bool IsBehavioral { get; set; }
     public List<string> FormatSpecifiers { get; set; } = [];
     public bool DoNotTranslate { get; set; }
     public bool IsTranslated { get; set; }
-    public string TranslationStatus { get; set; } = "Untranslated";
 }

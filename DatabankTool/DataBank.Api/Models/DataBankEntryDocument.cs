@@ -12,17 +12,23 @@ public class DataBankEntryDocument
     [BsonElement("Key")]
     public string Key { get; set; } = string.Empty;
 
-    [BsonElement("Value")]
-    public string Value { get; set; } = string.Empty;
+    [BsonElement("Values")]
+    public List<LocaleValueDocument> Values { get; set; } = [];
 
-    [BsonElement("Locale")]
-    public string Locale { get; set; } = string.Empty;
-
-    [BsonElement("Source")]
-    public SourceInfoDocument Source { get; set; } = new();
+    [BsonElement("Sources")]
+    public Dictionary<string, SourceInfoDocument> Sources { get; set; } = [];
 
     [BsonElement("Metadata")]
     public EntryMetadataDocument Metadata { get; set; } = new();
+}
+
+public class LocaleValueDocument
+{
+    [BsonElement("Locale")]
+    public string Locale { get; set; } = string.Empty;
+
+    [BsonElement("Value")]
+    public string Value { get; set; } = string.Empty;
 }
 
 public class SourceInfoDocument
@@ -35,24 +41,12 @@ public class SourceInfoDocument
 
     [BsonElement("Path")]
     public string Path { get; set; } = string.Empty;
-
-    [BsonElement("Encoding")]
-    public string? Encoding { get; set; }
 }
 
 public class EntryMetadataDocument
 {
     [BsonElement("Comment")]
     public string? Comment { get; set; }
-
-    [BsonElement("RcId")]
-    public int? RcId { get; set; }
-
-    [BsonElement("RcDefine")]
-    public string? RcDefine { get; set; }
-
-    [BsonElement("IsBehavioral")]
-    public bool IsBehavioral { get; set; }
 
     [BsonElement("FormatSpecifiers")]
     public List<string> FormatSpecifiers { get; set; } = [];
@@ -62,7 +56,4 @@ public class EntryMetadataDocument
 
     [BsonElement("IsTranslated")]
     public bool IsTranslated { get; set; }
-
-    [BsonElement("TranslationStatus")]
-    public string TranslationStatus { get; set; } = "Untranslated";
 }

@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Text.Json;
 using DataBank.Api.Models;
 using DataBank.Api.Repositories;
+using DataBank.Cli.Helpers;
 using DataBank.Cli.Models;
 using DataBank.Cli.Parsers;
 using Microsoft.AspNetCore.Mvc;
@@ -80,25 +81,25 @@ public static class ExtractionEndpoints
                 {
                     Id = e.Id,
                     Key = e.Key,
-                    Value = e.Value,
-                    Locale = e.Locale,
-                    Source = new SourceInfoDocument
+                    Values = e.Values.Select(v => new LocaleValueDocument
                     {
-                        Format = e.Source.Format,
-                        File = e.Source.File,
-                        Path = e.Source.Path,
-                        Encoding = e.Source.Encoding
-                    },
+                        Locale = v.Locale,
+                        Value = v.Value
+                    }).ToList(),
+                    Sources = e.Sources.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => new SourceInfoDocument
+                        {
+                            Format = kvp.Value.Format,
+                            File = kvp.Value.File,
+                            Path = kvp.Value.Path
+                        }),
                     Metadata = new EntryMetadataDocument
                     {
                         Comment = e.Metadata.Comment,
-                        RcId = e.Metadata.RcId,
-                        RcDefine = e.Metadata.RcDefine,
-                        IsBehavioral = e.Metadata.IsBehavioral,
                         FormatSpecifiers = e.Metadata.FormatSpecifiers,
                         DoNotTranslate = e.Metadata.DoNotTranslate,
-                        IsTranslated = e.Metadata.IsTranslated,
-                        TranslationStatus = e.Metadata.TranslationStatus.ToString()
+                        IsTranslated = e.Metadata.IsTranslated
                     }
                 }).ToList();
 
@@ -171,7 +172,8 @@ public static class ExtractionEndpoints
                 allFiles.AddRange(Directory.GetFiles(job.SourceDirectory, pattern, SearchOption.AllDirectories));
             }
 
-            var entries = new List<DataBankEntryDocument>();
+            // Parsers now produce flat RawLocalizedEntry objects
+            var rawEntries = new List<RawLocalizedEntry>();
 
             foreach (var file in allFiles)
             {
@@ -184,37 +186,10 @@ public static class ExtractionEndpoints
                         ".rc" => RcParser.Parse(file, rootDir: job.SourceDirectory),
                         ".fhx" => FhxParser.Parse(file, rootDir: job.SourceDirectory),
                         ".ahc" => AhcParser.Parse(file, rootDir: job.SourceDirectory),
-                        _ => new List<LocalizedStringEntry>()
+                        _ => new List<RawLocalizedEntry>()
                     };
 
-                    foreach (var entry in parsedEntries)
-                    {
-                        entries.Add(new DataBankEntryDocument
-                        {
-                            Id = entry.Id,
-                            Key = entry.Key,
-                            Value = entry.Value,
-                            Locale = entry.Locale,
-                            Source = new SourceInfoDocument
-                            {
-                                Format = entry.Source.Format,
-                                File = entry.Source.File,
-                                Path = entry.Source.Path,
-                                Encoding = entry.Source.Encoding
-                            },
-                            Metadata = new EntryMetadataDocument
-                            {
-                                Comment = entry.Metadata.Comment,
-                                RcId = entry.Metadata.RcId,
-                                RcDefine = entry.Metadata.RcDefine,
-                                IsBehavioral = entry.Metadata.IsBehavioral,
-                                FormatSpecifiers = entry.Metadata.FormatSpecifiers,
-                                DoNotTranslate = entry.Metadata.DoNotTranslate,
-                                IsTranslated = entry.Metadata.IsTranslated,
-                                TranslationStatus = entry.Metadata.TranslationStatus.ToString()
-                            }
-                        });
-                    }
+                    rawEntries.AddRange(parsedEntries);
                 }
                 catch (Exception ex)
                 {
@@ -222,15 +197,45 @@ public static class ExtractionEndpoints
                 }
             }
 
-            await repository.InsertManyEntriesAsync(entries);
+            // Group flat entries by key
+            var groupedEntries = EntryGrouper.GroupByKey(rawEntries);
+
+            // Convert to DataBankEntryDocuments for MongoDB
+            var documents = groupedEntries.Select(e => new DataBankEntryDocument
+            {
+                Id = e.Id,
+                Key = e.Key,
+                Values = e.Values.Select(v => new LocaleValueDocument
+                {
+                    Locale = v.Locale,
+                    Value = v.Value
+                }).ToList(),
+                Sources = e.Sources.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => new SourceInfoDocument
+                    {
+                        Format = kvp.Value.Format,
+                        File = kvp.Value.File,
+                        Path = kvp.Value.Path
+                    }),
+                Metadata = new EntryMetadataDocument
+                {
+                    Comment = e.Metadata.Comment,
+                    FormatSpecifiers = e.Metadata.FormatSpecifiers,
+                    DoNotTranslate = e.Metadata.DoNotTranslate,
+                    IsTranslated = e.Metadata.IsTranslated
+                }
+            }).ToList();
+
+            await repository.InsertManyEntriesAsync(documents);
 
             var metadata = await repository.GetMetadataAsync() ?? new DataBankMetadataDocument { Id = "default" };
-            metadata.Version = 2;
+            metadata.Version = 3;
             metadata.Generated = DateTime.UtcNow.ToString("o");
             metadata.EntryCount = (int)await repository.GetEntryCountAsync();
             await repository.UpdateMetadataAsync(metadata);
 
-            job.EntriesExtracted = entries.Count;
+            job.EntriesExtracted = documents.Count;
             job.Status = "completed";
             job.CompletedAt = DateTime.UtcNow;
         }

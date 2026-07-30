@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using DataBank.Cli.Helpers;
 using DataBank.Cli.Models;
@@ -10,9 +9,9 @@ public static partial class ResxParser
     private static readonly XNamespace Xsd = "http://www.w3.org/2001/XMLSchema";
     private static readonly XNamespace MsData = "urn:schemas-microsoft-com:xml-msdata";
 
-    public static List<LocalizedStringEntry> Parse(string filePath, string? rootDir = null)
+    public static List<RawLocalizedEntry> Parse(string filePath, string? rootDir = null)
     {
-        var entries = new List<LocalizedStringEntry>();
+        var entries = new List<RawLocalizedEntry>();
         var locale = DetectLocale(filePath);
         var relativePath = rootDir is not null
             ? Path.GetRelativePath(rootDir, filePath)
@@ -42,7 +41,7 @@ public static partial class ResxParser
         return entries;
     }
 
-    private static LocalizedStringEntry? ParseDataElement(
+    private static RawLocalizedEntry? ParseDataElement(
         XElement dataElement, string locale, string relativePath, bool isDntFile)
     {
         var name = dataElement.Attribute("name")?.Value;
@@ -65,9 +64,8 @@ public static partial class ResxParser
 
         var comment = dataElement.Element("comment")?.Value;
 
-        return new LocalizedStringEntry
+        return new RawLocalizedEntry
         {
-            Id = $"resx::{relativePath}::{name}",
             Key = name,
             Value = value,
             Locale = locale,
@@ -112,6 +110,6 @@ public static partial class ResxParser
         };
     }
 
-    [GeneratedRegex(@"\.([a-zA-Z]{2}(?:-[a-zA-Z0-9]+)?)$")]
-    private static partial Regex ResxLocalePattern();
+    [System.Text.RegularExpressions.GeneratedRegex(@"\.([a-zA-Z]{2}(?:-[a-zA-Z0-9]+)?)$")]
+    private static partial System.Text.RegularExpressions.Regex ResxLocalePattern();
 }

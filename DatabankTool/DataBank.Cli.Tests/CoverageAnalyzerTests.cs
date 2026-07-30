@@ -12,28 +12,27 @@ public class CoverageAnalyzerTests
     public void Analyze_WithL10nFiles_FindsFilePairs()
     {
         var rootDir = Path.GetFullPath(RootDir);
-        var entries = new List<LocalizedStringEntry>();
+        var rawEntries = new List<RawLocalizedEntry>();
 
-        // Parse RC EN files
         var rcEnDir = Path.Combine(rootDir, "RC", "EN");
         if (Directory.Exists(rcEnDir))
         {
             foreach (var file in Directory.GetFiles(rcEnDir, "*.rc", SearchOption.AllDirectories))
             {
-                entries.AddRange(Parsers.RcParser.Parse(file, rootDir: rootDir));
+                rawEntries.AddRange(Parsers.RcParser.Parse(file, rootDir: rootDir));
             }
         }
 
-        // Parse RC Translated files
         var rcTransDir = Path.Combine(rootDir, "RC", "Translated");
         if (Directory.Exists(rcTransDir))
         {
             foreach (var file in Directory.GetFiles(rcTransDir, "*.rc", SearchOption.AllDirectories))
             {
-                entries.AddRange(Parsers.RcParser.Parse(file, rootDir: rootDir));
+                rawEntries.AddRange(Parsers.RcParser.Parse(file, rootDir: rootDir));
             }
         }
 
+        var entries = EntryGrouper.GroupByKey(rawEntries);
         var report = CoverageAnalyzer.Analyze(entries, rootDir);
 
         Assert.NotEmpty(report.Files);
@@ -56,25 +55,35 @@ public class CoverageAnalyzerTests
         {
             new()
             {
-                Id = "test::en::key1", Key = "key1", Value = "val1", Locale = "en",
-                Source = new SourceInfo { Format = "rc", File = "test.rc", Path = "test.rc" }
+                Id = "test::key1", Key = "key1",
+                Values = [new LocaleValue { Locale = "en", Value = "val1" }],
+                Sources = new Dictionary<string, SourceInfo>
+                {
+                    ["en"] = new SourceInfo { Format = "rc", File = "test.rc", Path = "test.rc" }
+                }
             },
             new()
             {
-                Id = "test::en::key2", Key = "key2", Value = "val2", Locale = "en",
-                Source = new SourceInfo { Format = "rc", File = "test.rc", Path = "test.rc" }
+                Id = "test::key2", Key = "key2",
+                Values = [new LocaleValue { Locale = "en", Value = "val2" }],
+                Sources = new Dictionary<string, SourceInfo>
+                {
+                    ["en"] = new SourceInfo { Format = "rc", File = "test.rc", Path = "test.rc" }
+                }
             },
             new()
             {
-                Id = "test::fr::key1", Key = "key1", Value = "val1fr", Locale = "fr",
-                Source = new SourceInfo { Format = "rc", File = "test.rc", Path = "test.rc" }
+                Id = "test::key1-fr", Key = "key1",
+                Values = [new LocaleValue { Locale = "fr", Value = "val1fr" }],
+                Sources = new Dictionary<string, SourceInfo>
+                {
+                    ["fr"] = new SourceInfo { Format = "rc", File = "test.rc", Path = "test.rc" }
+                }
             }
         };
 
         var report = CoverageAnalyzer.Analyze(entries, ".");
 
-        // No file pairs will match since there's no EN/Translated directory structure,
-        // but we verify the analyzer doesn't crash
         Assert.NotNull(report);
     }
 

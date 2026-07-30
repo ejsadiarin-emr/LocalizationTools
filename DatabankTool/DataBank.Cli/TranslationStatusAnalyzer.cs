@@ -6,95 +6,46 @@ public static class TranslationStatusAnalyzer
 {
     public static TranslationSummary Analyze(List<LocalizedStringEntry> entries)
     {
-        var enKeys = new HashSet<string>(
-            entries.Where(e => string.Equals(e.Locale, "en", StringComparison.OrdinalIgnoreCase))
-                   .Select(e => e.Key),
-            StringComparer.OrdinalIgnoreCase);
+        var summary = new TranslationSummary();
 
         foreach (var entry in entries)
         {
-            if (entry.Metadata.DoNotTranslate)
-            {
-                entry.Metadata.IsTranslated = false;
-                entry.Metadata.TranslationStatus = TranslationStatus.DoNotTranslate;
-            }
-            else if (string.Equals(entry.Locale, "en", StringComparison.OrdinalIgnoreCase))
-            {
-                entry.Metadata.IsTranslated = true;
-                entry.Metadata.TranslationStatus = TranslationStatus.Translated;
-            }
-            else if (enKeys.Contains(entry.Key))
-            {
-                entry.Metadata.IsTranslated = true;
-                entry.Metadata.TranslationStatus = TranslationStatus.Translated;
-            }
-            else
-            {
-                entry.Metadata.IsTranslated = false;
-                entry.Metadata.TranslationStatus = TranslationStatus.NeedsReview;
-            }
-        }
+            var status = entry.Metadata.GetDerivedStatus();
 
-        var summary = new TranslationSummary();
-
-        var localeGroups = entries.GroupBy(e => e.Locale, StringComparer.OrdinalIgnoreCase);
-
-        foreach (var group in localeGroups)
-        {
-            var locale = group.Key;
-            var counts = new LocaleTranslationCounts { Locale = locale };
-
-            foreach (var entry in group)
-            {
-                switch (entry.Metadata.TranslationStatus)
-                {
-                    case TranslationStatus.Translated:
-                        counts.Translated++;
-                        summary.Overall.Translated++;
-                        break;
-                    case TranslationStatus.Untranslated:
-                        counts.Untranslated++;
-                        summary.Overall.Untranslated++;
-                        break;
-                    case TranslationStatus.DoNotTranslate:
-                        counts.DoNotTranslate++;
-                        summary.Overall.DoNotTranslate++;
-                        break;
-                    case TranslationStatus.NeedsReview:
-                        counts.NeedsReview++;
-                        summary.Overall.NeedsReview++;
-                        break;
-                }
-            }
-
-            summary.ByLocale.Add(counts);
-        }
-
-        var targetLocales = entries.Where(e => !string.Equals(e.Locale, "en", StringComparison.OrdinalIgnoreCase))
-                                   .Select(e => e.Locale)
-                                   .Distinct(StringComparer.OrdinalIgnoreCase)
-                                   .ToList();
-
-        foreach (var locale in targetLocales)
-        {
-            var localeKeys = new HashSet<string>(
-                entries.Where(e => string.Equals(e.Locale, locale, StringComparison.OrdinalIgnoreCase))
-                       .Select(e => e.Key),
-                StringComparer.OrdinalIgnoreCase);
-
-            var missingCount = enKeys.Count(k => !localeKeys.Contains(k));
-
-            if (missingCount > 0)
+            // Count per-locale status
+            foreach (var val in entry.Values)
             {
                 var localeCounts = summary.ByLocale.FirstOrDefault(lc =>
-                    string.Equals(lc.Locale, locale, StringComparison.OrdinalIgnoreCase));
+                    string.Equals(lc.Locale, val.Locale, StringComparison.OrdinalIgnoreCase));
 
-                if (localeCounts is not null)
+                if (localeCounts is null)
                 {
-                    localeCounts.Untranslated += missingCount;
+                    localeCounts = new LocaleTranslationCounts { Locale = val.Locale };
+                    summary.ByLocale.Add(localeCounts);
                 }
 
-                summary.Overall.Untranslated += missingCount;
+                // For each locale value, determine if it's translated
+                if (entry.Metadata.DoNotTranslate)
+                {
+                    localeCounts.DoNotTranslate++;
+                    summary.Overall.DoNotTranslate++;
+                }
+                else if (!string.IsNullOrEmpty(val.Value))
+                {
+                    localeCounts.Translated++;
+                    summary.Overall.Translated++;
+                }
+                else
+                {
+                    localeCounts.Untranslated++;
+                    summary.Overall.Untranslated++;
+                }
+            }
+
+            // If entry has no values at all, count as untranslated
+            if (entry.Values.Count == 0)
+            {
+                summary.Overall.Untranslated++;
             }
         }
 

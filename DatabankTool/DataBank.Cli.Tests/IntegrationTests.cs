@@ -33,16 +33,16 @@ public class IntegrationTests
             });
 
             Assert.NotNull(output);
-            Assert.Equal(2, output.Version);
+            Assert.Equal(3, output.Version);
             Assert.NotEmpty(output.Generated);
             Assert.NotEmpty(output.Entries);
 
-            // Should have entries from both formats
-            Assert.Contains(output.Entries, e => e.Source.Format == "resx");
-            Assert.Contains(output.Entries, e => e.Source.Format == "rc");
+            // Should have entries with multiple sources
+            Assert.Contains(output.Entries, e => e.Sources.Values.Any(s => s.Format == "resx"));
+            Assert.Contains(output.Entries, e => e.Sources.Values.Any(s => s.Format == "rc"));
 
-            // Should have multiple locales
-            var locales = output.Entries.Select(e => e.Locale).Distinct().ToList();
+            // Should have multiple locales across entries
+            var locales = output.Entries.SelectMany(e => e.Values).Select(v => v.Locale).Distinct().ToList();
             Assert.True(locales.Count >= 3, $"Expected at least 3 locales, got {locales.Count}");
         }
         finally
@@ -73,7 +73,7 @@ public class IntegrationTests
             });
 
             Assert.NotNull(output);
-            Assert.All(output.Entries, e => Assert.Equal("resx", e.Source.Format));
+            Assert.All(output.Entries, e => Assert.All(e.Sources.Values, s => Assert.Equal("resx", s.Format)));
         }
         finally
         {
@@ -193,7 +193,6 @@ public class IntegrationTests
         {
             Directory.CreateDirectory(testDir);
 
-            // Create a DNT RC file
             var rcContent = @"
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
@@ -205,7 +204,6 @@ END
 ";
             File.WriteAllText(Path.Combine(testDir, "Test-DNT.rc"), rcContent);
 
-            // Create a non-DNT RC file
             var normalRcContent = @"
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
@@ -235,12 +233,14 @@ END
             Assert.NotEmpty(output.Entries);
 
             // All entries from DNT file should be marked DoNotTranslate
-            var dntFileEntries = output.Entries.Where(e => e.Source.File.Contains("DNT")).ToList();
+            var dntFileEntries = output.Entries.Where(e =>
+                e.Sources.Values.Any(s => s.File.Contains("DNT"))).ToList();
             Assert.NotEmpty(dntFileEntries);
             Assert.All(dntFileEntries, e => Assert.True(e.Metadata.DoNotTranslate));
 
             // Entries from normal file should not be marked DoNotTranslate
-            var normalFileEntries = output.Entries.Where(e => e.Source.File == "Normal.rc").ToList();
+            var normalFileEntries = output.Entries.Where(e =>
+                e.Sources.Values.Any(s => s.File == "Normal.rc")).ToList();
             Assert.NotEmpty(normalFileEntries);
             Assert.All(normalFileEntries, e => Assert.False(e.Metadata.DoNotTranslate));
         }

@@ -11,7 +11,7 @@ body {
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1600px;
     margin: 0 auto;
     padding: 20px;
 }
@@ -249,6 +249,40 @@ section {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+/* Column widths */
+.col-key {
+    min-width: 200px;
+    max-width: 300px;
+}
+
+.col-locale {
+    min-width: 180px;
+    max-width: 280px;
+}
+
+.col-format {
+    width: 80px;
+    min-width: 80px;
+    text-align: center;
+}
+
+.col-status {
+    width: 110px;
+    min-width: 110px;
+    text-align: center;
+}
+
+.format-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 500;
+    background-color: rgba(14, 99, 156, 0.2);
+    color: #0e639c;
+    text-transform: uppercase;
 }
 
 #entries-table tbody tr {

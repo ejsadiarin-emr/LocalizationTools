@@ -33,15 +33,15 @@ public static class EntriesEndpoints
         .WithName("GetEntriesCount")
         .WithDescription("Get total entry count, optionally filtered by locale");
 
-        group.MapGet("/{id}", async (string id, IDataBankRepository repository) =>
+        group.MapGet("/by-key/{key}", async (string key, IDataBankRepository repository) =>
         {
-            var entry = await repository.GetEntryByIdAsync(id);
+            var entry = await repository.GetEntryByKeyAsync(key);
             if (entry is null)
-                return Results.NotFound(new { error = $"Entry with ID '{id}' not found." });
+                return Results.NotFound(new { error = $"Entry with key '{key}' not found." });
             return Results.Ok(entry);
         })
-        .WithName("GetEntryById")
-        .WithDescription("Get a single entry by ID");
+        .WithName("GetEntryByKey")
+        .WithDescription("Get a single entry by key");
 
         group.MapPost("/", async (DataBankEntryDocument entry, IDataBankRepository repository) =>
         {
@@ -49,30 +49,72 @@ public static class EntriesEndpoints
             if (existing is not null)
                 return Results.Conflict(new { error = $"An entry with key '{entry.Key}' already exists." });
 
+            entry.Id = entry.Key;
             var created = await repository.CreateEntryAsync(entry);
             return Results.Created($"/api/entries/{created.Id}", created);
         })
         .WithName("CreateEntry")
         .WithDescription("Create a new entry");
 
-        group.MapPut("/{id}", async (string id, DataBankEntryDocument entry, IDataBankRepository repository) =>
+        group.MapPut("/{key}", async (string key, DataBankEntryDocument entry, IDataBankRepository repository) =>
         {
-            var existing = await repository.GetEntryByIdAsync(id);
+            var existing = await repository.GetEntryByKeyAsync(key);
             if (existing is null)
-                return Results.NotFound(new { error = $"Entry with ID '{id}' not found." });
+                return Results.NotFound(new { error = $"Entry with key '{key}' not found." });
 
-            entry.Id = id;
-            await repository.UpdateEntryAsync(id, entry);
+            entry.Id = key;
+            entry.Key = key;
+            await repository.UpdateEntryAsync(key, entry);
             return Results.Ok(entry);
         })
         .WithName("UpdateEntry")
         .WithDescription("Update an existing entry");
 
-        group.MapDelete("/{id}", async (string id, IDataBankRepository repository) =>
+        group.MapPut("/{key}/locales/{locale}", async (
+            string key, string locale, UpdateLocaleValueRequest request, IDataBankRepository repository) =>
         {
-            var deleted = await repository.DeleteEntryAsync(id);
+            var existing = await repository.GetEntryByKeyAsync(key);
+            if (existing is null)
+                return Results.NotFound(new { error = $"Entry with key '{key}' not found." });
+
+            var updated = await repository.UpdateLocaleValueAsync(key, locale, request.Value);
+            if (!updated)
+                return Results.BadRequest(new { error = $"Failed to update locale '{locale}' for key '{key}'." });
+
+            var entry = await repository.GetEntryByKeyAsync(key);
+            return Results.Ok(entry);
+        })
+        .WithName("UpdateLocaleValue")
+        .WithDescription("Update a specific locale value within an entry");
+
+        group.MapPatch("/{key}/values", async (
+            string key, BulkUpdateValuesRequest request, IDataBankRepository repository) =>
+        {
+            var existing = await repository.GetEntryByKeyAsync(key);
+            if (existing is null)
+                return Results.NotFound(new { error = $"Entry with key '{key}' not found." });
+
+            // Update each locale value
+            foreach (var val in request.Values)
+            {
+                await repository.UpdateLocaleValueAsync(key, val.Locale, val.Value);
+            }
+
+            var entry = await repository.GetEntryByKeyAsync(key);
+            return Results.Ok(entry);
+        })
+        .WithName("BulkUpdateValues")
+        .WithDescription("Bulk update multiple locale values for an entry");
+
+        group.MapDelete("/{key}", async (string key, IDataBankRepository repository) =>
+        {
+            var existing = await repository.GetEntryByKeyAsync(key);
+            if (existing is null)
+                return Results.NotFound(new { error = $"Entry with key '{key}' not found." });
+
+            var deleted = await repository.DeleteEntryAsync(key);
             if (!deleted)
-                return Results.NotFound(new { error = $"Entry with ID '{id}' not found." });
+                return Results.NotFound(new { error = $"Entry with key '{key}' not found." });
             return Results.NoContent();
         })
         .WithName("DeleteEntry")

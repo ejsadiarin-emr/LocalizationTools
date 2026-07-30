@@ -20,18 +20,37 @@ public class MongoDataBankRepository : IDataBankRepository
 
     private void EnsureIndexes()
     {
+        // Drop all existing non-_id indexes to handle schema migrations
+        try { _entries.Indexes.DropAll(); } catch { }
+
+        // If collection has duplicate Keys (v2 data), drop and recreate the collection
+        var count = _entries.CountDocuments(_ => true);
+        if (count > 0)
+        {
+            var distinctKeys = _entries.Distinct(e => e.Key, _ => true).ToList().Count;
+            if (distinctKeys < count)
+            {
+                // Duplicate keys exist — drop collection so CLI re-imports v3 data
+                _entries.Database.DropCollection("DataBankEntry");
+            }
+        }
+
         var entryKeys = Builders<DataBankEntryDocument>.IndexKeys;
+        // Unique index on Key (one document per key)
         _entries.Indexes.CreateOne(new CreateIndexModel<DataBankEntryDocument>(
-            entryKeys.Ascending(e => e.Key).Ascending(e => e.Locale),
+            entryKeys.Ascending(e => e.Key),
             new CreateIndexOptions { Unique = true }));
+        // Index on Values.Locale for locale-based filtering
         _entries.Indexes.CreateOne(new CreateIndexModel<DataBankEntryDocument>(
-            entryKeys.Ascending(e => e.Locale)));
+            entryKeys.Ascending("Values.Locale")));
+        // Index on Sources.Format for format-based filtering
         _entries.Indexes.CreateOne(new CreateIndexModel<DataBankEntryDocument>(
-            entryKeys.Ascending(e => e.Source.Format)));
+            entryKeys.Ascending("Sources.Format")));
         _entries.Indexes.CreateOne(new CreateIndexModel<DataBankEntryDocument>(
             entryKeys.Ascending(e => e.Metadata.DoNotTranslate)));
 
         var sessionKeys = Builders<TranslationSessionDocument>.IndexKeys;
+        try { _sessions.Indexes.DropAll(); } catch { }
         _sessions.Indexes.CreateOne(new CreateIndexModel<TranslationSessionDocument>(
             sessionKeys.Ascending(s => s.Status)));
         _sessions.Indexes.CreateOne(new CreateIndexModel<TranslationSessionDocument>(
@@ -49,10 +68,10 @@ public class MongoDataBankRepository : IDataBankRepository
         var filters = new List<FilterDefinition<DataBankEntryDocument>>();
 
         if (!string.IsNullOrEmpty(locale))
-            filters.Add(filter.Eq(e => e.Locale, locale));
+            filters.Add(filter.ElemMatch(e => e.Values, v => v.Locale == locale));
 
         if (!string.IsNullOrEmpty(format))
-            filters.Add(filter.Eq(e => e.Source.Format, format));
+            filters.Add(filter.Eq("Sources.Format", format));
 
         if (!string.IsNullOrEmpty(key))
             filters.Add(filter.Regex(e => e.Key, new BsonRegularExpression(key, "i")));
@@ -76,7 +95,7 @@ public class MongoDataBankRepository : IDataBankRepository
 
     public async Task<List<DataBankEntryDocument>> GetEntriesByLocaleAsync(string locale)
     {
-        return await _entries.Find(e => e.Locale == locale).ToListAsync();
+        return await _entries.Find(e => e.Values.Any(v => v.Locale == locale)).ToListAsync();
     }
 
     public async Task<DataBankEntryDocument> CreateEntryAsync(DataBankEntryDocument entry)
@@ -102,9 +121,7 @@ public class MongoDataBankRepository : IDataBankRepository
         {
             var batch = entries.Skip(i).Take(batchSize).ToList();
             var models = batch.Select(entry => new ReplaceOneModel<DataBankEntryDocument>(
-                Builders<DataBankEntryDocument>.Filter.And(
-                    Builders<DataBankEntryDocument>.Filter.Eq(e => e.Key, entry.Key),
-                    Builders<DataBankEntryDocument>.Filter.Eq(e => e.Locale, entry.Locale)),
+                Builders<DataBankEntryDocument>.Filter.Eq(e => e.Key, entry.Key),
                 entry)
             {
                 IsUpsert = true
@@ -123,6 +140,28 @@ public class MongoDataBankRepository : IDataBankRepository
         return result.IsAcknowledged && result.ModifiedCount > 0;
     }
 
+    public async Task<bool> UpdateLocaleValueAsync(string key, string locale, string value)
+    {
+        var filter = Builders<DataBankEntryDocument>.Filter.And(
+            Builders<DataBankEntryDocument>.Filter.Eq(e => e.Key, key),
+            Builders<DataBankEntryDocument>.Filter.ElemMatch(e => e.Values, v => v.Locale == locale));
+
+        var update = Builders<DataBankEntryDocument>.Update.Set("Values.$.Value", value);
+
+        var result = await _entries.UpdateOneAsync(filter, update);
+
+        // If locale doesn't exist in Values array, add it
+        if (result.MatchedCount == 0)
+        {
+            var addFilter = Builders<DataBankEntryDocument>.Filter.Eq(e => e.Key, key);
+            var addUpdate = Builders<DataBankEntryDocument>.Update.AddToSet(e => e.Values,
+                new LocaleValueDocument { Locale = locale, Value = value });
+            result = await _entries.UpdateOneAsync(addFilter, addUpdate);
+        }
+
+        return result.IsAcknowledged && result.MatchedCount > 0;
+    }
+
     public async Task<bool> DeleteEntryAsync(string id)
     {
         var result = await _entries.DeleteOneAsync(e => e.Id == id);
@@ -134,27 +173,24 @@ public class MongoDataBankRepository : IDataBankRepository
         if (string.IsNullOrEmpty(locale))
             return await _entries.CountDocumentsAsync(_ => true);
 
-        return await _entries.CountDocumentsAsync(e => e.Locale == locale);
+        return await _entries.CountDocumentsAsync(e => e.Values.Any(v => v.Locale == locale));
     }
 
     public async Task<long> GetUniqueKeyCountAsync()
     {
-        var pipeline = new[]
-        {
-            new BsonDocument("$group", new BsonDocument { { "_id", "$Key" } }),
-            new BsonDocument("$count", "total")
-        };
-        var result = await _entries.Aggregate<BsonDocument>(pipeline).FirstOrDefaultAsync();
-        return result?["total"].ToInt64() ?? 0;
+        // Each document is now one key, so count documents directly
+        return await _entries.CountDocumentsAsync(_ => true);
     }
 
     public async Task<Dictionary<string, long>> GetEntryCountByLocaleAsync()
     {
+        // Unwind the Values array to count per locale
         var pipeline = new[]
         {
+            new BsonDocument("$unwind", "$Values"),
             new BsonDocument("$group", new BsonDocument
             {
-                { "_id", "$Locale" },
+                { "_id", "$Values.Locale" },
                 { "count", new BsonDocument("$sum", 1) }
             })
         };
@@ -164,11 +200,17 @@ public class MongoDataBankRepository : IDataBankRepository
 
     public async Task<Dictionary<string, long>> GetEntryCountByFormatAsync()
     {
+        // Unwind Sources dictionary keys to count per format
         var pipeline = new[]
         {
+            new BsonDocument("$project", new BsonDocument
+            {
+                { "sourceFormats", new BsonDocument("$objectToArray", "$Sources") }
+            }),
+            new BsonDocument("$unwind", "$sourceFormats"),
             new BsonDocument("$group", new BsonDocument
             {
-                { "_id", "$Source.Format" },
+                { "_id", "$sourceFormats.v.Format" },
                 { "count", new BsonDocument("$sum", 1) }
             })
         };
@@ -178,11 +220,24 @@ public class MongoDataBankRepository : IDataBankRepository
 
     public async Task<Dictionary<string, long>> GetTranslationStatusCountsAsync()
     {
+        // Derive status from DoNotTranslate and IsTranslated
         var pipeline = new[]
         {
+            new BsonDocument("$project", new BsonDocument
+            {
+                { "status", new BsonDocument("$switch", new BsonArray
+                {
+                    new BsonDocument("case", new BsonDocument("$eq", new BsonArray { "$Metadata.DoNotTranslate", true })),
+                    new BsonDocument("then", "DoNotTranslate"),
+                    new BsonDocument("case", new BsonDocument("$eq", new BsonArray { "$Metadata.IsTranslated", false })),
+                    new BsonDocument("then", "Untranslated"),
+                    new BsonDocument("case", new BsonDocument("$eq", new BsonArray { "$Metadata.IsTranslated", true })),
+                    new BsonDocument("then", "Translated")
+                })}
+            }),
             new BsonDocument("$group", new BsonDocument
             {
-                { "_id", "$Metadata.TranslationStatus" },
+                { "_id", "$status" },
                 { "count", new BsonDocument("$sum", 1) }
             })
         };
@@ -192,14 +247,35 @@ public class MongoDataBankRepository : IDataBankRepository
 
     public async Task<Dictionary<string, Dictionary<string, long>>> GetTranslationStatusCountsByLocaleAsync()
     {
+        // Unwind Values, then derive status per locale entry
         var pipeline = new[]
         {
+            new BsonDocument("$unwind", "$Values"),
+            new BsonDocument("$project", new BsonDocument
+            {
+                { "locale", "$Values.Locale" },
+                { "hasValue", new BsonDocument("$gt", new BsonArray { new BsonDocument("$strLenCP", "$Values.Value"), 0 }) },
+                { "doNotTranslate", "$Metadata.DoNotTranslate" }
+            }),
+            new BsonDocument("$project", new BsonDocument
+            {
+                { "locale", 1 },
+                { "status", new BsonDocument("$switch", new BsonArray
+                {
+                    new BsonDocument("case", new BsonDocument("$eq", new BsonArray { "$doNotTranslate", true })),
+                    new BsonDocument("then", "DoNotTranslate"),
+                    new BsonDocument("case", new BsonDocument("$eq", new BsonArray { "$hasValue", false })),
+                    new BsonDocument("then", "Untranslated"),
+                    new BsonDocument("case", new BsonDocument("$eq", new BsonArray { "$hasValue", true })),
+                    new BsonDocument("then", "Translated")
+                })}
+            }),
             new BsonDocument("$group", new BsonDocument
             {
                 { "_id", new BsonDocument
                     {
-                        { "locale", "$Locale" },
-                        { "status", "$Metadata.TranslationStatus" }
+                        { "locale", "$locale" },
+                        { "status", "$status" }
                     }
                 },
                 { "count", new BsonDocument("$sum", 1) }

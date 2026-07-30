@@ -18,22 +18,11 @@ public class EntryMetadataDocumentTests
     }
 
     [Fact]
-    public void EntryMetadataDocument_HasTranslationStatusField()
-    {
-        var metadata = new EntryMetadataDocument
-        {
-            TranslationStatus = "Translated"
-        };
-
-        Assert.Equal("Translated", metadata.TranslationStatus);
-    }
-
-    [Fact]
-    public void EntryMetadataDocument_DefaultTranslationStatus_IsUntranslated()
+    public void EntryMetadataDocument_DefaultDoNotTranslate_IsFalse()
     {
         var metadata = new EntryMetadataDocument();
 
-        Assert.Equal("Untranslated", metadata.TranslationStatus);
+        Assert.False(metadata.DoNotTranslate);
     }
 
     [Fact]
@@ -50,25 +39,17 @@ public class EntryMetadataDocumentTests
         var metadata = new EntryMetadataDocument
         {
             Comment = "test comment",
-            RcId = 123,
-            RcDefine = "DEFINE",
-            IsBehavioral = true,
             FormatSpecifiers = ["%d", "%s"],
             DoNotTranslate = true,
-            IsTranslated = true,
-            TranslationStatus = "Translated"
+            IsTranslated = true
         };
 
         var doc = metadata.ToBsonDocument();
 
         Assert.Equal("test comment", doc["Comment"].AsString);
-        Assert.Equal(123, doc["RcId"].AsInt32);
-        Assert.Equal("DEFINE", doc["RcDefine"].AsString);
-        Assert.True(doc["IsBehavioral"].AsBoolean);
         Assert.Equal(2, doc["FormatSpecifiers"].AsBsonArray.Count);
         Assert.True(doc["DoNotTranslate"].AsBoolean);
         Assert.True(doc["IsTranslated"].AsBoolean);
-        Assert.Equal("Translated", doc["TranslationStatus"].AsString);
     }
 
     [Fact]
@@ -77,17 +58,17 @@ public class EntryMetadataDocumentTests
         var original = new EntryMetadataDocument
         {
             Comment = "round trip test",
-            RcId = 456,
             IsTranslated = true,
-            TranslationStatus = "NeedsReview"
+            DoNotTranslate = false,
+            FormatSpecifiers = ["%s"]
         };
 
         var bson = original.ToBsonDocument();
         var deserialized = BsonSerializer.Deserialize<EntryMetadataDocument>(bson);
 
         Assert.Equal(original.Comment, deserialized.Comment);
-        Assert.Equal(original.RcId, deserialized.RcId);
         Assert.Equal(original.IsTranslated, deserialized.IsTranslated);
-        Assert.Equal(original.TranslationStatus, deserialized.TranslationStatus);
+        Assert.Equal(original.DoNotTranslate, deserialized.DoNotTranslate);
+        Assert.Equal(original.FormatSpecifiers, deserialized.FormatSpecifiers);
     }
 }

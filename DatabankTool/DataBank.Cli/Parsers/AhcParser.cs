@@ -6,9 +6,9 @@ namespace DataBank.Cli.Parsers;
 
 public static class AhcParser
 {
-    public static List<LocalizedStringEntry> Parse(string filePath, string? encodingOverride = null, string? rootDir = null)
+    public static List<RawLocalizedEntry> Parse(string filePath, string? encodingOverride = null, string? rootDir = null)
     {
-        var entries = new List<LocalizedStringEntry>();
+        var entries = new List<RawLocalizedEntry>();
 
         try
         {
@@ -35,9 +35,8 @@ public static class AhcParser
                 if (string.IsNullOrEmpty(text))
                     continue;
 
-                entries.Add(new LocalizedStringEntry
+                entries.Add(new RawLocalizedEntry
                 {
-                    Id = $"ahc::{relativePath}::{language}::{GenerateKey(languageValue)}",
                     Key = GenerateKey(languageValue),
                     Value = text,
                     Locale = language,

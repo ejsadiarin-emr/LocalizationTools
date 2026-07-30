@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using DataBank.Cli.Helpers;
 using DataBank.Cli.Models;
 
@@ -6,9 +5,9 @@ namespace DataBank.Cli.Parsers;
 
 public static partial class GrfParser
 {
-    public static List<LocalizedStringEntry> Parse(string filePath, string? rootDir = null)
+    public static List<RawLocalizedEntry> Parse(string filePath, string? rootDir = null)
     {
-        var entries = new List<LocalizedStringEntry>();
+        var entries = new List<RawLocalizedEntry>();
         var relativePath = rootDir is not null
             ? Path.GetRelativePath(rootDir, filePath)
             : Path.GetFileName(filePath);
@@ -16,9 +15,8 @@ public static partial class GrfParser
         var locale = DetectLocale(filePath);
         var fileName = Path.GetFileNameWithoutExtension(filePath);
 
-        entries.Add(new LocalizedStringEntry
+        entries.Add(new RawLocalizedEntry
         {
-            Id = $"grf::{relativePath}",
             Key = fileName,
             Value = $"GRF file: {Path.GetFileName(filePath)}",
             Locale = locale,
@@ -71,6 +69,6 @@ public static partial class GrfParser
         };
     }
 
-    [GeneratedRegex(@"\.([a-zA-Z]{2}(?:-[a-zA-Z0-9]+)?)$")]
-    private static partial Regex GrfLocalePattern();
+    [System.Text.RegularExpressions.GeneratedRegex(@"\.([a-zA-Z]{2}(?:-[a-zA-Z0-9]+)?)$")]
+    private static partial System.Text.RegularExpressions.Regex GrfLocalePattern();
 }

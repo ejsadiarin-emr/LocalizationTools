@@ -36,13 +36,16 @@ public static partial class CoverageAnalyzer
                 var enRelativePath = GetRelativePath(enFile, rootDir);
                 var transRelativePath = GetRelativePath(translatedFile, rootDir);
 
+                // Find entries that have this file as a source for "en" locale
                 var enEntries = allEntries.Where(e =>
-                    e.Source.Path == enRelativePath &&
-                    e.Locale == "en").ToList();
+                    e.Sources.ContainsKey("en") &&
+                    e.Sources["en"].Path == enRelativePath).ToList();
 
+                // Find entries that have this file as a source for any non-en locale
                 var translatedEntries = allEntries.Where(e =>
-                    e.Source.Path == transRelativePath &&
-                    e.Locale != "en").ToList();
+                    e.Sources.Any(s =>
+                        s.Key != "en" &&
+                        s.Value.Path == transRelativePath)).ToList();
 
                 var enKeys = enEntries.Select(e => e.Key).ToHashSet(StringComparer.OrdinalIgnoreCase);
                 var translatedKeys = translatedEntries.Select(e => e.Key).ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -109,8 +112,10 @@ public static partial class CoverageAnalyzer
         if (translatedEntries.Count == 0)
             return "unknown";
 
-        var locale = translatedEntries.First().Locale;
-        return string.IsNullOrEmpty(locale) ? "unknown" : locale;
+        // Get locale from the first non-en value in the entry
+        var entry = translatedEntries.First();
+        var nonEnLocale = entry.Values.FirstOrDefault(v => v.Locale != "en")?.Locale;
+        return nonEnLocale ?? "unknown";
     }
 
     private static List<(string enDir, string translatedDir)> FindEnTranslatedPairs(string rootDir)

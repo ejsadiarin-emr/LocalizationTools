@@ -7,21 +7,16 @@ namespace DataBank.Cli.Parsers;
 public static partial class RcParser
 {
     /// <summary>
-    /// Parses an RC resource file into localized string entries.
-    /// Key formats:
-    ///   CAPTION:     "CAPTION::{dialogName}"
-    ///   LTEXT/etc:   "{controlType}::{dialogName}::{defineName}" (e.g., "LTEXT::IDD_ABOUTBOX::IDC_STATIC::0")
-    ///   CONTROL:     "CONTROL::{dialogName}::{defineName}"
-    ///   STRINGTABLE: "{defineName}" (e.g., "IDS_WELCOME")
+    /// Parses an RC resource file into raw localized string entries.
+    /// Use EntryGrouper.GroupByKey() to collapse into grouped entries.
     /// </summary>
-    public static List<LocalizedStringEntry> Parse(string filePath, Dictionary<int, string>? symbolMap = null, string? rootDir = null, string? encodingOverride = null)
+    public static List<RawLocalizedEntry> Parse(string filePath, Dictionary<int, string>? symbolMap = null, string? rootDir = null, string? encodingOverride = null)
     {
-        var entries = new List<LocalizedStringEntry>();
+        var entries = new List<RawLocalizedEntry>();
         var relativePath = rootDir is not null
             ? Path.GetRelativePath(rootDir, filePath)
             : Path.GetFileName(filePath);
 
-        var encodingName = encodingOverride ?? EncodingDetector.Detect(filePath).WebName;
         var isDntFile = FileHelper.HasDntInFilename(filePath);
 
         try
@@ -81,7 +76,7 @@ public static partial class RcParser
 
                 if (inStringTable)
                 {
-                    var entry = ParseStringEntry(line, currentLocale, relativePath, symbolMap, encodingName, isDntFile);
+                    var entry = ParseStringEntry(line, currentLocale, relativePath, symbolMap, isDntFile);
                     if (entry is not null)
                         entries.Add(entry);
                     continue;
@@ -103,7 +98,7 @@ public static partial class RcParser
                         {
                             entries.Add(CreateDialogEntry(
                                 captionValue, currentLocale,
-                                currentDialogName, "CAPTION", relativePath, encodingName, isDntFile));
+                                currentDialogName, "CAPTION", relativePath, isDntFile));
                         }
                     }
                     continue;
@@ -128,13 +123,13 @@ public static partial class RcParser
                         {
                             entries.Add(CreateDialogEntry(
                                 captionValue, currentLocale,
-                                currentDialogName, "CAPTION", relativePath, encodingName, isDntFile));
+                                currentDialogName, "CAPTION", relativePath, isDntFile));
                         }
                         continue;
                     }
 
                     // Extract strings from control elements
-                    var controlEntry = ParseDialogControl(line, currentLocale, currentDialogName, relativePath, ref dialogControlIndex, symbolMap, encodingName, isDntFile);
+                    var controlEntry = ParseDialogControl(line, currentLocale, currentDialogName, relativePath, ref dialogControlIndex, symbolMap, isDntFile);
                     if (controlEntry is not null)
                         entries.Add(controlEntry);
                 }
@@ -148,17 +143,16 @@ public static partial class RcParser
         return entries;
     }
 
-    private static LocalizedStringEntry CreateDialogEntry(
+    private static RawLocalizedEntry CreateDialogEntry(
         string value, string locale, string dialogName,
-        string controlType, string relativePath, string encodingName, bool isDntFile)
+        string controlType, string relativePath, bool isDntFile)
     {
         var key = $"{controlType}::{dialogName}";
         var metadata = new EntryMetadata { DoNotTranslate = isDntFile };
         DetectFormatSpecifiers(value, metadata);
 
-        return new LocalizedStringEntry
+        return new RawLocalizedEntry
         {
-            Id = $"rc::{relativePath}::{key}",
             Key = key,
             Value = value,
             Locale = locale,
@@ -166,16 +160,15 @@ public static partial class RcParser
             {
                 Format = "rc",
                 File = relativePath,
-                Path = relativePath,
-                Encoding = encodingName
+                Path = relativePath
             },
             Metadata = metadata
         };
     }
 
-    private static LocalizedStringEntry? ParseDialogControl(
+    private static RawLocalizedEntry? ParseDialogControl(
         string line, string locale, string dialogName, string relativePath,
-        ref int controlIndex, Dictionary<int, string>? symbolMap, string encodingName, bool isDntFile)
+        ref int controlIndex, Dictionary<int, string>? symbolMap, bool isDntFile)
     {
         // LTEXT "text",IDC_xxx,x,y,w,h
         // PUSHBUTTON "text",IDC_xxx,x,y,w,h
@@ -191,7 +184,7 @@ public static partial class RcParser
 
             var controlType = textMatch.Groups[1].Value.ToUpperInvariant();
             var idPart = textMatch.Groups[3].Value;
-            var (numericId, defineName) = ResolveId(idPart, symbolMap);
+            var (_, defineName) = ResolveId(idPart, symbolMap);
             var key = $"{controlType}::{dialogName}::{defineName ?? idPart}";
 
             // Disambiguate IDC_STATIC with positional index
@@ -203,15 +196,12 @@ public static partial class RcParser
 
             var metadata = new EntryMetadata
             {
-                RcId = numericId,
-                RcDefine = defineName,
                 DoNotTranslate = isDntFile
             };
             DetectFormatSpecifiers(value, metadata);
 
-            return new LocalizedStringEntry
+            return new RawLocalizedEntry
             {
-                Id = $"rc::{relativePath}::{key}",
                 Key = key,
                 Value = value,
                 Locale = locale,
@@ -219,8 +209,7 @@ public static partial class RcParser
                 {
                     Format = "rc",
                     File = relativePath,
-                    Path = relativePath,
-                    Encoding = encodingName
+                    Path = relativePath
                 },
                 Metadata = metadata
             };
@@ -235,7 +224,7 @@ public static partial class RcParser
                 return null;
 
             var idPart = controlMatch.Groups[2].Value;
-            var (numericId, defineName) = ResolveId(idPart, symbolMap);
+            var (_, defineName) = ResolveId(idPart, symbolMap);
             var key = $"CONTROL::{dialogName}::{defineName ?? idPart}";
 
             // Disambiguate IDC_STATIC with positional index
@@ -247,15 +236,12 @@ public static partial class RcParser
 
             var metadata = new EntryMetadata
             {
-                RcId = numericId,
-                RcDefine = defineName,
                 DoNotTranslate = isDntFile
             };
             DetectFormatSpecifiers(value, metadata);
 
-            return new LocalizedStringEntry
+            return new RawLocalizedEntry
             {
-                Id = $"rc::{relativePath}::{key}",
                 Key = key,
                 Value = value,
                 Locale = locale,
@@ -263,8 +249,7 @@ public static partial class RcParser
                 {
                     Format = "rc",
                     File = relativePath,
-                    Path = relativePath,
-                    Encoding = encodingName
+                    Path = relativePath
                 },
                 Metadata = metadata
             };
@@ -358,7 +343,6 @@ public static partial class RcParser
 
         if (specifiers.Count > 0)
         {
-            metadata.IsBehavioral = true;
             metadata.FormatSpecifiers.AddRange(specifiers);
         }
     }
@@ -411,9 +395,9 @@ public static partial class RcParser
         return lines;
     }
 
-    private static LocalizedStringEntry? ParseStringEntry(
+    private static RawLocalizedEntry? ParseStringEntry(
         string line, string locale, string relativePath,
-        Dictionary<int, string>? symbolMap, string encodingName, bool isDntFile)
+        Dictionary<int, string>? symbolMap, bool isDntFile)
     {
         // Match: IDS_WELCOME "Welcome" or 100 "Welcome"
         var match = StringEntryPattern().Match(line);
@@ -449,15 +433,12 @@ public static partial class RcParser
 
         var metadata = new EntryMetadata
         {
-            RcId = numericId,
-            RcDefine = defineName,
             DoNotTranslate = isDntFile
         };
         DetectFormatSpecifiers(value, metadata);
 
-        return new LocalizedStringEntry
+        return new RawLocalizedEntry
         {
-            Id = $"rc::{relativePath}::{key}",
             Key = key,
             Value = value,
             Locale = locale,
@@ -465,8 +446,7 @@ public static partial class RcParser
             {
                 Format = "rc",
                 File = relativePath,
-                Path = relativePath,
-                Encoding = encodingName
+                Path = relativePath
             },
             Metadata = metadata
         };

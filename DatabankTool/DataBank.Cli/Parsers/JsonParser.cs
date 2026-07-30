@@ -6,9 +6,9 @@ namespace DataBank.Cli.Parsers;
 
 public static class JsonParser
 {
-    public static List<LocalizedStringEntry> Parse(string filePath, string? rootDir = null)
+    public static List<RawLocalizedEntry> Parse(string filePath, string? rootDir = null)
     {
-        var entries = new List<LocalizedStringEntry>();
+        var entries = new List<RawLocalizedEntry>();
         var relativePath = rootDir is not null
             ? Path.GetRelativePath(rootDir, filePath)
             : Path.GetFileName(filePath);
@@ -36,9 +36,8 @@ public static class JsonParser
                 if (string.IsNullOrEmpty(value))
                     continue;
 
-                entries.Add(new LocalizedStringEntry
+                entries.Add(new RawLocalizedEntry
                 {
-                    Id = $"json::{relativePath}::{property.Name}",
                     Key = property.Name,
                     Value = value,
                     Locale = locale,

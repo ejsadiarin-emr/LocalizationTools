@@ -27,8 +27,6 @@ public class RcParserTests
 
         var titleEntry = entries.First(e => e.Locale == "en" && e.Key == "IDS_APP_TITLE");
         Assert.Equal("DeltaV Application", titleEntry.Value);
-        Assert.Equal(100, titleEntry.Metadata.RcId);
-        Assert.Equal("IDS_APP_TITLE", titleEntry.Metadata.RcDefine);
     }
 
     [Fact]
@@ -206,7 +204,7 @@ public class RcParserTests
         var entries = ParseRcString(rc);
 
         Assert.Equal(2, entries.Count);
-        Assert.All(entries, e => Assert.True(e.Metadata.IsBehavioral));
+        Assert.All(entries, e => Assert.NotEmpty(e.Metadata.FormatSpecifiers));
         Assert.Single(entries[0].Metadata.FormatSpecifiers); // %d in LTEXT
         Assert.Single(entries[1].Metadata.FormatSpecifiers); // %s in PUSHBUTTON
     }
@@ -225,7 +223,6 @@ public class RcParserTests
         var entries = ParseRcString(rc);
 
         Assert.Single(entries);
-        Assert.False(entries[0].Metadata.IsBehavioral);
         Assert.Empty(entries[0].Metadata.FormatSpecifiers);
     }
 
@@ -243,7 +240,7 @@ public class RcParserTests
         var entries = ParseRcString(rc);
 
         Assert.Single(entries);
-        Assert.False(entries[0].Metadata.IsBehavioral);
+        Assert.Empty(entries[0].Metadata.FormatSpecifiers);
     }
 
     [Fact]
@@ -261,8 +258,7 @@ public class RcParserTests
         var entries = ParseRcString(rc, symbolMap);
 
         Assert.Single(entries);
-        Assert.Equal("IDC_SUBMIT_BTN", entries[0].Metadata.RcDefine);
-        Assert.Equal(500, entries[0].Metadata.RcId);
+        Assert.Contains("IDC_SUBMIT_BTN", entries[0].Key);
     }
 
     [Fact]
@@ -378,7 +374,6 @@ public class RcParserTests
         var metadata = new DataBank.Cli.Models.EntryMetadata();
         RcParser.DetectFormatSpecifiers("Value: %s, Count: %d, Price: %.2f", metadata);
 
-        Assert.True(metadata.IsBehavioral);
         Assert.Equal(3, metadata.FormatSpecifiers.Count);
         Assert.Contains("%s", metadata.FormatSpecifiers);
         Assert.Contains("%d", metadata.FormatSpecifiers);
@@ -391,7 +386,6 @@ public class RcParserTests
         var metadata = new DataBank.Cli.Models.EntryMetadata();
         RcParser.DetectFormatSpecifiers("Hello World", metadata);
 
-        Assert.False(metadata.IsBehavioral);
         Assert.Empty(metadata.FormatSpecifiers);
     }
 
@@ -516,7 +510,7 @@ PUSHBUTTON ""OK"", IDOK, 280, 5, 30, 14
         Assert.NotEqual(ltextKey, controlKey);
     }
 
-    private static List<DataBank.Cli.Models.LocalizedStringEntry> ParseRcString(
+    private static List<DataBank.Cli.Models.RawLocalizedEntry> ParseRcString(
         string rcContent, Dictionary<int, string>? symbolMap = null)
     {
         var tempFile = Path.GetTempFileName();

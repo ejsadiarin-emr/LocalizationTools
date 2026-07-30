@@ -13,20 +13,31 @@ public class DataBankEntryDocumentTests
         {
             Id = "json::test.json::key1",
             Key = "key1",
-            Value = "Test value",
-            Locale = "en",
-            Source = new SourceInfoDocument
+            Values =
+            [
+                new LocaleValueDocument { Locale = "en", Value = "Test value" },
+                new LocaleValueDocument { Locale = "zh-CN", Value = "测试值" }
+            ],
+            Sources = new Dictionary<string, SourceInfoDocument>
             {
-                Format = "json",
-                File = "test.json",
-                Path = "test.json",
-                Encoding = "utf-8"
+                ["en"] = new SourceInfoDocument
+                {
+                    Format = "json",
+                    File = "test.json",
+                    Path = "test.json"
+                },
+                ["zh-CN"] = new SourceInfoDocument
+                {
+                    Format = "json",
+                    File = "test.zh-CN.json",
+                    Path = "test.zh-CN.json"
+                }
             },
             Metadata = new EntryMetadataDocument
             {
                 Comment = "test",
                 IsTranslated = true,
-                TranslationStatus = "Translated"
+                DoNotTranslate = false
             }
         };
 
@@ -34,13 +45,14 @@ public class DataBankEntryDocumentTests
 
         Assert.Equal("json::test.json::key1", doc["_id"].AsString);
         Assert.Equal("key1", doc["Key"].AsString);
-        Assert.Equal("Test value", doc["Value"].AsString);
-        Assert.Equal("en", doc["Locale"].AsString);
-        Assert.Equal("json", doc["Source"]["Format"].AsString);
-        Assert.Equal("test.json", doc["Source"]["File"].AsString);
-        Assert.Equal("utf-8", doc["Source"]["Encoding"].AsString);
+        Assert.Equal(2, doc["Values"].AsBsonArray.Count);
+        Assert.Equal("en", doc["Values"][0]["Locale"].AsString);
+        Assert.Equal("Test value", doc["Values"][0]["Value"].AsString);
+        Assert.Equal("zh-CN", doc["Values"][1]["Locale"].AsString);
+        Assert.Equal("测试值", doc["Values"][1]["Value"].AsString);
+        Assert.Equal("json", doc["Sources"]["en"]["Format"].AsString);
+        Assert.Equal("test.json", doc["Sources"]["en"]["File"].AsString);
         Assert.True(doc["Metadata"]["IsTranslated"].AsBoolean);
-        Assert.Equal("Translated", doc["Metadata"]["TranslationStatus"].AsString);
     }
 
     [Fact]
@@ -50,18 +62,23 @@ public class DataBankEntryDocumentTests
         {
             Id = "round::trip::test",
             Key = "roundtrip",
-            Value = "Round trip value",
-            Locale = "zh",
-            Source = new SourceInfoDocument
+            Values =
+            [
+                new LocaleValueDocument { Locale = "en", Value = "Round trip value" },
+                new LocaleValueDocument { Locale = "zh", Value = "往返值" }
+            ],
+            Sources = new Dictionary<string, SourceInfoDocument>
             {
-                Format = "rc",
-                File = "test.rc",
-                Path = "test.rc"
+                ["en"] = new SourceInfoDocument
+                {
+                    Format = "rc",
+                    File = "test.rc",
+                    Path = "test.rc"
+                }
             },
             Metadata = new EntryMetadataDocument
             {
                 IsTranslated = false,
-                TranslationStatus = "Untranslated",
                 DoNotTranslate = true
             }
         };
@@ -71,11 +88,11 @@ public class DataBankEntryDocumentTests
 
         Assert.Equal(original.Id, deserialized.Id);
         Assert.Equal(original.Key, deserialized.Key);
-        Assert.Equal(original.Value, deserialized.Value);
-        Assert.Equal(original.Locale, deserialized.Locale);
-        Assert.Equal(original.Source.Format, deserialized.Source.Format);
+        Assert.Equal(2, deserialized.Values.Count);
+        Assert.Equal("en", deserialized.Values[0].Locale);
+        Assert.Equal("Round trip value", deserialized.Values[0].Value);
+        Assert.Equal("rc", deserialized.Sources["en"].Format);
         Assert.Equal(original.Metadata.IsTranslated, deserialized.Metadata.IsTranslated);
-        Assert.Equal(original.Metadata.TranslationStatus, deserialized.Metadata.TranslationStatus);
         Assert.Equal(original.Metadata.DoNotTranslate, deserialized.Metadata.DoNotTranslate);
     }
 
@@ -86,30 +103,30 @@ public class DataBankEntryDocumentTests
         {
             Id = "json::translate.en.json::TestKey",
             Key = "TestKey",
-            Value = "Test value",
-            Locale = "en",
-            Source = new SourceInfoDocument
+            Values =
+            [
+                new LocaleValueDocument { Locale = "en", Value = "Test value" }
+            ],
+            Sources = new Dictionary<string, SourceInfoDocument>
             {
-                Format = "json",
-                File = "translate.en.json",
-                Path = "translate.en.json"
+                ["en"] = new SourceInfoDocument
+                {
+                    Format = "json",
+                    File = "translate.en.json",
+                    Path = "translate.en.json"
+                }
             },
             Metadata = new EntryMetadataDocument
             {
-                IsBehavioral = false,
                 FormatSpecifiers = [],
                 DoNotTranslate = false,
-                IsTranslated = false,
-                TranslationStatus = "Untranslated"
+                IsTranslated = false
             }
         };
 
         var json = entry.ToJson(new MongoDB.Bson.IO.JsonWriterSettings { Indent = true });
 
         Assert.Contains("\"Key\" : \"TestKey\"", json);
-        Assert.Contains("\"Value\" : \"Test value\"", json);
-        Assert.Contains("\"Locale\" : \"en\"", json);
         Assert.Contains("\"IsTranslated\" : false", json);
-        Assert.Contains("\"TranslationStatus\" : \"Untranslated\"", json);
     }
 }

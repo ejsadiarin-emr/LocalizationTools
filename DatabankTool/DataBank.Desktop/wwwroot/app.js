@@ -8,6 +8,7 @@
     let sortColumn = '';
     let sortDirection = 'asc';
     const PAGE_SIZE = 50;
+    const DEFAULT_LOCALES = ['en', 'zh-CN', 'ru', 'ja'];
 
     // DOM refs
     const dashboardSection = document.getElementById('dashboard-section');
@@ -30,10 +31,8 @@
     tabBtns.forEach(function (btn) {
         btn.addEventListener('click', function () {
             var targetTab = btn.getAttribute('data-tab');
-
             tabBtns.forEach(function (b) { b.classList.remove('active'); });
             tabContents.forEach(function (c) { c.classList.remove('active'); });
-
             btn.classList.add('active');
             document.getElementById('tab-' + targetTab).classList.add('active');
         });
@@ -48,51 +47,13 @@
         }
     }
 
-    function renderGrfFiles(files) {
-        var container = document.getElementById('grf-file-list');
-        var noGrfMessage = document.getElementById('no-grf-message');
-        container.innerHTML = '';
-
-        if (files.length === 0) {
-            noGrfMessage.classList.remove('hidden');
-            return;
-        }
-
-        noGrfMessage.classList.add('hidden');
-        files.forEach(function (file) {
-            var item = document.createElement('div');
-            item.className = 'grf-file-item';
-            item.innerHTML =
-                '<span class="grf-file-name">' + escapeHtml(file.fileName) + '</span>' +
-                '<span class="grf-folder-badge">' + escapeHtml(file.folder) + '</span>';
-            container.appendChild(item);
-        });
+    // --- Exclude GRF entries from main table ---
+    function isGrfEntry(e) {
+        return getEntryFormat(e) === 'grf';
     }
 
-    function renderGrfTab() {
-        var grfEntries = allEntries.filter(function (e) {
-            return e.source && e.source.format === 'grf';
-        });
-        var container = document.getElementById('grf-file-list');
-        var noGrfMessage = document.getElementById('no-grf-message');
-        container.innerHTML = '';
-
-        if (grfEntries.length === 0) {
-            noGrfMessage.classList.remove('hidden');
-            return;
-        }
-
-        noGrfMessage.classList.add('hidden');
-        grfEntries.forEach(function (entry) {
-            var item = document.createElement('div');
-            item.className = 'grf-file-item';
-            var comment = (entry.metadata && entry.metadata.comment) || '';
-            item.innerHTML =
-                '<span class="grf-file-name">' + escapeHtml(entry.key) + '.grf</span>' +
-                '<span class="grf-folder-badge">' + escapeHtml(entry.locale) + '</span>' +
-                (comment ? '<span class="grf-comment">' + escapeHtml(comment) + '</span>' : '');
-            container.appendChild(item);
-        });
+    function getTableEntries() {
+        return allEntries.filter(function (e) { return !isGrfEntry(e); });
     }
 
     function onDataLoaded() {
@@ -103,30 +64,62 @@
         noDataMessage.classList.add('hidden');
     }
 
+    // --- Helper: Get locale value from entry ---
+    function getLocaleValue(entry, locale) {
+        if (!entry.values) return '';
+        var found = entry.values.find(function (v) { return v.locale === locale; });
+        return found ? found.value : '';
+    }
+
+    // --- Helper: Get all locales present in data (excluding GRF) ---
+    function getAllLocales() {
+        var localeSet = new Set();
+        getTableEntries().forEach(function (e) {
+            if (e.values) {
+                e.values.forEach(function (v) { localeSet.add(v.locale); });
+            }
+        });
+        return Array.from(localeSet).sort();
+    }
+
+    // --- Helper: Get format from entry sources ---
+    function getEntryFormat(entry) {
+        if (!entry.sources) return '';
+        var keys = Object.keys(entry.sources);
+        return keys.length > 0 ? entry.sources[keys[0]].format : '';
+    }
+
     // --- Dashboard ---
     function updateDashboard() {
-        var total = allEntries.length;
-        var locales = new Set(allEntries.map(function (e) { return e.locale; }));
-        var formats = new Set(allEntries.map(function (e) { return e.source ? e.source.format : ''; }));
-        var translated = allEntries.filter(function (e) { return getStatus(e) === 'translated'; }).length;
-        var untranslated = allEntries.filter(function (e) { return getStatus(e) === 'untranslated'; }).length;
+        var tableEntries = getTableEntries();
+        var total = tableEntries.length;
+        var allLocales = getAllLocales();
+        var formats = new Set();
+        tableEntries.forEach(function (e) {
+            var fmt = getEntryFormat(e);
+            if (fmt) formats.add(fmt);
+        });
+
+        var translated = tableEntries.filter(function (e) { return getStatus(e) === 'translated'; }).length;
+        var untranslated = tableEntries.filter(function (e) { return getStatus(e) === 'untranslated'; }).length;
 
         document.getElementById('stat-total').textContent = total;
-        document.getElementById('stat-locales').textContent = locales.size;
+        document.getElementById('stat-locales').textContent = allLocales.length;
         document.getElementById('stat-formats').textContent = formats.size;
         document.getElementById('stat-translated').textContent = translated;
         document.getElementById('stat-untranslated').textContent = untranslated;
 
-        renderLocaleStats(locales, total);
+        renderLocaleStats(allLocales, total);
     }
 
     function renderLocaleStats(locales, total) {
         var container = document.getElementById('locale-stats');
         container.innerHTML = '';
-        var localeArray = Array.from(locales).sort();
 
-        localeArray.forEach(function (locale) {
-            var count = allEntries.filter(function (e) { return e.locale === locale; }).length;
+        locales.forEach(function (locale) {
+            var count = getTableEntries().filter(function (e) {
+                return getLocaleValue(e, locale) !== '';
+            }).length;
             var pct = total > 0 ? Math.round((count / total) * 100) : 0;
 
             var row = document.createElement('div');
@@ -146,7 +139,7 @@
         if (entry.metadata && entry.metadata.doNotTranslate) {
             return 'do-not-translate';
         }
-        if (!entry.value || entry.value.trim() === '') {
+        if (!entry.metadata || !entry.metadata.isTranslated) {
             return 'untranslated';
         }
         return 'translated';
@@ -165,9 +158,12 @@
     function populateFilters() {
         var locales = {};
         var formats = {};
-        allEntries.forEach(function (e) {
-            if (e.locale) locales[e.locale] = true;
-            if (e.source && e.source.format) formats[e.source.format] = true;
+        getTableEntries().forEach(function (e) {
+            if (e.values) {
+                e.values.forEach(function (v) { locales[v.locale] = true; });
+            }
+            var fmt = getEntryFormat(e);
+            if (fmt && fmt !== 'grf') formats[fmt] = true;
         });
 
         populateDropdown(localeFilter, Object.keys(locales).sort(), 'All Locales');
@@ -190,13 +186,25 @@
         var status = statusFilter.value;
         var search = searchInput.value.toLowerCase().trim();
 
-        filteredEntries = allEntries.filter(function (e) {
-            if (locale && e.locale !== locale) return false;
-            if (format && (!e.source || e.source.format !== format)) return false;
+        filteredEntries = getTableEntries().filter(function (e) {
+            // Filter by locale: show entries that have a non-empty value for this locale
+            if (locale && getLocaleValue(e, locale) === '') return false;
+
+            // Filter by format
+            if (format && getEntryFormat(e) !== format) return false;
+
+            // Filter by status
             if (status && getStatus(e) !== status) return false;
+
+            // Search across key and all locale values
             if (search) {
                 var keyMatch = e.key && e.key.toLowerCase().indexOf(search) !== -1;
-                var valueMatch = e.value && e.value.toLowerCase().indexOf(search) !== -1;
+                var valueMatch = false;
+                if (e.values) {
+                    valueMatch = e.values.some(function (v) {
+                        return v.value && v.value.toLowerCase().indexOf(search) !== -1;
+                    });
+                }
                 if (!keyMatch && !valueMatch) return false;
             }
             return true;
@@ -224,10 +232,7 @@
     function getSortValue(entry, column) {
         switch (column) {
             case 'key': return entry.key || '';
-            case 'sourceFile': return (entry.source && entry.source.file) || '';
-            case 'value': return entry.value || '';
-            case 'locale': return entry.locale || '';
-            case 'format': return (entry.source && entry.source.format) || '';
+            case 'format': return getEntryFormat(entry);
             case 'status': return getStatus(entry);
             default: return '';
         }
@@ -240,25 +245,145 @@
         var end = Math.min(start + PAGE_SIZE, filteredEntries.length);
         var pageEntries = filteredEntries.slice(start, end);
 
+        // Determine which locales to show as columns
+        var displayLocales = DEFAULT_LOCALES.slice();
+        var allLocales = getAllLocales();
+        allLocales.forEach(function (loc) {
+            if (displayLocales.indexOf(loc) === -1) {
+                displayLocales.push(loc);
+            }
+        });
+
+        // Update table header
+        var thead = document.querySelector('#entries-table thead tr');
+        if (thead) {
+            var headerHtml = '<th data-sort="key" class="col-key">Key <span class="sort-arrow"></span></th>';
+            headerHtml += '<th data-sort="format" class="col-format">Format <span class="sort-arrow"></span></th>';
+            headerHtml += '<th data-sort="status" class="col-status">Status <span class="sort-arrow"></span></th>';
+            displayLocales.forEach(function (loc) {
+                headerHtml += '<th class="col-locale">' + escapeHtml(loc) + '</th>';
+            });
+            thead.innerHTML = headerHtml;
+
+            // Re-attach sort listeners
+            thead.querySelectorAll('th[data-sort]').forEach(function (th) {
+                th.addEventListener('click', function () {
+                    var col = th.getAttribute('data-sort');
+                    if (sortColumn === col) {
+                        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        sortColumn = col;
+                        sortDirection = 'asc';
+                    }
+                    updateSortIndicators();
+                    applyFilters();
+                });
+            });
+        }
+
+        // Render rows
         pageEntries.forEach(function (entry) {
             var status = getStatus(entry);
             var tr = document.createElement('tr');
             tr.className = 'row-' + status;
-            tr.setAttribute('data-id', entry.id);
+            tr.setAttribute('data-key', entry.key);
 
-            tr.innerHTML =
-                '<td title="' + escapeAttr(entry.key) + '">' + escapeHtml(truncate(entry.key, 40)) + '</td>' +
-                '<td title="' + escapeAttr((entry.source && entry.source.file) || '') + '">' + escapeHtml(truncate((entry.source && entry.source.file) || '', 30)) + '</td>' +
-                '<td title="' + escapeAttr(entry.value) + '">' + escapeHtml(truncate(entry.value, 50)) + '</td>' +
-                '<td>' + escapeHtml(entry.locale) + '</td>' +
-                '<td>' + escapeHtml((entry.source && entry.source.format) || '') + '</td>' +
-                '<td><span class="status-badge status-' + status + '">' + getStatusLabel(status) + '</span></td>';
+            var rowHtml = '<td class="col-key" title="' + escapeAttr(entry.key) + '">' + escapeHtml(truncate(entry.key, 40)) + '</td>';
 
-            tr.addEventListener('click', function () {
+            var format = getEntryFormat(entry);
+            rowHtml += '<td class="col-format"><span class="format-badge">' + escapeHtml(format) + '</span></td>';
+            rowHtml += '<td class="col-status"><span class="status-badge status-' + status + '">' + getStatusLabel(status) + '</span></td>';
+
+            displayLocales.forEach(function (loc) {
+                var val = getLocaleValue(entry, loc);
+                var titleAttr = escapeAttr(val);
+                var displayVal = escapeHtml(truncate(val, 50));
+                rowHtml += '<td class="locale-cell" data-locale="' + escapeAttr(loc) + '" data-key="' + escapeAttr(entry.key) + '" title="' + titleAttr + '">' + (displayVal || '<span class="empty-value">\u2014</span>') + '</td>';
+            });
+            tr.innerHTML = rowHtml;
+
+            // Click to show detail
+            tr.addEventListener('click', function (e) {
+                // Don't show detail if clicking on editable cell
+                if (e.target.classList.contains('locale-cell') && e.target.getAttribute('contenteditable') === 'true') {
+                    return;
+                }
                 showDetail(entry);
             });
 
             tableBody.appendChild(tr);
+        });
+
+        // Add inline editing to locale cells
+        addInlineEditing();
+    }
+
+    // --- Inline Editing ---
+    function addInlineEditing() {
+        document.querySelectorAll('.locale-cell').forEach(function (cell) {
+            cell.addEventListener('dblclick', function () {
+                if (cell.getAttribute('contenteditable') === 'true') return;
+
+                var key = cell.getAttribute('data-key');
+                var locale = cell.getAttribute('data-locale');
+                var entry = getTableEntries().find(function (e) { return e.key === key; });
+                if (!entry) return;
+
+                var currentValue = getLocaleValue(entry, locale);
+                cell.setAttribute('contenteditable', 'true');
+                cell.textContent = currentValue;
+                cell.focus();
+
+                // Select all text
+                var range = document.createRange();
+                range.selectNodeContents(cell);
+                var sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+
+                function saveEdit() {
+                    cell.removeAttribute('contenteditable');
+                    var newValue = cell.textContent.trim();
+
+                    // Update local state
+                    if (!entry.values) entry.values = [];
+                    var existing = entry.values.find(function (v) { return v.locale === locale; });
+                    if (existing) {
+                        existing.value = newValue;
+                    } else {
+                        entry.values.push({ locale: locale, value: newValue });
+                    }
+
+                    // Update metadata.isTranslated: true if any non-en locale has a non-empty value
+                    var enVal = getLocaleValue(entry, 'en');
+                    entry.metadata.isTranslated = entry.values.some(function (v) {
+                        return v.locale !== 'en' && v.value !== '' && v.value !== enVal;
+                    });
+
+                    // Re-render cell
+                    cell.textContent = newValue || '';
+                    if (!newValue) {
+                        cell.innerHTML = '<span class="empty-value">—</span>';
+                    }
+
+                    // Update dashboard
+                    updateDashboard();
+                }
+
+                cell.addEventListener('blur', saveEdit, { once: true });
+                cell.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        cell.blur();
+                    } else if (e.key === 'Escape') {
+                        cell.removeAttribute('contenteditable');
+                        cell.textContent = currentValue || '';
+                        if (!currentValue) {
+                            cell.innerHTML = '<span class="empty-value">—</span>';
+                        }
+                    }
+                });
+            });
         });
     }
 
@@ -310,24 +435,41 @@
     // --- Detail Panel ---
     function showDetail(entry) {
         var status = getStatus(entry);
-        detailContent.innerHTML =
-            detailField('ID', entry.id, true) +
-            detailField('Key', entry.key, true) +
-            detailField('Value', entry.value) +
-            detailField('Locale', entry.locale) +
-            detailField('Status', '<span class="status-badge status-' + status + '">' + getStatusLabel(status) + '</span>') +
-            '<hr style="border-color:#3c3c3c;margin:16px 0">' +
-            detailField('Source Format', (entry.source && entry.source.format) || 'N/A') +
-            detailField('Source File', (entry.source && entry.source.file) || 'N/A', true) +
-            detailField('Source Path', (entry.source && entry.source.path) || 'N/A', true) +
-            '<hr style="border-color:#3c3c3c;margin:16px 0">' +
-            detailField('Comment', (entry.metadata && entry.metadata.comment) || 'N/A') +
-            detailField('RC ID', (entry.metadata && entry.metadata.rcId != null) ? String(entry.metadata.rcId) : 'N/A') +
-            detailField('RC Define', (entry.metadata && entry.metadata.rcDefine) || 'N/A') +
-            detailField('Is Behavioral', entry.metadata && entry.metadata.isBehavioral ? 'Yes' : 'No') +
-            detailField('Do Not Translate', entry.metadata && entry.metadata.doNotTranslate ? 'Yes' : 'No') +
-            detailField('Format Specifiers', (entry.metadata && entry.metadata.formatSpecifiers && entry.metadata.formatSpecifiers.length > 0) ? entry.metadata.formatSpecifiers.join(', ') : 'None');
+        var html = '';
 
+        html += detailField('Key', entry.key, true);
+
+        // Show all locale values
+        html += '<hr style="border-color:#3c3c3c;margin:16px 0">';
+        html += '<div class="detail-label">Locale Values</div>';
+        if (entry.values && entry.values.length > 0) {
+            entry.values.forEach(function (v) {
+                html += detailField(v.locale, v.value, true);
+            });
+        } else {
+            html += detailField('Values', 'None');
+        }
+
+        // Show sources
+        html += '<hr style="border-color:#3c3c3c;margin:16px 0">';
+        html += '<div class="detail-label">Sources</div>';
+        if (entry.sources) {
+            Object.keys(entry.sources).forEach(function (locale) {
+                var src = entry.sources[locale];
+                html += detailField(locale + ' Format', src.format || 'N/A');
+                html += detailField(locale + ' File', src.file || 'N/A', true);
+            });
+        }
+
+        // Metadata
+        html += '<hr style="border-color:#3c3c3c;margin:16px 0">';
+        html += detailField('Status', '<span class="status-badge status-' + status + '">' + getStatusLabel(status) + '</span>');
+        html += detailField('Comment', (entry.metadata && entry.metadata.comment) || 'N/A');
+        html += detailField('Do Not Translate', entry.metadata && entry.metadata.doNotTranslate ? 'Yes' : 'No');
+        html += detailField('Is Translated', entry.metadata && entry.metadata.isTranslated ? 'Yes' : 'No');
+        html += detailField('Format Specifiers', (entry.metadata && entry.metadata.formatSpecifiers && entry.metadata.formatSpecifiers.length > 0) ? entry.metadata.formatSpecifiers.join(', ') : 'None');
+
+        detailContent.innerHTML = html;
         detailPanel.classList.remove('hidden');
     }
 
@@ -336,6 +478,34 @@
             '<div class="detail-label">' + label + '</div>' +
             '<div class="detail-value' + (isMono ? ' mono' : '') + '">' + (value != null ? value : 'N/A') + '</div>' +
             '</div>';
+    }
+
+    // --- GRF Tab ---
+    function renderGrfTab() {
+        var grfEntries = allEntries.filter(function (e) {
+            return getEntryFormat(e) === 'grf';
+        });
+        var container = document.getElementById('grf-file-list');
+        var noGrfMessage = document.getElementById('no-grf-message');
+        container.innerHTML = '';
+
+        if (grfEntries.length === 0) {
+            noGrfMessage.classList.remove('hidden');
+            return;
+        }
+
+        noGrfMessage.classList.add('hidden');
+        grfEntries.forEach(function (entry) {
+            var item = document.createElement('div');
+            item.className = 'grf-file-item';
+            var comment = (entry.metadata && entry.metadata.comment) || '';
+            var locale = entry.values && entry.values.length > 0 ? entry.values[0].locale : '';
+            item.innerHTML =
+                '<span class="grf-file-name">' + escapeHtml(entry.key) + '.grf</span>' +
+                '<span class="grf-folder-badge">' + escapeHtml(locale) + '</span>' +
+                (comment ? '<span class="grf-comment">' + escapeHtml(comment) + '</span>' : '');
+            container.appendChild(item);
+        });
     }
 
     // --- Event Listeners ---
@@ -350,32 +520,6 @@
     detailClose.addEventListener('click', function () {
         detailPanel.classList.add('hidden');
     });
-
-    // Column sorting
-    document.querySelectorAll('#entries-table th[data-sort]').forEach(function (th) {
-        th.addEventListener('click', function () {
-            var col = th.getAttribute('data-sort');
-            if (sortColumn === col) {
-                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-            } else {
-                sortColumn = col;
-                sortDirection = 'asc';
-            }
-            updateSortIndicators();
-            applyFilters();
-        });
-    });
-
-    function updateSortIndicators() {
-        document.querySelectorAll('#entries-table th').forEach(function (th) {
-            var arrow = th.querySelector('.sort-arrow');
-            if (th.getAttribute('data-sort') === sortColumn) {
-                arrow.textContent = sortDirection === 'asc' ? ' ▲' : ' ▼';
-            } else {
-                arrow.textContent = '';
-            }
-        });
-    }
 
     // --- Utilities ---
     function escapeHtml(str) {
@@ -399,6 +543,17 @@
             clearTimeout(timer);
             timer = setTimeout(fn, delay);
         };
+    }
+
+    function updateSortIndicators() {
+        document.querySelectorAll('#entries-table th').forEach(function (th) {
+            var arrow = th.querySelector('.sort-arrow');
+            if (th.getAttribute('data-sort') === sortColumn) {
+                arrow.textContent = sortDirection === 'asc' ? ' ▲' : ' ▼';
+            } else {
+                arrow.textContent = '';
+            }
+        });
     }
 
     // Expose function for C# ExecuteScriptAsync to call
