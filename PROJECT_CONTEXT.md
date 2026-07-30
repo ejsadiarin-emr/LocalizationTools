@@ -78,7 +78,7 @@ These are related but **should be built and reasoned about separately** — do n
 
 **Status:** Complete — 73 tests passing, NuGet package generated.
 
-### Tool 2 — Extraction + Context CLI (`dv-extract-strings`) — ⬜ not yet built
+### Tool 2 — Extraction + Context CLI (`databank-cli`) — ⬜ not yet built
 
 **Input:** SARIF 2.1.0 file containing LOC010 diagnostics from Tool 1. Each LOC010 diagnostic includes:
 - File path and line number of the string literal
@@ -162,7 +162,7 @@ This is the bridge between "the analyzer found a problem" and "the problem is no
         └── LOC010 (Display) ──► info diagnostic, does not fail build
                     │
                     ▼
-        dv-extract-strings CLI (Tool 2) — run periodically or on-demand, sweeps SARIF
+        databank-cli CLI (Tool 2) — run periodically or on-demand, sweeps SARIF
                     │
                     ├──► writes Resources/en.json (key-value pairs, Weblate reads this natively)
                     └──► writes data-bank.json (translation glossary: key + source_string + domain)
@@ -208,7 +208,7 @@ This is the bridge between "the analyzer found a problem" and "the problem is no
 | Tool 1 — Desktop App (WPF + WebView2) | ✅ Complete — GUI with expandable row details | `src/LocalizationAnalyzers.Desktop/` |
 | Tool 1 — SARIF → SonarQube/Azure DevOps integration | ✅ Complete — SARIF 2.1.0 compatible | `src/README.md` |
 | Tool 1 — CI baseline-gate (fail only on new violations) | Documented approach, tooling not yet built | — |
-| Tool 2 — `dv-extract-strings` CLI | Not started | — |
+| Tool 2 — `databank-cli` CLI | Not started | — |
 | Tool 3 — Data bank + Weblate glossary sync | Not started | — |
 | Weblate instance/config for DeltaV | Not confirmed as set up | — |
 

@@ -63,7 +63,7 @@ Collections:
 
 ```
 ┌─────────────┐     ┌──────────────┐     ┌─────────────┐
-│  Resource   │────▶│  dv-extract  │────▶│ data-bank   │
+│  Resource   │────▶│  databank-cli  │────▶│ data-bank   │
 │  Files      │     │  (CLI)       │     │ .json       │
 └─────────────┘     └──────────────┘     └──────┬──────┘
                                                 │
@@ -118,7 +118,7 @@ Collections:
 ## CLI Reference
 
 ```
-dv-extract --input-dir <path> [options]
+databank-cli --input-dir <path> [options]
 
 Options:
   --input-dir <path>      Input directory to scan (default: current dir)

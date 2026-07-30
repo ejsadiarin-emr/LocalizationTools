@@ -86,8 +86,8 @@ public class Program
             symbolMap = RcParser.ParseResourceH(resourceH);
         }
 
-        // Discover and parse files
-        var entries = new List<LocalizedStringEntry>();
+        // Discover and parse files — parsers produce flat RawLocalizedEntry objects
+        var rawEntries = new List<RawLocalizedEntry>();
         var rootDir = Path.GetFullPath(inputDir);
 
         var detectedFiles = FileDetector.DiscoverFiles(inputDir);
@@ -102,31 +102,34 @@ public class Program
             switch (detectedFormat)
             {
                 case "resx":
-                    entries.AddRange(ResxParser.Parse(file, rootDir));
+                    rawEntries.AddRange(ResxParser.Parse(file, rootDir));
                     break;
                 case "rc":
-                    entries.AddRange(RcParser.Parse(file, symbolMap, rootDir));
+                    rawEntries.AddRange(RcParser.Parse(file, symbolMap, rootDir));
                     break;
                 case "fhx":
-                    entries.AddRange(FhxParser.Parse(file, localeOverride, encodingOverride, rootDir));
+                    rawEntries.AddRange(FhxParser.Parse(file, localeOverride, encodingOverride, rootDir));
                     break;
                 case "ahc":
-                    entries.AddRange(AhcParser.Parse(file, encodingOverride, rootDir));
+                    rawEntries.AddRange(AhcParser.Parse(file, encodingOverride, rootDir));
                     break;
                 case "json":
-                    entries.AddRange(JsonParser.Parse(file, rootDir));
+                    rawEntries.AddRange(JsonParser.Parse(file, rootDir));
                     break;
                 case "grf":
-                    entries.AddRange(GrfParser.Parse(file, rootDir));
+                    rawEntries.AddRange(GrfParser.Parse(file, rootDir));
                     break;
             }
         }
 
-        if (entries.Count == 0)
+        if (rawEntries.Count == 0)
         {
             Console.WriteLine("No localization entries found.");
             return 0;
         }
+
+        // Group flat entries by key → one entry per key with multi-locale values
+        var entries = EntryGrouper.GroupByKey(rawEntries);
 
         // Write output
         var outputPathValue = outputPath ?? Path.Combine(".", "data-bank.json");
@@ -155,7 +158,7 @@ public class Program
         var json = JsonSerializer.Serialize(output, options);
         File.WriteAllText(outputPathValue, json);
 
-        Console.WriteLine($"Wrote {entries.Count} entries to {outputPathValue}");
+        Console.WriteLine($"Wrote {entries.Count} entries ({rawEntries.Count} raw) to {outputPathValue}");
 
         if (showStats)
         {
@@ -205,35 +208,52 @@ public class Program
     {
         Console.WriteLine();
         Console.WriteLine("=== Statistics ===");
-        Console.WriteLine($"Total entries: {entries.Count}");
+        Console.WriteLine($"Total keys: {entries.Count}");
+
+        // Count total locale values
+        var totalLocaleValues = entries.Sum(e => e.Values.Count);
+        Console.WriteLine($"Total locale values: {totalLocaleValues}");
 
         Console.WriteLine();
-        Console.WriteLine("By format:");
-        foreach (var group in entries.GroupBy(e => e.Source.Format).OrderBy(g => g.Key))
+        Console.WriteLine("By format (from sources):");
+        var formatCounts = new Dictionary<string, int>();
+        foreach (var entry in entries)
         {
-            Console.WriteLine($"  {group.Key}: {group.Count()}");
+            foreach (var source in entry.Sources.Values)
+            {
+                if (!formatCounts.ContainsKey(source.Format))
+                    formatCounts[source.Format] = 0;
+                formatCounts[source.Format]++;
+            }
+        }
+        foreach (var (fmt, count) in formatCounts.OrderBy(kvp => kvp.Key))
+        {
+            Console.WriteLine($"  {fmt}: {count}");
         }
 
         Console.WriteLine();
         Console.WriteLine("By locale:");
-        foreach (var group in entries.GroupBy(e => e.Locale).OrderBy(g => g.Key))
+        var localeCounts = new Dictionary<string, int>();
+        foreach (var entry in entries)
         {
-            Console.WriteLine($"  {group.Key}: {group.Count()}");
+            foreach (var val in entry.Values)
+            {
+                if (!localeCounts.ContainsKey(val.Locale))
+                    localeCounts[val.Locale] = 0;
+                localeCounts[val.Locale]++;
+            }
         }
-
-        Console.WriteLine();
-        Console.WriteLine("By file:");
-        foreach (var group in entries.GroupBy(e => e.Source.File).OrderBy(g => g.Key))
+        foreach (var (locale, count) in localeCounts.OrderBy(kvp => kvp.Key))
         {
-            Console.WriteLine($"  {group.Key}: {group.Count()}");
+            Console.WriteLine($"  {locale}: {count}");
         }
     }
 
     private static void PrintUsage()
     {
-        Console.WriteLine("dv-extract - Localization string extractor");
+        Console.WriteLine("databank-cli - Localization string extractor");
         Console.WriteLine();
-        Console.WriteLine("Usage: dv-extract [options]");
+        Console.WriteLine("Usage: databank-cli [options]");
         Console.WriteLine();
         Console.WriteLine("Options:");
         Console.WriteLine("  --input-dir <path>     Input directory to scan (default: current directory)");
@@ -250,8 +270,8 @@ public class Program
         Console.WriteLine("  --help, -h             Show this help message");
         Console.WriteLine();
         Console.WriteLine("Examples:");
-        Console.WriteLine("  dv-extract --input-dir ./l10n-files");
-        Console.WriteLine("  dv-extract --input-dir ./l10n-files --output ./out/data-bank.json --stats");
-        Console.WriteLine("  dv-extract --input-dir ./l10n-files --format resx --verbose");
+        Console.WriteLine("  databank-cli --input-dir ./l10n-files");
+        Console.WriteLine("  databank-cli --input-dir ./l10n-files --output ./out/data-bank.json --stats");
+        Console.WriteLine("  databank-cli --input-dir ./l10n-files --format resx --verbose");
     }
 }
