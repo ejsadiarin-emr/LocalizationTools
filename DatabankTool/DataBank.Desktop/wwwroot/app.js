@@ -9,6 +9,7 @@
     let sortDirection = 'asc';
     const PAGE_SIZE = 50;
     const DEFAULT_LOCALES = ['en', 'zh-CN', 'ru', 'ja'];
+    let selectedLocales = new Set();
 
     // DOM refs
     const dashboardSection = document.getElementById('dashboard-section');
@@ -17,7 +18,11 @@
     const pagination = document.getElementById('pagination');
     const noDataMessage = document.getElementById('no-data-message');
     const searchInput = document.getElementById('search-input');
-    const localeFilter = document.getElementById('locale-filter');
+    const localeTrigger = document.getElementById('locale-trigger');
+    const localeDropdown = document.getElementById('locale-dropdown');
+    const localeOptions = document.getElementById('locale-options');
+    const localeSelectAll = document.getElementById('locale-select-all');
+    const localeClearAll = document.getElementById('locale-clear-all');
     const formatFilter = document.getElementById('format-filter');
     const statusFilter = document.getElementById('status-filter');
     const detailPanel = document.getElementById('detail-panel');
@@ -166,8 +171,77 @@
             if (fmt && fmt !== 'grf') formats[fmt] = true;
         });
 
-        populateDropdown(localeFilter, Object.keys(locales).sort(), 'All Locales');
+        populateLocaleCheckboxes(Object.keys(locales).sort());
         populateDropdown(formatFilter, Object.keys(formats).sort(), 'All Formats');
+    }
+
+    function populateLocaleCheckboxes(locales) {
+        localeOptions.innerHTML = '';
+        locales.forEach(function (loc) {
+            var label = document.createElement('label');
+            label.className = 'locale-multiselect-option';
+            var checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = loc;
+            checkbox.checked = selectedLocales.has(loc);
+            checkbox.addEventListener('change', function () {
+                toggleLocale(loc);
+            });
+            label.appendChild(checkbox);
+            label.appendChild(document.createTextNode(' ' + loc));
+            localeOptions.appendChild(label);
+        });
+        updateTriggerDisplay();
+    }
+
+    // --- Locale Multi-Select Dropdown ---
+    function toggleLocaleDropdown() {
+        localeDropdown.classList.toggle('hidden');
+    }
+
+    function toggleLocale(locale) {
+        if (selectedLocales.has(locale)) {
+            selectedLocales.delete(locale);
+        } else {
+            selectedLocales.add(locale);
+        }
+        updateTriggerDisplay();
+        updateCheckboxStates();
+        applyFilters();
+    }
+
+    function selectAllLocales() {
+        var checkboxes = localeOptions.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(function (cb) {
+            selectedLocales.add(cb.value);
+            cb.checked = true;
+        });
+        updateTriggerDisplay();
+        applyFilters();
+    }
+
+    function clearAllLocales() {
+        selectedLocales.clear();
+        var checkboxes = localeOptions.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(function (cb) { cb.checked = false; });
+        updateTriggerDisplay();
+        applyFilters();
+    }
+
+    function updateTriggerDisplay() {
+        if (selectedLocales.size === 0) {
+            localeTrigger.textContent = 'All Locales';
+        } else {
+            var sorted = Array.from(selectedLocales).sort();
+            localeTrigger.textContent = sorted.join(', ');
+        }
+    }
+
+    function updateCheckboxStates() {
+        var checkboxes = localeOptions.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(function (cb) {
+            cb.checked = selectedLocales.has(cb.value);
+        });
     }
 
     function populateDropdown(select, options, defaultLabel) {
@@ -181,14 +255,22 @@
     }
 
     function applyFilters() {
-        var locale = localeFilter.value;
         var format = formatFilter.value;
         var status = statusFilter.value;
         var search = searchInput.value.toLowerCase().trim();
 
         filteredEntries = getTableEntries().filter(function (e) {
-            // Filter by locale: show entries that have a non-empty value for this locale
-            if (locale && getLocaleValue(e, locale) === '') return false;
+            // Filter by locale: show entries that have a non-empty value for ANY selected locale (OR logic)
+            if (selectedLocales.size > 0) {
+                var hasAnyLocale = false;
+                for (var loc of selectedLocales) {
+                    if (getLocaleValue(e, loc) !== '') {
+                        hasAnyLocale = true;
+                        break;
+                    }
+                }
+                if (!hasAnyLocale) return false;
+            }
 
             // Filter by format
             if (format && getEntryFormat(e) !== format) return false;
@@ -246,13 +328,20 @@
         var pageEntries = filteredEntries.slice(start, end);
 
         // Determine which locales to show as columns
-        var displayLocales = DEFAULT_LOCALES.slice();
-        var allLocales = getAllLocales();
-        allLocales.forEach(function (loc) {
-            if (displayLocales.indexOf(loc) === -1) {
-                displayLocales.push(loc);
-            }
-        });
+        var displayLocales;
+        if (selectedLocales.size > 0) {
+            // Show only selected locales
+            displayLocales = Array.from(selectedLocales).sort();
+        } else {
+            // No selection: show all locales (backwards compatible default)
+            displayLocales = DEFAULT_LOCALES.slice();
+            var allLocales = getAllLocales();
+            allLocales.forEach(function (loc) {
+                if (displayLocales.indexOf(loc) === -1) {
+                    displayLocales.push(loc);
+                }
+            });
+        }
 
         // Update table header
         var thead = document.querySelector('#entries-table thead tr');
@@ -513,7 +602,29 @@
         applyFilters();
     }, 300));
 
-    localeFilter.addEventListener('change', function () { applyFilters(); });
+    localeTrigger.addEventListener('click', function (e) {
+        e.stopPropagation();
+        toggleLocaleDropdown();
+    });
+
+    localeSelectAll.addEventListener('click', function (e) {
+        e.stopPropagation();
+        selectAllLocales();
+    });
+
+    localeClearAll.addEventListener('click', function (e) {
+        e.stopPropagation();
+        clearAllLocales();
+    });
+
+    document.addEventListener('click', function () {
+        localeDropdown.classList.add('hidden');
+    });
+
+    localeDropdown.addEventListener('click', function (e) {
+        e.stopPropagation();
+    });
+
     formatFilter.addEventListener('change', function () { applyFilters(); });
     statusFilter.addEventListener('change', function () { applyFilters(); });
 

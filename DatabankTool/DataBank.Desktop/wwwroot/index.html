@@ -52,9 +52,16 @@
         <section id="table-section">
             <h2>Entries</h2>
             <div class="filter-bar">
-                <select id="locale-filter">
-                    <option value="">All Locales</option>
-                </select>
+                <div class="locale-multiselect" id="locale-multiselect">
+                    <button class="locale-multiselect-trigger" id="locale-trigger" type="button">All Locales</button>
+                    <div class="locale-multiselect-dropdown hidden" id="locale-dropdown">
+                        <div class="locale-multiselect-actions">
+                            <button type="button" id="locale-select-all">Select All</button>
+                            <button type="button" id="locale-clear-all">Clear All</button>
+                        </div>
+                        <div class="locale-multiselect-options" id="locale-options"></div>
+                    </div>
+                </div>
                 <select id="format-filter">
                     <option value="">All Formats</option>
                 </select>
