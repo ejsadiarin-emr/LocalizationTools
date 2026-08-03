@@ -13,6 +13,7 @@ public partial class MainWindow : Window
     private readonly ApiClient _apiClient;
     private bool _isRemoteMode;
     private string _apiBaseUrl = "http://localhost:5000";
+    private string? _basePath;
 
     public MainWindow()
     {
@@ -83,9 +84,18 @@ public partial class MainWindow : Window
                 return;
 
             var filePath = filePathProp.GetString();
-            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+            if (string.IsNullOrEmpty(filePath))
+                return;
+
+            var resolvedPath = filePath;
+            if (!Path.IsPathRooted(filePath) && !string.IsNullOrEmpty(_basePath))
             {
-                StatusText.Text = $"File not found: {filePath}";
+                resolvedPath = Path.Combine(_basePath, filePath);
+            }
+
+            if (!File.Exists(resolvedPath))
+            {
+                StatusText.Text = $"File not found: {resolvedPath}";
                 return;
             }
 
@@ -95,13 +105,13 @@ public partial class MainWindow : Window
                 line = lineProp.GetInt32();
             }
 
-            if (line.HasValue && TryOpenWithVsCode(filePath, line.Value))
+            if (line.HasValue && TryOpenWithVsCode(resolvedPath, line.Value))
             {
                 StatusText.Text = $"Opened {Path.GetFileName(filePath)} at line {line} in VS Code";
                 return;
             }
 
-            Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo(resolvedPath) { UseShellExecute = true });
             StatusText.Text = line.HasValue
                 ? $"Opened {Path.GetFileName(filePath)} (line {line})"
                 : $"Opened {Path.GetFileName(filePath)}";
@@ -237,6 +247,12 @@ public partial class MainWindow : Window
                 var json = File.ReadAllText(dialog.FileName);
                 var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
                 var data = JsonSerializer.Deserialize<JsonElement>(json, options);
+
+                _basePath = null;
+                if (data.TryGetProperty("basePath", out var basePathProp) && basePathProp.ValueKind == JsonValueKind.String)
+                {
+                    _basePath = basePathProp.GetString();
+                }
 
                 if (data.TryGetProperty("entries", out var entries))
                 {

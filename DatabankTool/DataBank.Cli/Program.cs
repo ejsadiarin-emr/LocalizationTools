@@ -140,6 +140,7 @@ public class Program
         var output = new DataBankOutput
         {
             Generated = DateTime.UtcNow.ToString("o"),
+            BasePath = rootDir,
             Entries = entries
         };
 
