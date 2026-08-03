@@ -67,6 +67,9 @@ public partial class MainWindow : Window
                     case "openSourceFile":
                         HandleOpenSourceFile(root);
                         break;
+                    case "exportJson":
+                        HandleExportJson(root);
+                        break;
                 }
             }
         }
@@ -130,7 +133,6 @@ public partial class MainWindow : Window
             if (vsCodePath == null)
                 return false;
 
-            var argument = $"code -g \"{filePath}:{line}\"";
             var psi = new ProcessStartInfo
             {
                 FileName = vsCodePath,
@@ -180,10 +182,48 @@ public partial class MainWindow : Window
         }
         catch
         {
-            // where command not available or failed
         }
 
         return null;
+    }
+
+    private void HandleExportJson(JsonElement root)
+    {
+        try
+        {
+            if (!root.TryGetProperty("data", out var dataProp))
+                return;
+
+            var jsonString = dataProp.GetString();
+            if (string.IsNullOrEmpty(jsonString))
+                return;
+
+            var defaultFilename = "databank-export.json";
+            if (root.TryGetProperty("defaultFilename", out var filenameProp))
+            {
+                var fn = filenameProp.GetString();
+                if (!string.IsNullOrEmpty(fn))
+                    defaultFilename = fn;
+            }
+
+            var dialog = new SaveFileDialog
+            {
+                Title = "Export DataBank JSON",
+                Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*",
+                DefaultExt = ".json",
+                FileName = defaultFilename
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                File.WriteAllText(dialog.FileName, jsonString);
+                StatusText.Text = $"Exported to {Path.GetFileName(dialog.FileName)}";
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = $"Export failed: {ex.Message}";
+        }
     }
 
     private void LoadJsonBtn_Click(object sender, RoutedEventArgs e)

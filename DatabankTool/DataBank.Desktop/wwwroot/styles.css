@@ -98,6 +98,11 @@ section {
     background-color: #3c3c3c;
 }
 
+.btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
 /* Dashboard Cards */
 .cards {
     display: flex;

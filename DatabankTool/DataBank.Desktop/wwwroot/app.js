@@ -324,6 +324,7 @@
         currentPage = 1;
         renderTable();
         renderPagination();
+        updateExportButtonState();
     }
 
     function sortEntries() {
@@ -641,6 +642,80 @@
         });
     }
 
+    // --- Export Functions ---
+    function buildExportJson() {
+        var locales = selectedLocales.size > 0
+            ? Array.from(selectedLocales)
+            : getAllLocales();
+
+        var entries = filteredEntries.map(function (entry) {
+            var filteredValues = (entry.values || []).filter(function (v) {
+                return locales.indexOf(v.locale) !== -1;
+            });
+
+            var filteredSources = {};
+            if (entry.sources) {
+                Object.keys(entry.sources).forEach(function (locale) {
+                    if (locales.indexOf(locale) !== -1) {
+                        filteredSources[locale] = entry.sources[locale];
+                    }
+                });
+            }
+
+            return {
+                id: entry.id || entry.key,
+                key: entry.key,
+                values: filteredValues,
+                sources: filteredSources,
+                metadata: entry.metadata || {}
+            };
+        });
+
+        return {
+            version: 3,
+            generated: new Date().toISOString(),
+            basePath: '',
+            entries: entries
+        };
+    }
+
+    function generateExportFilename() {
+        var now = new Date();
+        var timestamp = now.getFullYear() + '-' +
+            String(now.getMonth() + 1).padStart(2, '0') + '-' +
+            String(now.getDate()).padStart(2, '0') + 'T' +
+            String(now.getHours()).padStart(2, '0') + '-' +
+            String(now.getMinutes()).padStart(2, '0') + '-' +
+            String(now.getSeconds()).padStart(2, '0');
+
+        var locales = selectedLocales.size > 0
+            ? Array.from(selectedLocales).sort().join('-')
+            : 'all';
+
+        return 'databank-export-' + timestamp + '-' + locales + '.json';
+    }
+
+    function exportFilteredData() {
+        if (filteredEntries.length === 0) return;
+
+        var exportData = buildExportJson();
+        var jsonString = JSON.stringify(exportData, null, 2);
+        var defaultFilename = generateExportFilename();
+
+        window.chrome.webview.postMessage({
+            action: 'exportJson',
+            data: jsonString,
+            defaultFilename: defaultFilename
+        });
+    }
+
+    function updateExportButtonState() {
+        var exportBtn = document.getElementById('export-btn');
+        if (exportBtn) {
+            exportBtn.disabled = filteredEntries.length === 0;
+        }
+    }
+
     // --- Event Listeners ---
     searchInput.addEventListener('input', debounce(function () {
         applyFilters();
@@ -674,6 +749,10 @@
 
     detailClose.addEventListener('click', function () {
         detailPanel.classList.add('hidden');
+    });
+
+    document.getElementById('export-btn').addEventListener('click', function () {
+        exportFilteredData();
     });
 
     // --- Utilities ---
