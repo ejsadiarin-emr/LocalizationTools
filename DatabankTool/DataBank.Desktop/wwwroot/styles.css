@@ -546,6 +546,11 @@ section {
     background-color: #252526;
     border: 1px solid #3c3c3c;
     border-radius: 4px;
+    cursor: pointer;
+}
+
+.grf-file-item:hover {
+    background-color: #2a2d2e;
 }
 
 .grf-file-name {

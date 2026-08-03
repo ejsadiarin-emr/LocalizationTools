@@ -4,6 +4,7 @@
     // State
     let allEntries = [];
     let filteredEntries = [];
+    let loadedBasePath = '';
     let currentPage = 1;
     let sortColumn = '';
     let sortDirection = 'asc';
@@ -47,6 +48,7 @@
     function handleMessage(data) {
         if (data && data.action === 'loadData') {
             allEntries = data.entries || [];
+            loadedBasePath = data.basePath || '';
             currentPage = 1;
             onDataLoaded();
         }
@@ -638,6 +640,9 @@
                 '<span class="grf-file-name">' + escapeHtml(entry.key) + '.grf</span>' +
                 '<span class="grf-folder-badge">' + escapeHtml(locale) + '</span>' +
                 (comment ? '<span class="grf-comment">' + escapeHtml(comment) + '</span>' : '');
+            item.addEventListener('click', function () {
+                showDetail(entry);
+            });
             container.appendChild(item);
         });
     }
@@ -674,7 +679,7 @@
         return {
             version: 3,
             generated: new Date().toISOString(),
-            basePath: '',
+            basePath: loadedBasePath,
             entries: entries
         };
     }

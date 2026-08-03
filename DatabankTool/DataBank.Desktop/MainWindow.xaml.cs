@@ -302,6 +302,7 @@ public partial class MainWindow : Window
                     var payload = JsonSerializer.Serialize(new
                     {
                         action = "loadData",
+                        basePath = _basePath ?? "",
                         entries = entries
                     });
                     var escapedPayload = JsonSerializer.Serialize(payload);
