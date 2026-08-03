@@ -89,7 +89,8 @@ public class Program
                         {
                             { "Format", kvp.Value.Format },
                             { "File", kvp.Value.File },
-                            { "Path", kvp.Value.Path }
+                            { "Path", kvp.Value.Path },
+                            { "Line", kvp.Value.Line.HasValue ? BsonValue.Create(kvp.Value.Line.Value) : BsonNull.Value }
                         });
                     }
 
@@ -177,6 +178,7 @@ public class SourceInfoInput
     public string Format { get; set; } = string.Empty;
     public string File { get; set; } = string.Empty;
     public string Path { get; set; } = string.Empty;
+    public int? Line { get; set; }
 }
 
 public class EntryMetadataInput

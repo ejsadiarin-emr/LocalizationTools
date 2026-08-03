@@ -41,6 +41,9 @@ public class SourceInfoDocument
 
     [BsonElement("Path")]
     public string Path { get; set; } = string.Empty;
+
+    [BsonElement("Line")]
+    public int? Line { get; set; }
 }
 
 public class EntryMetadataDocument

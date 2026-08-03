@@ -207,6 +207,7 @@
         }
         updateTriggerDisplay();
         updateCheckboxStates();
+        updateStatusFilterOptions();
         applyFilters();
     }
 
@@ -217,6 +218,7 @@
             cb.checked = true;
         });
         updateTriggerDisplay();
+        updateStatusFilterOptions();
         applyFilters();
     }
 
@@ -225,6 +227,7 @@
         var checkboxes = localeOptions.querySelectorAll('input[type="checkbox"]');
         checkboxes.forEach(function (cb) { cb.checked = false; });
         updateTriggerDisplay();
+        updateStatusFilterOptions();
         applyFilters();
     }
 
@@ -242,6 +245,28 @@
         checkboxes.forEach(function (cb) {
             cb.checked = selectedLocales.has(cb.value);
         });
+    }
+
+    function updateStatusFilterOptions() {
+        var isSpecificLocale = selectedLocales.size > 0;
+        var untranslatedOption = statusFilter.querySelector('option[value="untranslated"]');
+
+        if (isSpecificLocale && untranslatedOption) {
+            statusFilter.removeChild(untranslatedOption);
+            if (statusFilter.value === 'untranslated') {
+                statusFilter.value = '';
+            }
+        } else if (!isSpecificLocale && !untranslatedOption) {
+            var allStatusOption = statusFilter.querySelector('option[value=""]');
+            var option = document.createElement('option');
+            option.value = 'untranslated';
+            option.textContent = 'Untranslated';
+            if (allStatusOption) {
+                allStatusOption.insertAdjacentElement('afterend', option);
+            } else {
+                statusFilter.appendChild(option);
+            }
+        }
     }
 
     function populateDropdown(select, options, defaultLabel) {
@@ -547,6 +572,12 @@
                 var src = entry.sources[locale];
                 html += detailField(locale + ' Format', src.format || 'N/A');
                 html += detailField(locale + ' File', src.file || 'N/A', true);
+                if (src.line) {
+                    html += detailField(locale + ' Line', src.line.toString());
+                }
+                if (src.file) {
+                    html += '<div class="detail-field"><button class="open-source-btn" data-file="' + escapeAttr(src.file) + '" data-line="' + (src.line || '') + '">Open Source File</button></div>';
+                }
             });
         }
 
@@ -560,6 +591,19 @@
 
         detailContent.innerHTML = html;
         detailPanel.classList.remove('hidden');
+
+        // Attach click handlers for "Open Source File" buttons
+        detailContent.querySelectorAll('.open-source-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var filePath = btn.getAttribute('data-file');
+                var line = btn.getAttribute('data-line');
+                var message = { action: 'openSourceFile', filePath: filePath };
+                if (line) {
+                    message.line = parseInt(line, 10);
+                }
+                window.chrome.webview.postMessage(message);
+            });
+        });
     }
 
     function detailField(label, value, isMono) {

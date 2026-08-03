@@ -34,7 +34,7 @@ public static class ExportEndpoints
                     values = e.Values.Select(v => new { locale = v.Locale, value = v.Value }).ToList(),
                     sources = e.Sources.ToDictionary(
                         kvp => kvp.Key,
-                        kvp => new { format = kvp.Value.Format, file = kvp.Value.File, path = kvp.Value.Path }),
+                        kvp => new { format = kvp.Value.Format, file = kvp.Value.File, path = kvp.Value.Path, line = kvp.Value.Line }),
                     metadata = new
                     {
                         comment = e.Metadata.Comment,

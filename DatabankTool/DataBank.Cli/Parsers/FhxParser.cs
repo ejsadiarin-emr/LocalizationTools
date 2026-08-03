@@ -26,13 +26,15 @@ public static class FhxParser
             var locale = DetectLocale(filePath, content, localeOverride);
             var isDntFile = FileHelper.HasDntInFilename(filePath);
 
+            var lineNum = 0;
             foreach (var rawLine in content.Split(["\r\n", "\n", "\r"], StringSplitOptions.None))
             {
+                lineNum++;
                 var line = rawLine.TrimEnd('\r', '\n');
                 if (string.IsNullOrWhiteSpace(line))
                     continue;
 
-                var entry = ParseLine(line, locale, relativePath, isDntFile);
+                var entry = ParseLine(line, locale, relativePath, isDntFile, lineNum);
                 if (entry is not null)
                     entries.Add(entry);
             }
@@ -45,7 +47,7 @@ public static class FhxParser
         return entries;
     }
 
-    private static RawLocalizedEntry? ParseLine(string line, string locale, string relativePath, bool isDntFile)
+    private static RawLocalizedEntry? ParseLine(string line, string locale, string relativePath, bool isDntFile, int lineNum)
     {
         // Format: @Key@\t"context"\tValue
         var parts = line.Split('\t');
@@ -81,7 +83,8 @@ public static class FhxParser
             {
                 Format = "fhx",
                 File = relativePath,
-                Path = relativePath
+                Path = relativePath,
+                Line = lineNum
             },
             Metadata = metadata
         };

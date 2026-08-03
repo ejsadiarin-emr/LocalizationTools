@@ -1,3 +1,4 @@
+using System.Xml;
 using System.Xml.Linq;
 using DataBank.Cli.Helpers;
 using DataBank.Cli.Models;
@@ -21,7 +22,7 @@ public static partial class ResxParser
 
         try
         {
-            var doc = XDocument.Load(filePath);
+            var doc = XDocument.Load(filePath, LoadOptions.SetLineInfo);
             var root = doc.Root;
             if (root is null)
                 return entries;
@@ -64,6 +65,12 @@ public static partial class ResxParser
 
         var comment = dataElement.Element("comment")?.Value;
 
+        int? line = null;
+        if (dataElement is IXmlLineInfo lineInfo && lineInfo.HasLineInfo())
+        {
+            line = lineInfo.LineNumber;
+        }
+
         return new RawLocalizedEntry
         {
             Key = name,
@@ -73,7 +80,8 @@ public static partial class ResxParser
             {
                 Format = "resx",
                 File = relativePath,
-                Path = relativePath
+                Path = relativePath,
+                Line = line
             },
             Metadata = new EntryMetadata
             {

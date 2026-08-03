@@ -1,4 +1,5 @@
 using System.Configuration;
+using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using System.Windows;
@@ -62,6 +63,9 @@ public partial class MainWindow : Window
                     case "retryConnection":
                         HandleRetryConnection();
                         break;
+                    case "openSourceFile":
+                        HandleOpenSourceFile(root);
+                        break;
                 }
             }
         }
@@ -69,6 +73,107 @@ public partial class MainWindow : Window
         {
             MessageBox.Show($"Error processing message: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
+    }
+
+    private void HandleOpenSourceFile(JsonElement root)
+    {
+        try
+        {
+            if (!root.TryGetProperty("filePath", out var filePathProp))
+                return;
+
+            var filePath = filePathProp.GetString();
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+            {
+                StatusText.Text = $"File not found: {filePath}";
+                return;
+            }
+
+            int? line = null;
+            if (root.TryGetProperty("line", out var lineProp) && lineProp.ValueKind == JsonValueKind.Number)
+            {
+                line = lineProp.GetInt32();
+            }
+
+            if (line.HasValue && TryOpenWithVsCode(filePath, line.Value))
+            {
+                StatusText.Text = $"Opened {Path.GetFileName(filePath)} at line {line} in VS Code";
+                return;
+            }
+
+            Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
+            StatusText.Text = line.HasValue
+                ? $"Opened {Path.GetFileName(filePath)} (line {line})"
+                : $"Opened {Path.GetFileName(filePath)}";
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = $"Failed to open file: {ex.Message}";
+        }
+    }
+
+    private static bool TryOpenWithVsCode(string filePath, int line)
+    {
+        try
+        {
+            var vsCodePath = FindVsCodeExecutable();
+            if (vsCodePath == null)
+                return false;
+
+            var argument = $"code -g \"{filePath}:{line}\"";
+            var psi = new ProcessStartInfo
+            {
+                FileName = vsCodePath,
+                Arguments = $"-g \"{filePath}:{line}\"",
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            Process.Start(psi);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static string? FindVsCodeExecutable()
+    {
+        var electronPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "Programs", "Microsoft VS Code", "bin", "code.cmd");
+        if (File.Exists(electronPath))
+            return electronPath;
+
+        try
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = "where",
+                Arguments = "code",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                CreateNoWindow = true
+            };
+            var process = Process.Start(psi);
+            if (process != null)
+            {
+                var output = process.StandardOutput.ReadToEnd().Trim();
+                process.WaitForExit();
+                if (process.ExitCode == 0 && !string.IsNullOrEmpty(output))
+                {
+                    var firstLine = output.Split('\n')[0].Trim();
+                    if (File.Exists(firstLine))
+                        return firstLine;
+                }
+            }
+        }
+        catch
+        {
+            // where command not available or failed
+        }
+
+        return null;
     }
 
     private void LoadJsonBtn_Click(object sender, RoutedEventArgs e)

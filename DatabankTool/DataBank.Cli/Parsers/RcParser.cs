@@ -31,7 +31,7 @@ public static partial class RcParser
             var currentDialogName = "";
             var dialogControlIndex = 0;
 
-            foreach (var rawLine in lines)
+            foreach (var (rawLine, startLineNumber) in lines)
             {
                 var line = rawLine.Trim();
 
@@ -76,7 +76,7 @@ public static partial class RcParser
 
                 if (inStringTable)
                 {
-                    var entry = ParseStringEntry(line, currentLocale, relativePath, symbolMap, isDntFile);
+                    var entry = ParseStringEntry(line, currentLocale, relativePath, symbolMap, isDntFile, startLineNumber);
                     if (entry is not null)
                         entries.Add(entry);
                     continue;
@@ -98,7 +98,7 @@ public static partial class RcParser
                         {
                             entries.Add(CreateDialogEntry(
                                 captionValue, currentLocale,
-                                currentDialogName, "CAPTION", relativePath, isDntFile));
+                                currentDialogName, "CAPTION", relativePath, isDntFile, startLineNumber));
                         }
                     }
                     continue;
@@ -123,13 +123,13 @@ public static partial class RcParser
                         {
                             entries.Add(CreateDialogEntry(
                                 captionValue, currentLocale,
-                                currentDialogName, "CAPTION", relativePath, isDntFile));
+                                currentDialogName, "CAPTION", relativePath, isDntFile, startLineNumber));
                         }
                         continue;
                     }
 
                     // Extract strings from control elements
-                    var controlEntry = ParseDialogControl(line, currentLocale, currentDialogName, relativePath, ref dialogControlIndex, symbolMap, isDntFile);
+                    var controlEntry = ParseDialogControl(line, currentLocale, currentDialogName, relativePath, ref dialogControlIndex, symbolMap, isDntFile, startLineNumber);
                     if (controlEntry is not null)
                         entries.Add(controlEntry);
                 }
@@ -145,7 +145,7 @@ public static partial class RcParser
 
     private static RawLocalizedEntry CreateDialogEntry(
         string value, string locale, string dialogName,
-        string controlType, string relativePath, bool isDntFile)
+        string controlType, string relativePath, bool isDntFile, int lineNumber)
     {
         var key = $"{controlType}::{dialogName}";
         var metadata = new EntryMetadata { DoNotTranslate = isDntFile };
@@ -160,7 +160,8 @@ public static partial class RcParser
             {
                 Format = "rc",
                 File = relativePath,
-                Path = relativePath
+                Path = relativePath,
+                Line = lineNumber
             },
             Metadata = metadata
         };
@@ -168,7 +169,7 @@ public static partial class RcParser
 
     private static RawLocalizedEntry? ParseDialogControl(
         string line, string locale, string dialogName, string relativePath,
-        ref int controlIndex, Dictionary<int, string>? symbolMap, bool isDntFile)
+        ref int controlIndex, Dictionary<int, string>? symbolMap, bool isDntFile, int lineNumber)
     {
         // LTEXT "text",IDC_xxx,x,y,w,h
         // PUSHBUTTON "text",IDC_xxx,x,y,w,h
@@ -209,7 +210,8 @@ public static partial class RcParser
                 {
                     Format = "rc",
                     File = relativePath,
-                    Path = relativePath
+                    Path = relativePath,
+                    Line = lineNumber
                 },
                 Metadata = metadata
             };
@@ -249,7 +251,8 @@ public static partial class RcParser
                 {
                     Format = "rc",
                     File = relativePath,
-                    Path = relativePath
+                    Path = relativePath,
+                    Line = lineNumber
                 },
                 Metadata = metadata
             };
@@ -347,10 +350,11 @@ public static partial class RcParser
         }
     }
 
-    private static List<string> NormalizeContent(string content)
+    private static List<(string line, int startLineNumber)> NormalizeContent(string content)
     {
-        var lines = new List<string>();
+        var lines = new List<(string line, int startLineNumber)>();
         var remaining = content;
+        var physicalLineNum = 0;
 
         while (remaining.Length > 0)
         {
@@ -366,6 +370,9 @@ public static partial class RcParser
                 line = remaining;
                 remaining = string.Empty;
             }
+
+            physicalLineNum++;
+            var startLine = physicalLineNum;
 
             // Handle line continuations
             while (line.TrimEnd().EndsWith('\\') && remaining.Length > 0)
@@ -386,10 +393,11 @@ public static partial class RcParser
                     remaining = string.Empty;
                 }
 
+                physicalLineNum++;
                 line += nextLine.TrimStart();
             }
 
-            lines.Add(line);
+            lines.Add((line, startLine));
         }
 
         return lines;
@@ -397,7 +405,7 @@ public static partial class RcParser
 
     private static RawLocalizedEntry? ParseStringEntry(
         string line, string locale, string relativePath,
-        Dictionary<int, string>? symbolMap, bool isDntFile)
+        Dictionary<int, string>? symbolMap, bool isDntFile, int lineNumber)
     {
         // Match: IDS_WELCOME "Welcome" or 100 "Welcome"
         var match = StringEntryPattern().Match(line);
@@ -446,7 +454,8 @@ public static partial class RcParser
             {
                 Format = "rc",
                 File = relativePath,
-                Path = relativePath
+                Path = relativePath,
+                Line = lineNumber
             },
             Metadata = metadata
         };

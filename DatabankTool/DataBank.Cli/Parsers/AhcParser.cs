@@ -1,3 +1,4 @@
+using System.Xml;
 using System.Xml.Linq;
 using DataBank.Cli.Helpers;
 using DataBank.Cli.Models;
@@ -19,7 +20,7 @@ public static class AhcParser
 
             var isDntFile = FileHelper.HasDntInFilename(filePath);
 
-            var doc = XDocument.Parse(content);
+            var doc = XDocument.Parse(content, LoadOptions.SetLineInfo);
             if (doc.Root is null)
                 return entries;
 
@@ -44,7 +45,8 @@ public static class AhcParser
                     {
                         Format = "ahc",
                         File = relativePath,
-                        Path = relativePath
+                        Path = relativePath,
+                        Line = languageValue is IXmlLineInfo lineInfo && lineInfo.HasLineInfo() ? lineInfo.LineNumber : null
                     },
                     Metadata = new EntryMetadata { DoNotTranslate = isDntFile }
                 });

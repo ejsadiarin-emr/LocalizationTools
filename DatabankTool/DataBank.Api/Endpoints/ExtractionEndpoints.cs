@@ -92,7 +92,8 @@ public static class ExtractionEndpoints
                         {
                             Format = kvp.Value.Format,
                             File = kvp.Value.File,
-                            Path = kvp.Value.Path
+                            Path = kvp.Value.Path,
+                            Line = kvp.Value.Line
                         }),
                     Metadata = new EntryMetadataDocument
                     {
@@ -216,7 +217,8 @@ public static class ExtractionEndpoints
                     {
                         Format = kvp.Value.Format,
                         File = kvp.Value.File,
-                        Path = kvp.Value.Path
+                        Path = kvp.Value.Path,
+                        Line = kvp.Value.Line
                     }),
                 Metadata = new EntryMetadataDocument
                 {

@@ -19,6 +19,10 @@ public static class JsonParser
         try
         {
             var content = File.ReadAllText(filePath);
+
+            // Build a line index: map each character position to its line number
+            var lineMap = BuildLineMap(content);
+
             using var doc = JsonDocument.Parse(content);
 
             if (doc.RootElement.ValueKind != JsonValueKind.Object)
@@ -36,6 +40,8 @@ public static class JsonParser
                 if (string.IsNullOrEmpty(value))
                     continue;
 
+                var line = FindKeyLine(content, property.Name, lineMap);
+
                 entries.Add(new RawLocalizedEntry
                 {
                     Key = property.Name,
@@ -45,7 +51,8 @@ public static class JsonParser
                     {
                         Format = "json",
                         File = relativePath,
-                        Path = relativePath
+                        Path = relativePath,
+                        Line = line
                     },
                     Metadata = new EntryMetadata { DoNotTranslate = isDntFile }
                 });
@@ -57,6 +64,30 @@ public static class JsonParser
         }
 
         return entries;
+    }
+
+    private static List<int> BuildLineMap(string content)
+    {
+        var lineMap = new List<int>();
+        var lineNum = 1;
+        for (var i = 0; i < content.Length; i++)
+        {
+            lineMap.Add(lineNum);
+            if (content[i] == '\n')
+                lineNum++;
+        }
+        return lineMap;
+    }
+
+    private static int? FindKeyLine(string content, string key, List<int> lineMap)
+    {
+        // Search for the key pattern in the raw content: "key":
+        var searchPattern = $"\"{key}\"";
+        var index = content.IndexOf(searchPattern, StringComparison.Ordinal);
+        if (index < 0)
+            return null;
+
+        return lineMap[index];
     }
 
     internal static string DetectLocale(string filePath)
