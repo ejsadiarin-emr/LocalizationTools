@@ -8,13 +8,15 @@ public class AhcParserTests
         Directory.GetCurrentDirectory(), "..", "..", "..", "..", "..", "l10n-files");
 
     [Fact]
-    public void Parse_AALM_File_ExtractsNonEmptyEntries()
+    public void Parse_AALM_File_ExtractsAllEntries()
     {
         var filePath = Path.Combine(L10nFilesDir, "AHC", "AALM_dt.cd.ahc");
         var entries = AhcParser.Parse(filePath);
 
-        // 68 LanguageValues total, 40 non-empty (10 per lang × 4 langs)
-        Assert.Equal(40, entries.Count);
+        // 7 keys with values × 4 locales = 28
+        // 5 keys with empty values × 4 locales = 20
+        // Total: 48 raw entries
+        Assert.Equal(48, entries.Count);
     }
 
     [Fact]
@@ -37,12 +39,33 @@ public class AhcParserTests
     }
 
     [Fact]
-    public void Parse_AALM_File_SkipsEmptyEntries()
+    public void Parse_AALM_File_ExtractsCorrectKeys()
     {
         var filePath = Path.Combine(L10nFilesDir, "AHC", "AALM_dt.cd.ahc");
         var entries = AhcParser.Parse(filePath);
 
-        Assert.All(entries, e => Assert.False(string.IsNullOrWhiteSpace(e.Value)));
+        var keys = entries.Select(e => e.Key).Distinct().OrderBy(k => k).ToList();
+
+        // Keys with values
+        Assert.Contains("Description", keys);
+        Assert.Contains("Title", keys);
+        Assert.Contains("txtLimits", keys);
+        Assert.Contains("txtAlarms", keys);
+        Assert.Contains("txtMisc", keys);
+        Assert.Contains("txtDiagnostics", keys);
+        Assert.Contains("txtEnable", keys);
+
+        // Keys with empty values
+        Assert.Contains("chkboxEnable", keys);
+        Assert.Contains("txtEnab", keys);
+        Assert.Contains("txtOOS", keys);
+        Assert.Contains("txtShlv", keys);
+        Assert.Contains("txtHelp", keys);
+
+        // Should NOT contain garbage keys
+        Assert.DoesNotContain("Value", keys);
+        Assert.DoesNotContain("GsLocalizedString", keys);
+        Assert.DoesNotContain("EU", keys);
     }
 
     [Fact]
@@ -63,6 +86,48 @@ public class AhcParserTests
 
         var enTitle = entries.First(e => e.Locale == "en" && e.Key == "Title");
         Assert.Equal("Alarm module detail display", enTitle.Value);
+    }
+
+    [Fact]
+    public void Parse_AALM_File_TextKeysHaveCorrectValues()
+    {
+        var filePath = Path.Combine(L10nFilesDir, "AHC", "AALM_dt.cd.ahc");
+        var entries = AhcParser.Parse(filePath);
+
+        var enTxtLimits = entries.First(e => e.Locale == "en" && e.Key == "txtLimits");
+        Assert.Equal("txtLimits", enTxtLimits.Value);
+
+        var enTxtAlarms = entries.First(e => e.Locale == "en" && e.Key == "txtAlarms");
+        Assert.Equal("txtAlarms", enTxtAlarms.Value);
+    }
+
+    [Fact]
+    public void Parse_AALM_File_EmptyValueKeysHaveEmptyValues()
+    {
+        var filePath = Path.Combine(L10nFilesDir, "AHC", "AALM_dt.cd.ahc");
+        var entries = AhcParser.Parse(filePath);
+
+        var emptyKeys = new[] { "chkboxEnable", "txtEnab", "txtOOS", "txtShlv", "txtHelp" };
+        foreach (var key in emptyKeys)
+        {
+            var keyEntries = entries.Where(e => e.Key == key).ToList();
+            Assert.Equal(4, keyEntries.Count);
+            Assert.All(keyEntries, e => Assert.Equal(string.Empty, e.Value));
+            Assert.All(keyEntries, e => Assert.False(e.Metadata.IsTranslated));
+            Assert.All(keyEntries, e => Assert.Equal("no language value provided", e.Metadata.Comment));
+        }
+    }
+
+    [Fact]
+    public void Parse_AALM_File_GemElementsAreSkipped()
+    {
+        var filePath = Path.Combine(L10nFilesDir, "AHC", "AALM_dt.cd.ahc");
+        var entries = AhcParser.Parse(filePath);
+
+        // Gem elements produce no entries (EU %, NA %, etc.)
+        var keys = entries.Select(e => e.Key).Distinct().ToList();
+        Assert.DoesNotContain("CD_LABEL_SCALEDVALUE1", keys);
+        Assert.DoesNotContain("CD_LABEL_VALUE8", keys);
     }
 
     [Fact]
