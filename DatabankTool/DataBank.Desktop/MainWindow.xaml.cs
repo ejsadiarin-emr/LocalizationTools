@@ -236,6 +236,39 @@ public partial class MainWindow : Window
         HandleConnectApi();
     }
 
+    private async void ImportBtn_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = "Select DataBank JSON to Import to API",
+            Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*",
+            DefaultExt = ".json"
+        };
+
+        if (dialog.ShowDialog() != true) return;
+
+        ImportBtn.IsEnabled = false;
+        try
+        {
+            StatusText.Text = "Importing...";
+            var (success, entryCount, error) = await _apiClient.ImportJsonAsync(dialog.FileName);
+
+            if (success)
+            {
+                StatusText.Text = $"Imported {entryCount} entries from {Path.GetFileName(dialog.FileName)}";
+                await LoadEntriesFromApi();
+            }
+            else
+            {
+                StatusText.Text = $"Import failed: {error}";
+            }
+        }
+        finally
+        {
+            ImportBtn.IsEnabled = true;
+        }
+    }
+
     private void RetryBtn_Click(object sender, RoutedEventArgs e)
     {
         HandleRetryConnection();
@@ -257,6 +290,7 @@ public partial class MainWindow : Window
 
         LoadJsonBtn.Visibility = _isRemoteMode ? Visibility.Collapsed : Visibility.Visible;
         ConnectApiBtn.Visibility = _isRemoteMode ? Visibility.Visible : Visibility.Collapsed;
+        ImportBtn.Visibility = _isRemoteMode ? Visibility.Visible : Visibility.Collapsed;
         RetryBtn.Visibility = Visibility.Collapsed;
         SwitchToLocalBtn.Visibility = Visibility.Collapsed;
 

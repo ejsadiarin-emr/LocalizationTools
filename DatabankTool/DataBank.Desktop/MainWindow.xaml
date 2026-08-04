@@ -30,6 +30,10 @@
                         Padding="12,6" Background="#2ea043" Foreground="White" BorderBrush="#2ea043"
                         FontSize="13" VerticalAlignment="Center" Visibility="Collapsed"/>
                 
+                <Button x:Name="ImportBtn" Content="Import Data to API" Click="ImportBtn_Click"
+                        Padding="12,6" Background="#8250df" Foreground="White" BorderBrush="#8250df"
+                        FontSize="13" VerticalAlignment="Center" Margin="8,0,0,0" Visibility="Collapsed"/>
+                
                 <Button x:Name="RetryBtn" Content="Retry" Click="RetryBtn_Click"
                         Padding="12,6" Background="#d29922" Foreground="White" BorderBrush="#d29922"
                         FontSize="13" VerticalAlignment="Center" Visibility="Collapsed"/>
