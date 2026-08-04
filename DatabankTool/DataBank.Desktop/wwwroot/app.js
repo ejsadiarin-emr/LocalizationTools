@@ -297,6 +297,9 @@
                     }
                 }
                 if (!hasAnyLocale) return false;
+
+                // When specifically filtering locales, exclude untranslated entries
+                if (getStatus(e) === 'untranslated') return false;
             }
 
             // Filter by format
@@ -485,6 +488,9 @@
 
                     // Update dashboard
                     updateDashboard();
+
+                    // Write back to source file
+                    writeBackToSource(entry, locale, currentValue, newValue);
                 }
 
                 cell.addEventListener('blur', saveEdit, { once: true });
