@@ -47,6 +47,11 @@ public static class AhcParser
                 if (string.IsNullOrEmpty(text))
                     continue;
 
+                // Record the <Content> element's line (not <LanguageValue>), since the replacer targets <Content>value</Content>
+                int? contentLine = null;
+                if (contentElement is IXmlLineInfo contentLineInfo && contentLineInfo.HasLineInfo())
+                    contentLine = contentLineInfo.LineNumber;
+
                 entries.Add(new RawLocalizedEntry
                 {
                     Key = key,
@@ -57,7 +62,7 @@ public static class AhcParser
                         Format = "ahc",
                         File = relativePath,
                         Path = relativePath,
-                        Line = languageValue is IXmlLineInfo lineInfo && lineInfo.HasLineInfo() ? lineInfo.LineNumber : null
+                        Line = contentLine
                     },
                     Metadata = new EntryMetadata { DoNotTranslate = isDntFile }
                 });

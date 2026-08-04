@@ -26,7 +26,7 @@ public class ApiClient : IDisposable
         _baseUrl = baseUrl.TrimEnd('/');
     }
 
-    public async Task<(bool IsHealthy, int EntryCount, int Version)> CheckHealthAsync()
+    public async Task<(bool IsHealthy, int EntryCount, int Version, string? BasePath)> CheckHealthAsync()
     {
         try
         {
@@ -39,15 +39,18 @@ public class ApiClient : IDisposable
 
                 var entryCount = root.GetProperty("entryCount").GetInt32();
                 var version = root.GetProperty("version").GetInt32();
+                var basePath = root.TryGetProperty("basePath", out var bpProp) && bpProp.ValueKind == JsonValueKind.String
+                    ? bpProp.GetString()
+                    : null;
 
-                return (true, entryCount, version);
+                return (true, entryCount, version, basePath);
             }
 
-            return (false, 0, 0);
+            return (false, 0, 0, null);
         }
         catch
         {
-            return (false, 0, 0);
+            return (false, 0, 0, null);
         }
     }
 

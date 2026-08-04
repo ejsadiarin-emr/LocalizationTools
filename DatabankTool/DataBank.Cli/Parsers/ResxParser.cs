@@ -66,9 +66,14 @@ public static partial class ResxParser
         var comment = dataElement.Element("comment")?.Value;
 
         int? line = null;
-        if (dataElement is IXmlLineInfo lineInfo && lineInfo.HasLineInfo())
+        // Record the <value> element's line (not <data>), since the replacer targets <value>value</value>
+        if (valueElement is IXmlLineInfo valueLineInfo && valueLineInfo.HasLineInfo())
         {
-            line = lineInfo.LineNumber;
+            line = valueLineInfo.LineNumber;
+        }
+        else if (dataElement is IXmlLineInfo dataLineInfo && dataLineInfo.HasLineInfo())
+        {
+            line = dataLineInfo.LineNumber;
         }
 
         return new RawLocalizedEntry

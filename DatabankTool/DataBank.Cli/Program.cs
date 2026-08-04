@@ -2,6 +2,7 @@ using System.Text.Json;
 using DataBank.Cli.Helpers;
 using DataBank.Cli.Models;
 using DataBank.Cli.Parsers;
+using DataBank.Cli.Replacers;
 
 namespace DataBank.Cli;
 
@@ -9,6 +10,12 @@ public class Program
 {
     public static int Main(string[] args)
     {
+        // Check for edit subcommand
+        if (args.Length > 0 && args[0] == "edit")
+        {
+            return RunEditCommand(args.Skip(1).ToArray());
+        }
+
         var inputDir = ".";
         string? outputPath = null;
         string? format = null;
@@ -250,13 +257,182 @@ public class Program
         }
     }
 
+    private static int RunEditCommand(string[] args)
+    {
+        string? key = null;
+        string? locale = null;
+        string? newValue = null;
+        string? dataBankPath = null;
+        bool dryRun = false;
+
+        for (int i = 0; i < args.Length; i++)
+        {
+            switch (args[i])
+            {
+                case "--key" or "-k":
+                    if (i + 1 < args.Length) key = args[++i];
+                    break;
+                case "--locale" or "-l":
+                    if (i + 1 < args.Length) locale = args[++i];
+                    break;
+                case "--value" or "-v":
+                    if (i + 1 < args.Length) newValue = args[++i];
+                    break;
+                case "--file" or "-f":
+                    if (i + 1 < args.Length) dataBankPath = args[++i];
+                    break;
+                case "--dry-run":
+                    dryRun = true;
+                    break;
+                case "--help" or "-h":
+                    PrintEditUsage();
+                    return 0;
+            }
+        }
+
+        if (key is null || locale is null || newValue is null || dataBankPath is null)
+        {
+            Console.Error.WriteLine("Error: --key, --locale, --value, and --file are required for edit command.");
+            PrintEditUsage();
+            return 1;
+        }
+
+        if (!File.Exists(dataBankPath))
+        {
+            Console.Error.WriteLine($"Error: Data bank file not found: {dataBankPath}");
+            return 1;
+        }
+
+        // Load data bank
+        var json = File.ReadAllText(dataBankPath);
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
+        };
+        var dataBank = JsonSerializer.Deserialize<DataBankOutput>(json, options);
+
+        if (dataBank?.Entries is null)
+        {
+            Console.Error.WriteLine("Error: Failed to load data bank or no entries found.");
+            return 1;
+        }
+
+        // Find entry by key
+        var entry = dataBank.Entries.FirstOrDefault(e =>
+            string.Equals(e.Key, key, StringComparison.OrdinalIgnoreCase));
+
+        if (entry is null)
+        {
+            Console.Error.WriteLine($"Error: Entry not found for key: {key}");
+            return 1;
+        }
+
+        // Find locale value
+        var localeValue = entry.Values.FirstOrDefault(v =>
+            string.Equals(v.Locale, locale, StringComparison.OrdinalIgnoreCase));
+
+        if (localeValue is null)
+        {
+            Console.Error.WriteLine($"Error: Locale '{locale}' not found for key: {key}");
+            return 1;
+        }
+
+        // Find source for this locale
+        if (!entry.Sources.TryGetValue(locale, out var sourceInfo))
+        {
+            Console.Error.WriteLine($"Error: No source information for locale '{locale}' on key: {key}");
+            return 1;
+        }
+
+        // Resolve relative source path against the data bank base path
+        var sourceFile = sourceInfo.File;
+        if (!Path.IsPathRooted(sourceFile) && !string.IsNullOrEmpty(dataBank.BasePath))
+        {
+            sourceFile = Path.GetFullPath(Path.Combine(dataBank.BasePath, sourceFile));
+        }
+
+        // Show what will be changed
+        Console.WriteLine($"Key:      {entry.Key}");
+        Console.WriteLine($"Locale:   {locale}");
+        Console.WriteLine($"File:     {sourceFile}");
+        Console.WriteLine($"Line:     {sourceInfo.Line}");
+        Console.WriteLine($"Format:   {sourceInfo.Format}");
+        Console.WriteLine($"Old value: \"{localeValue.Value}\"");
+        Console.WriteLine($"New value: \"{newValue}\"");
+
+        if (dryRun)
+        {
+            Console.WriteLine();
+            Console.WriteLine("(Dry run - no changes written)");
+            return 0;
+        }
+
+        // Create raw entry for FileWriter
+        var rawEntry = new RawLocalizedEntry
+        {
+            Key = entry.Key,
+            Locale = locale,
+            Value = localeValue.Value,
+            Source = new SourceInfo
+            {
+                Format = sourceInfo.Format,
+                File = sourceFile,
+                Path = sourceFile,
+                Line = sourceInfo.Line
+            },
+            Metadata = entry.Metadata
+        };
+
+        // Write back
+        var writer = new FileWriter();
+        var result = writer.EditEntry(rawEntry, newValue);
+
+        if (result.Success)
+        {
+            Console.WriteLine();
+            Console.WriteLine($"Successfully updated {result.File} at line {result.Line}");
+            return 0;
+        }
+        else
+        {
+            Console.Error.WriteLine();
+            Console.Error.WriteLine($"Error: {result.ErrorMessage}");
+            return 1;
+        }
+    }
+
+    private static void PrintEditUsage()
+    {
+        Console.WriteLine("databank-cli edit - Edit a translation value and write back to source file");
+        Console.WriteLine();
+        Console.WriteLine("Usage: databank-cli edit --key <key> --locale <locale> --value <value> --file <data-bank.json>");
+        Console.WriteLine();
+        Console.WriteLine("Options:");
+        Console.WriteLine("  --key, -k <key>        The entry key to edit (required)");
+        Console.WriteLine("  --locale, -l <locale>  The locale to edit (required)");
+        Console.WriteLine("  --value, -v <value>    The new translation value (required)");
+        Console.WriteLine("  --file, -f <path>      Path to data-bank.json (required)");
+        Console.WriteLine("  --dry-run              Show what would change without writing");
+        Console.WriteLine("  --help, -h             Show this help message");
+        Console.WriteLine();
+        Console.WriteLine("Examples:");
+        Console.WriteLine("  databank-cli edit --key IDS_WELCOME --locale fr --value \"Bonjour\" --file data-bank.json");
+        Console.WriteLine("  databank-cli edit -k IDS_START -l zh-CN -v \"启动\" -f data-bank.json --dry-run");
+    }
+
     private static void PrintUsage()
     {
         Console.WriteLine("databank-cli - Localization string extractor");
         Console.WriteLine();
         Console.WriteLine("Usage: databank-cli [options]");
+        Console.WriteLine("       databank-cli edit [options]");
         Console.WriteLine();
-        Console.WriteLine("Options:");
+        Console.WriteLine("Commands:");
+        Console.WriteLine("  (default)              Extract and group localization strings");
+        Console.WriteLine("  edit                   Edit a translation value and write back to source");
+        Console.WriteLine();
+        Console.WriteLine("Extract Options:");
         Console.WriteLine("  --input-dir <path>     Input directory to scan (default: current directory)");
         Console.WriteLine("  --output, -o <path>    Output file path (default: ./data-bank.json)");
         Console.WriteLine("  --format, -f <format>  Filter by format: resx, rc, fhx, ahc, json");
@@ -270,9 +446,16 @@ public class Program
         Console.WriteLine("  --flag-untranslated    Flag entries with translation status analysis");
         Console.WriteLine("  --help, -h             Show this help message");
         Console.WriteLine();
+        Console.WriteLine("Edit Options:");
+        Console.WriteLine("  --key, -k <key>        Entry key to edit");
+        Console.WriteLine("  --locale, -l <locale>  Locale to edit");
+        Console.WriteLine("  --value, -v <value>    New translation value");
+        Console.WriteLine("  --file, -f <path>      Path to data-bank.json");
+        Console.WriteLine("  --dry-run              Show what would change without writing");
+        Console.WriteLine();
         Console.WriteLine("Examples:");
         Console.WriteLine("  databank-cli --input-dir ./l10n-files");
         Console.WriteLine("  databank-cli --input-dir ./l10n-files --output ./out/data-bank.json --stats");
-        Console.WriteLine("  databank-cli --input-dir ./l10n-files --format resx --verbose");
+        Console.WriteLine("  databank-cli edit --key IDS_WELCOME --locale fr --value \"Bonjour\" --file data-bank.json");
     }
 }

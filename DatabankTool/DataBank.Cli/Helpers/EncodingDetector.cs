@@ -106,6 +106,87 @@ public static class EncodingDetector
         return content;
     }
 
+    public static string DetectLineEnding(string content)
+    {
+        var crlfCount = 0;
+        var lfCount = 0;
+
+        for (var i = 0; i < content.Length; i++)
+        {
+            if (content[i] == '\r')
+            {
+                if (i + 1 < content.Length && content[i + 1] == '\n')
+                {
+                    crlfCount++;
+                    i++;
+                }
+                else
+                {
+                    crlfCount++;
+                }
+            }
+            else if (content[i] == '\n')
+            {
+                lfCount++;
+            }
+        }
+
+        return crlfCount > lfCount ? "\r\n" : "\n";
+    }
+
+    public static bool HasBom(string filePath)
+    {
+        if (!File.Exists(filePath))
+            return false;
+
+        try
+        {
+            using var stream = File.OpenRead(filePath);
+            if (stream.Length < 3)
+                return false;
+
+            var b0 = stream.ReadByte();
+            var b1 = stream.ReadByte();
+            var b2 = stream.ReadByte();
+
+            // UTF-8 BOM: EF BB BF
+            if (b0 == 0xEF && b1 == 0xBB && b2 == 0xBF)
+                return true;
+
+            // UTF-16LE BOM: FF FE
+            if (b0 == 0xFF && b1 == 0xFE)
+                return true;
+
+            // UTF-16BE BOM: FE FF
+            if (b0 == 0xFE && b1 == 0xFF)
+                return true;
+
+            return false;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public static (string content, Encoding encoding, string lineEnding) ReadFileWithMetadata(string filePath, string? encodingOverride = null)
+    {
+        var encoding = encodingOverride is not null
+            ? GetEncodingByName(encodingOverride)
+            : Detect(filePath);
+
+        var content = File.ReadAllText(filePath, encoding);
+
+        if (content.Contains('\uFFFD'))
+        {
+            Console.Error.WriteLine($"Warning: Encoding mismatch detected in {filePath}. Consider using --encoding override.");
+        }
+
+        var lineEnding = DetectLineEnding(content);
+
+        return (content, encoding, lineEnding);
+    }
+
     private static Encoding GetEncodingByName(string name)
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);

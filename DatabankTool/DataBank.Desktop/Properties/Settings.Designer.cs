@@ -32,5 +32,17 @@ namespace DataBank.Desktop.Properties {
                 this["AppMode"] = value;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string BasePath {
+            get {
+                return ((string)(this["BasePath"]));
+            }
+            set {
+                this["BasePath"] = value;
+            }
+        }
     }
 }

@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using System.Windows;
+using DataBank.Cli.Models;
+using DataBank.Cli.Replacers;
 using Microsoft.Win32;
 using Microsoft.Web.WebView2.Core;
 
@@ -24,6 +26,12 @@ public partial class MainWindow : Window
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
+        var savedBasePath = Properties.Settings.Default.BasePath;
+        if (!string.IsNullOrEmpty(savedBasePath))
+        {
+            BasePathInput.Text = savedBasePath;
+        }
+
         var savedMode = Properties.Settings.Default.AppMode;
         if (savedMode == "Remote")
         {
@@ -70,6 +78,9 @@ public partial class MainWindow : Window
                     case "exportJson":
                         HandleExportJson(root);
                         break;
+                    case "writebackEdit":
+                        HandleWritebackEdit(root);
+                        break;
                 }
             }
         }
@@ -90,10 +101,14 @@ public partial class MainWindow : Window
             if (string.IsNullOrEmpty(filePath))
                 return;
 
+            var effectiveBasePath = _isRemoteMode
+                ? ExpandBasePath(BasePathInput.Text)
+                : _basePath;
+
             var resolvedPath = filePath;
-            if (!Path.IsPathRooted(filePath) && !string.IsNullOrEmpty(_basePath))
+            if (!Path.IsPathRooted(filePath) && !string.IsNullOrEmpty(effectiveBasePath))
             {
-                resolvedPath = Path.Combine(_basePath, filePath);
+                resolvedPath = Path.Combine(effectiveBasePath, filePath);
             }
 
             if (!File.Exists(resolvedPath))
@@ -226,6 +241,102 @@ public partial class MainWindow : Window
         }
     }
 
+    private void HandleWritebackEdit(JsonElement root)
+    {
+        try
+        {
+            if (!root.TryGetProperty("key", out var keyProp) ||
+                !root.TryGetProperty("locale", out var localeProp) ||
+                !root.TryGetProperty("oldValue", out var oldValueProp) ||
+                !root.TryGetProperty("newValue", out var newValueProp))
+            {
+                return;
+            }
+
+            var key = keyProp.GetString() ?? "";
+            var locale = localeProp.GetString() ?? "";
+            var oldValue = oldValueProp.GetString() ?? "";
+            var newValue = newValueProp.GetString() ?? "";
+
+            if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(locale))
+                return;
+
+            string? format = null;
+            string? file = null;
+            int? line = null;
+
+            if (root.TryGetProperty("format", out var formatProp))
+                format = formatProp.GetString();
+            if (root.TryGetProperty("file", out var fileProp))
+                file = fileProp.GetString();
+            if (root.TryGetProperty("line", out var lineProp) && lineProp.ValueKind == JsonValueKind.Number)
+                line = lineProp.GetInt32();
+
+            if (string.IsNullOrEmpty(format) || string.IsNullOrEmpty(file) || !line.HasValue)
+            {
+                PostWritebackResult(new { success = false, error = "No source file information for this value" });
+                return;
+            }
+
+            var resolvedPath = file;
+            var effectiveBasePath = _isRemoteMode
+                ? ExpandBasePath(BasePathInput.Text)
+                : _basePath;
+            if (!Path.IsPathRooted(file) && !string.IsNullOrEmpty(effectiveBasePath))
+            {
+                resolvedPath = Path.Combine(effectiveBasePath, file);
+            }
+
+            var rawEntry = new RawLocalizedEntry
+            {
+                Key = key,
+                Locale = locale,
+                Value = oldValue,
+                Source = new SourceInfo
+                {
+                    Format = format,
+                    File = resolvedPath,
+                    Path = resolvedPath,
+                    Line = line
+                }
+            };
+
+            var result = new FileWriter().EditEntry(rawEntry, newValue);
+
+            PostWritebackResult(new
+            {
+                success = result.Success,
+                error = result.ErrorMessage,
+                key,
+                locale,
+                line = result.Line,
+                file = result.File
+            });
+
+            StatusText.Text = result.Success
+                ? $"Saved {key} [{locale}] -> {resolvedPath}:{line}"
+                : $"Write-back failed: {result.ErrorMessage}";
+        }
+        catch (Exception ex)
+        {
+            PostWritebackResult(new { success = false, error = ex.Message });
+            StatusText.Text = $"Write-back error: {ex.Message}";
+        }
+    }
+
+    private async void PostWritebackResult(object payload)
+    {
+        try
+        {
+            var json = JsonSerializer.Serialize(payload);
+            var escaped = JsonSerializer.Serialize(json);
+            await WebView.CoreWebView2.ExecuteScriptAsync($"window.receiveWritebackResult(JSON.parse({escaped}))");
+        }
+        catch
+        {
+        }
+    }
+
     private void LoadJsonBtn_Click(object sender, RoutedEventArgs e)
     {
         HandleLoadJson();
@@ -291,6 +402,8 @@ public partial class MainWindow : Window
         LoadJsonBtn.Visibility = _isRemoteMode ? Visibility.Collapsed : Visibility.Visible;
         ConnectApiBtn.Visibility = _isRemoteMode ? Visibility.Visible : Visibility.Collapsed;
         ImportBtn.Visibility = _isRemoteMode ? Visibility.Visible : Visibility.Collapsed;
+        BasePathLabel.Visibility = _isRemoteMode ? Visibility.Visible : Visibility.Collapsed;
+        BasePathInput.Visibility = _isRemoteMode ? Visibility.Visible : Visibility.Collapsed;
         RetryBtn.Visibility = Visibility.Collapsed;
         SwitchToLocalBtn.Visibility = Visibility.Collapsed;
 
@@ -362,10 +475,12 @@ public partial class MainWindow : Window
             StatusText.Text = "Connecting to API...";
             ConnectApiBtn.IsEnabled = false;
 
-            var (isHealthy, entryCount, version) = await _apiClient.CheckHealthAsync();
+            var (isHealthy, entryCount, version, apiBasePath) = await _apiClient.CheckHealthAsync();
 
             if (isHealthy)
             {
+                var userBasePath = ExpandBasePath(BasePathInput.Text);
+                _basePath = !string.IsNullOrEmpty(userBasePath) ? userBasePath : apiBasePath;
                 StatusText.Text = $"Connected to API - {entryCount} entries (v{version})";
                 RetryBtn.Visibility = Visibility.Collapsed;
                 SwitchToLocalBtn.Visibility = Visibility.Collapsed;
@@ -419,5 +534,34 @@ public partial class MainWindow : Window
             RetryBtn.Visibility = Visibility.Visible;
             SwitchToLocalBtn.Visibility = Visibility.Visible;
         }
+    }
+
+    private void BasePathInput_LostFocus(object sender, RoutedEventArgs e)
+    {
+        Properties.Settings.Default.BasePath = BasePathInput.Text;
+        Properties.Settings.Default.Save();
+
+        if (_isRemoteMode)
+        {
+            var expanded = ExpandBasePath(BasePathInput.Text);
+            if (!string.IsNullOrEmpty(expanded))
+                _basePath = expanded;
+        }
+    }
+
+    private static string ExpandBasePath(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return string.Empty;
+
+        path = path.Trim();
+
+        if (path.StartsWith('~'))
+        {
+            var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            path = path.Length == 1 ? home : Path.Combine(home, path[1..].TrimStart('\\', '/'));
+        }
+
+        return Path.GetFullPath(path);
     }
 }

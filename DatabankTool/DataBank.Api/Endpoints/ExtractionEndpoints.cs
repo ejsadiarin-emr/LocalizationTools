@@ -110,6 +110,8 @@ public static class ExtractionEndpoints
                 metadata.Version = dataBank.Version;
                 metadata.Generated = dataBank.Generated ?? DateTime.UtcNow.ToString("o");
                 metadata.EntryCount = (int)await repository.GetEntryCountAsync();
+                if (!string.IsNullOrEmpty(dataBank.BasePath))
+                    metadata.BasePath = dataBank.BasePath;
                 await repository.UpdateMetadataAsync(metadata);
 
                 return Results.Ok(new
@@ -146,7 +148,8 @@ public static class ExtractionEndpoints
                 {
                     status = "healthy",
                     entryCount,
-                    version = metadata?.Version ?? 0
+                    version = metadata?.Version ?? 0,
+                    basePath = metadata?.BasePath
                 });
             }
             catch (Exception ex)
@@ -235,6 +238,7 @@ public static class ExtractionEndpoints
             metadata.Version = 3;
             metadata.Generated = DateTime.UtcNow.ToString("o");
             metadata.EntryCount = (int)await repository.GetEntryCountAsync();
+            metadata.BasePath = job.SourceDirectory;
             await repository.UpdateMetadataAsync(metadata);
 
             job.EntriesExtracted = documents.Count;

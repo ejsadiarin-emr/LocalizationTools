@@ -17,4 +17,7 @@ public class DataBankMetadataDocument
 
     [BsonElement("EntryCount")]
     public int EntryCount { get; set; }
+
+    [BsonElement("BasePath")]
+    public string? BasePath { get; set; }
 }

@@ -510,6 +510,59 @@
         });
     }
 
+    // --- Write-back to Source Files ---
+    function writeBackToSource(entry, locale, oldValue, newValue) {
+        if (oldValue === newValue) return;
+
+        var src = null;
+        if (entry.sources && entry.sources[locale] && entry.sources[locale].file) {
+            src = entry.sources[locale];
+        } else if (entry.sources) {
+            var keys = Object.keys(entry.sources);
+            for (var i = 0; i < keys.length; i++) {
+                if (entry.sources[keys[i]].file) {
+                    src = entry.sources[keys[i]];
+                    break;
+                }
+            }
+        }
+
+        if (!src || !src.file || !src.line) {
+            showToast('No source file to write back to - value saved in memory only', 'warning');
+            return;
+        }
+
+        window.chrome.webview.postMessage({
+            action: 'writebackEdit',
+            key: entry.key,
+            locale: locale,
+            oldValue: oldValue,
+            newValue: newValue,
+            file: src.file,
+            line: src.line,
+            format: src.format || ''
+        });
+    }
+
+    function showToast(message, type) {
+        var toast = document.getElementById('toast');
+        if (!toast) return;
+        toast.textContent = message;
+        toast.className = 'toast show toast-' + (type || 'info');
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(function () {
+            toast.className = 'toast hidden';
+        }, 4000);
+    }
+
+    window.receiveWritebackResult = function (result) {
+        if (result && result.success) {
+            showToast('Saved to source: ' + (result.file || '') + ':' + (result.line || ''), 'success');
+        } else {
+            showToast('Write-back failed: ' + ((result && result.error) || 'Unknown error'), 'error');
+        }
+    };
+
     // --- Pagination ---
     function renderPagination() {
         pagination.innerHTML = '';

@@ -42,6 +42,12 @@
                         Padding="12,6" Background="#6c757d" Foreground="White" BorderBrush="#6c757d"
                         FontSize="13" VerticalAlignment="Center" Visibility="Collapsed"/>
                 
+                <TextBlock x:Name="BasePathLabel" Text="Base Path:" Foreground="#cccccc" FontSize="12"
+                           VerticalAlignment="Center" Margin="16,0,6,0" Visibility="Collapsed"/>
+                <TextBox x:Name="BasePathInput" Width="300" FontSize="12" VerticalAlignment="Center"
+                         Visibility="Collapsed" LostFocus="BasePathInput_LostFocus"
+                         ToolTip="Local path to source files (supports ~ for home directory)"/>
+
                 <TextBlock x:Name="StatusText" Text="No data loaded" Foreground="#888888" FontSize="12"
                            VerticalAlignment="Center" Margin="16,0,0,0"/>
             </StackPanel>

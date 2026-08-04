@@ -527,6 +527,39 @@ section {
     font-size: 14px;
 }
 
+/* Toast */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #2d2d2d;
+    color: #e0e0e0;
+    padding: 10px 16px;
+    border-radius: 6px;
+    border: 1px solid #3c3c3c;
+    font-size: 13px;
+    max-width: 420px;
+    z-index: 1000;
+    display: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.toast.show {
+    display: block;
+}
+
+.toast-success {
+    border-color: #2e7d32;
+}
+
+.toast-error {
+    border-color: #c62828;
+}
+
+.toast-warning {
+    border-color: #f9a825;
+}
+
 .hidden {
     display: none !important;
 }
