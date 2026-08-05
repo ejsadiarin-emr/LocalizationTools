@@ -10,6 +10,92 @@ This analyzer package helps prevent localization issues by detecting two categor
 - **Localization code smells** (LOC004-LOC007): Patterns that make text hard to translate: string concatenation in output contexts, hardcoded date/number formats, missing StringComparison, and hardcoded pluralization logic.
 - **Display strings** (LOC010): UI text, labels, and messages that should be routed through `Localize()` for translation.
 
+Additional rules (LOC011-LOC015) cover string interpolation in localizable contexts, hardcoded `DateTime` formats without `CultureInfo`, dynamic resource keys, English-only pluralization, and punctuation concatenated outside translatable strings.
+
+## Use Case
+
+The analyzer classifies every string literal in a C# codebase as either **behavioral**
+(drives control flow, DB lookups, equality checks — translated strings break the program)
+or **display** (UI text that should go through `Localize()`). The goal: stop
+locale-specific string literals from driving business logic, so one build can serve all
+languages with locale data loaded at runtime.
+
+- Run it on **any directory** of C# files — no project compilation required (works on
+  plain folders; `bin`, `obj`, `Test`, `TestResults` are skipped).
+- Results are emitted as **SARIF 2.1.0**, consumable by GitHub Code Scanning, SonarQube,
+  and Azure DevOps.
+- Includes a **code fix** (lightbulb) that extracts a LOC010 display string into a
+  `Localize("suggested.key")` call.
+
+## Quick Run
+
+### CLI (analyze a directory → SARIF)
+
+```bash
+# make targets
+make build-cli          # build the CLI (net10.0)
+make analyze            # analyze src/ → results.sarif
+make analyze-test       # analyze test-codebase/ → prints SARIF to stdout
+make analyze-test-ca    # same, plus built-in CA globalization rules (CA1303-CA1311)
+
+# raw dotnet run — point at any folder containing .cs files:
+dotnet run --project src/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- <directory> [output.sarif] [--with-ca-rules]
+```
+
+Examples:
+
+```bash
+# Analyze a specific directory and write the SARIF to a file
+dotnet run --project src/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- test-codebase/ results.sarif
+
+# Analyze and print SARIF to stdout (no output file argument)
+dotnet run --project src/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- test-codebase/
+
+# Include Microsoft's built-in CA globalization rules
+make analyze-test-ca
+```
+
+### Desktop app
+
+```bash
+make run-desktop        # builds + runs
+
+# raw:
+dotnet run --project src/LocalizationAnalyzers.Desktop/LocalizationAnalyzers.Desktop.csproj -c Release
+```
+
+See [Desktop App](#desktop-app) for what you can do in the GUI.
+
+### Checking the SARIF file
+
+The CLI output (whether written to a file or printed) is SARIF 2.1.0 JSON. Each result
+carries enriched properties — `classification` (hardcoded / concatenated / interpolated /
+format-string / plural-form / display-string / dynamic-key / culture-default),
+`sourceSnippet` (the offending line), and `stringLiteral` — plus per-file metrics in
+`runs[].properties.fileMetrics[]` and rule metadata (helpUri, tags, relatedRules, bad/good
+examples) in `runs[].tool.driver.rules[]`.
+
+To view it:
+
+```bash
+# Pretty-print / query it like any JSON
+Get-Content results.sarif | ConvertFrom-Json
+
+# Or open it in VS Code with the SARIF Viewer extension
+code results.sarif
+```
+
+### Where to use the SARIF file
+
+- **GitHub Code Scanning** — the repo's `.github/workflows/analyze.yml` already runs the
+  CLI on `src/` and uploads the result to Code Scanning
+  (`github/codeql-action/upload-sarif@v4`).
+- **SonarQube** — import the SARIF file in the project settings.
+- **Azure DevOps** — `dotnet build /p:ErrorLog=results.sarif` produces SARIF natively;
+  publish it as a build artifact (see [CI Integration](#ci-integration)).
+- **Local review** — the desktop app's **Export SARIF** button or the CLI file output,
+  opened in the VS Code SARIF viewer.
+
 ## Installation
 
 ### NuGet Package
@@ -259,21 +345,36 @@ Both platforms require SARIF version 2.1.0. The `dotnet build /p:ErrorLog=` comm
 
 ## CLI Tool
 
-The project includes a command-line tool for running analyzers and generating SARIF output with metrics.
+The project includes a command-line tool for running analyzers and generating SARIF output with metrics. It is compiled only for `net10.0` (the analyzer itself also targets `netstandard2.0` for the NuGet package).
 
 ### Build and Run
 
 ```bash
 # Build the CLI
 dotnet build src/LocalizationAnalyzers.csproj -c Release -f net10.0
+# (make build-cli does the same)
 
-# Run analysis on a project
-dotnet run --project src/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- src results.sarif
+# Run analysis on a directory of C# files
+dotnet run --project src/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- test-codebase results.sarif
+
+# With the built-in CA globalization rules (CA1303-CA1311)
+dotnet run --project src/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- test-codebase/ --with-ca-rules
+
+# Print SARIF to stdout instead of a file
+dotnet run --project src/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- test-codebase/
 
 # Or publish as self-contained
 dotnet publish src/LocalizationAnalyzers.csproj -c Release -f net10.0 --self-contained
 ./publish/LocalizationAnalyzers src results.sarif
 ```
+
+Arguments:
+
+- `<directory>` — any folder containing `*.cs` files (a `.csproj` path also works; its
+  containing directory is used). `bin`, `obj`, `Test`, `TestResults` subfolders are
+  excluded.
+- `[output-file]` — optional SARIF output path; omitted → prints to stdout.
+- `--with-ca-rules` — include Microsoft's built-in globalization analyzers.
 
 ### Metrics Output
 
@@ -285,29 +386,46 @@ The CLI includes per-file and aggregate metrics in the SARIF output:
 
 ## Desktop App
 
-A WPF + WebView2 desktop application provides a GUI for running the analyzer.
+A WPF + WebView2 desktop application provides a GUI for running the analyzer on any directory of C# files.
 
 ### Build and Run
 
 ```bash
-dotnet build src/LocalizationAnalyzers.Desktop/ -c Release -f net10.0-windows
-dotnet run --project src/LocalizationAnalyzers.Desktop/ --no-build -c Release -f net10.0-windows
+make run-desktop        # builds + runs
+
+# raw:
+dotnet build src/LocalizationAnalyzers.Desktop/LocalizationAnalyzers.Desktop.csproj -c Release
+dotnet run --project src/LocalizationAnalyzers.Desktop/LocalizationAnalyzers.Desktop.csproj -c Release --no-build
 ```
+
+### Common Workflow
+
+1. **Select a folder** — type a path or click **Browse Folder** (directory containing C# files).
+2. **Configure rules** — toggle individual LOC rule checkboxes (LOC001–LOC015) and
+   optionally **Include CA Rules** to add Microsoft's built-in globalization analyzers
+   (CA1303–CA1311).
+3. **Run Analysis** — the summary panel shows total files, lines, diagnostics, and duration.
+4. **Inspect results** — sortable table with rule, severity, file, line, and message.
+   Click any row to **expand details**: classification badge (hardcoded/concatenated/
+   interpolated/etc.), source snippet, string literal, rule description with help link,
+   related rules, tags, and bad/good code examples side-by-side.
+5. **Export SARIF** — save the current run to a `.sarif` file for GitHub Code Scanning,
+   SonarQube, or Azure DevOps.
 
 ### Features
 
-- Browse to select a `.csproj` file or directory
-- Run analysis with a single click
-- View results in a sortable, filterable table (LOC001-LOC015, plus optional CA rules)
-- **Expandable row details**: Click any row to see:
-  - **Metadata**: Rule ID, severity, classification badge (hardcoded/concatenated/interpolated/etc.), file location
+- Browse to select a directory of C# files
+- Run analysis with a single click (LOC001-LOC015, plus optional CA rules)
+- Sortable, filterable results table
+- **Expandable row details**:
+  - **Metadata**: Rule ID, severity, classification badge, file location
   - **Source Code**: Offending source line snippet
   - **String Literal**: The problematic string value
   - **Rule Details**: Description, help link, related rules, tags
   - **Code Example**: Bad/good code side-by-side (when available)
 - Summary panel with total files, diagnostics, and execution time
 - Rule filter toggles for all LOC rules (LOC001-LOC015)
-- Export results to SARIF file
+- Export results to a SARIF file
 
 ## CI Integration
 
@@ -327,15 +445,32 @@ dotnet run --project src/LocalizationAnalyzers.Desktop/ --no-build -c Release -f
 
 ### GitHub Actions
 
-```yaml
-- name: Build with SARIF
-  run: dotnet build /p:ErrorLog=results.sarif
+The repo ships `.github/workflows/analyze.yml`, which runs the CLI on `src/` and uploads
+the SARIF to GitHub Code Scanning:
 
-- name: Upload SARIF
-  uses: github/codeql-action/upload-sarif@v2
+```yaml
+- name: Setup .NET
+  uses: actions/setup-dotnet@v4
   with:
-    sarif_file: results.sarif
+    dotnet-version: '10.0.x'
+
+- name: Build CLI tool (net10.0)
+  run: dotnet build src/LocalizationAnalyzers.csproj --no-restore -c Release -f net10.0
+
+- name: Run analyzers and generate SARIF
+  run: |
+    dotnet run --project src/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- src string_classification_results.sarif
+
+- name: Upload SARIF to GitHub Code Scanning
+  uses: github/codeql-action/upload-sarif@v4
+  if: always()
+  with:
+    sarif_file: string_classification_results.sarif
+    category: localization-analyzers
 ```
+
+For build-time SARIF (e.g., when the analyzer is referenced as a NuGet package), the
+`dotnet build /p:ErrorLog=results.sarif` approach works too.
 
 ## Testing
 

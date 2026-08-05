@@ -1,4 +1,4 @@
-# DeltaV Localization Refactor — Consolidated Project Context
+# DeltaV Localization Refactor - Consolidated Project Context
 
 > **Single source of truth** for this initiative. Read before touching any code, tooling,
 > or translation workflow. This file is written for both human engineers and AI coding
@@ -9,7 +9,7 @@
 
 ## 1. The Problem
 
-DeltaV ships 5–10+ language versions. Historically, each language version has been
+DeltaV ships 5-10+ language versions. Historically, each language version has been
 built as a **separate binary/image**, with its own full build process (some take hours).
 
 **Root cause:** Localization-related strings drive business logic in the codebase:
@@ -28,7 +28,7 @@ logic expects, the historical fix has been to **add more locale-specific branchi
 
 | Type | Definition | Example | Problem if hardcoded |
 |---|---|---|---|
-| **Display** | UI text, labels, log messages, dialogs | `button.Text = "Start Pump"` | Needs translation, but safe — doesn't break logic |
+| **Display** | UI text, labels, log messages, dialogs | `button.Text = "Start Pump"` | Needs translation, but safe - doesn't break logic |
 | **Behavioral** | Drives control flow, DB lookups, equality checks | `if (status == "Running")` | Translation **breaks the program**, forcing per-locale workarounds |
 
 **Core fix:** Behavioral strings become invariant keys/enums that never change per locale.
@@ -46,154 +46,135 @@ Display strings are extracted into resource files and resolved client-side at ru
 
 ---
 
-## 3. The Three Tools
+## 3. The Two Tools
 
-These are related but **should be built and reasoned about separately** — do not conflate them.
+These are related but **should be built and reasoned about separately** - do not conflate them.
 
-### Tool 1 — Static Analysis (Roslyn Analyzer) — ✅ complete
+### Tool 1 - Static Analysis (Roslyn Analyzer) - Complete
 
 **Location:** `src/` (see that folder's own README.md for build/usage details)
 
 - Classifies string literals in C# source as **Behavioral** or **Display** using syntax-level heuristics.
 - Emits standard Roslyn diagnostics (15 LOC rules + optional CA rules):
-  - `LOC001` (Warning) — string literal in a conditional (if/switch/ternary)
-  - `LOC002` (Warning) — string literal passed to a data-access/lookup call (Find/Get/Query)
-  - `LOC003` (Warning) — string literal in an equality comparison (==/.Equals())
-  - `LOC004` (Warning) — string concatenation in output context (Console, Debug, logging, UI)
-  - `LOC005` (Warning) — hardcoded date/number format string
-  - `LOC006` (Info) — string method called without StringComparison
-  - `LOC007` (Warning) — hardcoded pluralization logic (ternary comparing Count/Length)
-  - `LOC010` (Info) — display string not yet routed through `Localize(...)`
-  - `LOC011` (Warning) — string interpolation in localizable context
-  - `LOC012` (Warning) — hardcoded DateTime format without CultureInfo
-  - `LOC013` (Info) — dynamic/computed resource keys
-  - `LOC014` (Warning) — English-only pluralization logic
-  - `LOC015` (Info) — punctuation concatenated outside translatable strings
+  - `LOC001` (Warning) - string literal in a conditional (if/switch/ternary)
+  - `LOC002` (Warning) - string literal passed to a data-access/lookup call (Find/Get/Query)
+  - `LOC003` (Warning) - string literal in an equality comparison (==/.Equals())
+  - `LOC004` (Warning) - string concatenation in output context (Console, Debug, logging, UI)
+  - `LOC005` (Warning) - hardcoded date/number format string
+  - `LOC006` (Info) - string method called without StringComparison
+  - `LOC007` (Warning) - hardcoded pluralization logic (ternary comparing Count/Length)
+  - `LOC010` (Info) - display string not yet routed through `Localize(...)`
+  - `LOC011` (Warning) - string interpolation in localizable context
+  - `LOC012` (Warning) - hardcoded DateTime format without CultureInfo
+  - `LOC013` (Info) - dynamic/computed resource keys
+  - `LOC014` (Warning) - English-only pluralization logic
+  - `LOC015` (Info) - punctuation concatenated outside translatable strings
 - Includes a **CLI tool** (`SarifCli.cs`) for running analyzers outside the IDE, with per-file metrics (timing, size, line count).
 - Includes a **WPF + WebView2 desktop app** (`LocalizationAnalyzers.Desktop/`) for GUI-based analysis with expandable row details.
 - Diagnostics flow into **SARIF 2.1.0** (`dotnet build /p:ErrorLog=results.sarif`), which SonarQube and Azure DevOps both consume natively.
 - **Enriched SARIF output**: Results include `classification`, `sourceSnippet`, and `stringLiteral` properties. Rules include `helpUri`, `tags`, `relatedRules`, and `example` (bad/good code snippets).
 - Ships a code fix (lightbulb in IDE) that extracts a LOC010 string into a `Localize("suggested.key")` call.
-- **CI strategy:** Gate builds on *new* LOC001–LOC003 occurrences only (diff against a committed SARIF baseline). Do not fail builds on the entire legacy backlog.
+- **CI strategy:** Gate builds on *new* LOC001-LOC003 occurrences only (diff against a committed SARIF baseline). Do not fail builds on the entire legacy backlog.
 
-**Status:** Complete — 73 tests passing, NuGet package generated.
+**Status:** Complete - 132 unit tests passing, NuGet package generated.
 
-### Tool 2 — Extraction + Context CLI (`databank-cli`) — ⬜ not yet built
+### Tool 2 - Extraction + Context (databank-cli) - Complete
 
-**Input:** SARIF 2.1.0 file containing LOC010 diagnostics from Tool 1. Each LOC010 diagnostic includes:
-- File path and line number of the string literal
-- The string value itself (e.g., `"Start Pump"`)
+**Location:** `DatabankTool/` (see `DatabankTool/README.md` for build/usage details)
 
-**Key generation:** Tool 2 is self-contained — it re-derives resource keys by reading source files and running the same slug algorithm as Tool 1's code fix (`{Class}.{Method}.{slug}`). Does NOT modify Tool 1.
+The Databank pipeline scans raw resource files (`.resx`, `.rc`, `.fhx`, `.ahc`, `.json`,
+`.grf`) - where the translatable strings live for the existing DeltaV assets - and turns
+them into a structured Data Bank that translators and tools can work with.
 
-**Output: TWO separate files (not one combined file):**
+**Input:** a directory of resource files (`--input-dir <path>`, e.g. `./l10n-files`).
+Supported formats: `resx`, `rc`, `fhx`, `ahc`, `json`, `grf`. Locale is detected per file
+(from filename or path, e.g. `Messages.fr.resx`, FHX `Translated/` folders). `.rc` files
+can be resolved against a `resource.h` symbol map (`--resource-h`).
 
-#### Output 1: Resource JSON (`Resources/en.json`)
-Flat key-value pairs that Weblate reads natively:
+**Output: `data-bank.json` (version 3)** - entries grouped by key, one entry per key with
+multi-locale values and source locations:
+
 ```json
 {
-  "PumpController.InitializeUI.startpump": "Start Pump",
-  "AlarmSystem.CheckPressure.pressurehigh": "Pressure high"
+  "version": 3,
+  "generated": "2026-08-05T...",
+  "basePath": "C:/.../l10n-files",
+  "entries": [
+    {
+      "id": "IDS_WELCOME",
+      "key": "IDS_WELCOME",
+      "values": [
+        { "locale": "en", "value": "Welcome" },
+        { "locale": "zh-CN", "value": "欢迎" }
+      ],
+      "sources": {
+        "en": { "format": "resx", "file": "Resources/EN/Messages.resx", "path": "...", "line": 12 }
+      },
+      "metadata": {
+        "comment": null,
+        "formatSpecifiers": [],
+        "doNotTranslate": false,
+        "isTranslated": true
+      }
+    }
+  ],
+  "translationSummary": { "totalKeys": 1234, "translatedKeys": 900, "untranslatedKeys": 334 }
 }
-```
-Weblate natively supports JSON resource files — it parses this directly as a translation file.
-
-#### Output 2: Data Bank (`data-bank.json`)
-Generic translation glossary — translator-centric metadata about each term. Stored separately from the resource JSON:
-```json
-[
-  {
-    "key": "PumpController.InitializeUI.startpump",
-    "source_string": "Start Pump",
-    "domain": "PumpModule"
-  }
-]
 ```
 
 Fields:
-- `key` — resource key (same as in en.json)
-- `source_string` — English source text
-- `domain` — product area derived from file path (first folder after `src/`); fallback `"General"`
+- `key` - the resource key (as found in the source file)
+- `values[]` - one entry per locale; `value` is the localized string
+- `sources{}` - per-locale origin: format, relative file path, line number
+- `metadata` - `doNotTranslate`, `isTranslated`, `comment`, `formatSpecifiers`
 
-The Data Bank is intentionally generic. It answers "what does this term mean in our product?" not "which file was this found in?" — the latter lives in SARIF (for developers). The Data Bank is for translators and AI auto-translation.
+The Data Bank is translator-centric: it answers "what does this term mean in our product,
+and what are its translations?" - not "which file was this found in?" (that lives in the
+source locations above, for developers).
+
+**Sub-projects (all under `DatabankTool/`):**
+
+| Project | Purpose |
+|---------|---------|
+| `DataBank.Cli` | Extraction CLI (`databank-cli`) - also has an `edit` subcommand that writes a translation back to the source file |
+| `DataBank.Api` | ASP.NET Core REST API backed by MongoDB (import/export, CRUD, stats, sessions, extraction jobs) |
+| `DataBank.Desktop` | WPF + WebView2 GUI - **Local mode** (load `data-bank.json` from disk) and **Remote mode** (connect to the API/MongoDB) |
+| `DataBank.Import` | **Deprecated** - JSON-to-MongoDB importer; use `POST /api/import` instead |
 
 **How they connect:**
+
+```mermaid
+flowchart TD
+    RES[Resource files<br/>l10n-files/ - FHX, RC, GRF, RESX, AHC]
+    CLI[databank-cli - DataBank.Cli<br/>--input-dir &lt;dir&gt;]
+    DB[data-bank.json<br/>v3: key + per-locale values + sources + metadata]
+    LOCAL[Desktop app Local mode<br/>offline browse / edit]
+    API[POST /api/import]
+    MONGO[MongoDB]
+    REMOTE[Desktop app Remote mode / Swagger UI]
+
+    RES --> CLI --> DB
+    DB --> LOCAL
+    DB --> API --> MONGO --> REMOTE
 ```
-Tool 2 produces:
-    │
-    ├──► Resources/en.json          ──► Weblate reads directly (translation file)
-    │
-    └──► data-bank.json             ──► Data Bank (translation glossary)
-                                          │
-                                          ▼
-                                    Tool 3 syncs to Weblate glossary via API
-                                          │
-                                          ▼
-                                    Translator sees: "Start Pump" + domain context
-```
-
-This is the bridge between "the analyzer found a problem" and "the problem is now structured data that Tool 3 and Weblate can use."
-
-### Tool 3 — Data Bank + Weblate Glossary Sync — ⬜ not yet built
-
-**Data Bank** = the context records store (Output 2 from Tool 2). Can be as simple as a JSON file in the repo or a small database table.
-
-- Consolidates context records from Tool 2 into a persistent store.
-- Syncs that context into **Weblate's glossary feature** via its API: term + DeltaV-specific definition + component/domain tag + approved per-locale translations.
-- This context is used two ways:
-  1. **Human translators** see it directly in the Weblate editor UI.
-  2. **AI/auto-translation** (DeepL, LibreTranslate, etc.) gets relevant glossary entries prepended to its prompt/context, so machine translation of ambiguous terms is disambiguated per-component.
-
-**Note:** Weblate's glossary and translation files are separate features. The resource JSON (`en.json`) is the translation file. The glossary is a separate term database that provides context to translators.
 
 ---
 
 ## 4. The End-to-End Workflow
 
-```
- Dev writes/edits code
-        │
-        ▼
- Roslyn Analyzer (Tool 1) runs on build/PR
-        │
-        ├── LOC001/LOC002/LOC003 (Behavioral) ── new occurrence? ──► FAILS CI (must fix before merge)
-        │                                   └─ existing legacy? ──► warning only, tracked in backlog
-        │
-        └── LOC010 (Display) ──► info diagnostic, does not fail build
-                    │
-                    ▼
-        databank-cli CLI (Tool 2) — run periodically or on-demand, sweeps SARIF
-                    │
-                    ├──► writes Resources/en.json (key-value pairs, Weblate reads this natively)
-                    └──► writes data-bank.json (translation glossary: key + source_string + domain)
-                                │                                │
-                                │                                ▼
-                                │                     Data Bank (translation glossary)
-                                │                                │
-                                │                                ▼
-                                │                     Tool 3 syncs glossary → Weblate via API
-                                │
-                                ▼
-                    Weblate detects new en.json keys via webhook
-                                │
-                                ├──► imports key, marks "untranslated," notifies translators
-                                ├──► shows English value + DeltaV context from glossary
-                                └──► (optional) auto-translates via DeepL/LibreTranslate,
-                                      using glossary context to disambiguate terms
-                                │
-                                ▼
-                    Translator reviews/edits/approves in Weblate
-                                │
-                                ▼
-                    Weblate auto-detects new translation, opens a PR with updated
-                    fr.json / ja.json / etc.
-                                │
-                                ▼
-                    Dev reviews & merges PR
-                                │
-                                ▼
-                    CI builds ONE binary. All locale JSON packs are loaded
-                    client-side at runtime — no per-locale build.
+```mermaid
+flowchart TD
+    DEV[Dev writes/edits code] --> ANA[Roslyn Analyzer - Tool 1<br/>runs on build/PR]
+
+    ANA -->|LOC001/002/003 - Behavioral, new occurrence| FAIL[FAILS CI<br/>must fix before merge]
+    ANA -->|LOC001/002/003 - Behavioral, existing legacy| WARN[warning only<br/>tracked in backlog]
+    ANA -->|LOC010 - Display| INF[info diagnostic<br/>does not fail build]
+
+    INF --> CLI[databank-cli - Tool 2<br/>run on-demand, scans resource file directories]
+    CLI --> DB[data-bank.json<br/>translation glossary: key + per-locale values + sources + metadata]
+    DB --> STORE[Data Bank<br/>MongoDB via API, desktop UI]
+    STORE --> EDIT[Translators/editors browse and edit translations<br/>in the desktop app - Local or Remote mode<br/>edits write back to the source resource files]
+    EDIT --> EXPORT[Curated data-bank exports<br/>distributed to translation teams]
 ```
 
 ---
@@ -202,31 +183,32 @@ This is the bridge between "the analyzer found a problem" and "the problem is no
 
 | Piece | Status | Location |
 |---|---|---|
-| Tool 1 — Roslyn Analyzer (LOC001–LOC007, LOC010, LOC011–LOC015) + code fix | ✅ Complete — 73 tests passing, NuGet package generated | `src/` |
-| Tool 1 — CLI with per-file metrics | ✅ Complete — SARIF 2.1.0 + invocations[] + fileMetrics[] | `src/SarifCli.cs` |
-| Tool 1 — CLI enriched SARIF | ✅ Complete — classification, sourceSnippet, stringLiteral, rule metadata (helpUri, tags, examples) | `src/SarifCli.cs` |
-| Tool 1 — Desktop App (WPF + WebView2) | ✅ Complete — GUI with expandable row details | `src/LocalizationAnalyzers.Desktop/` |
-| Tool 1 — SARIF → SonarQube/Azure DevOps integration | ✅ Complete — SARIF 2.1.0 compatible | `src/README.md` |
-| Tool 1 — CI baseline-gate (fail only on new violations) | Documented approach, tooling not yet built | — |
-| Tool 2 — `databank-cli` CLI | Not started | — |
-| Tool 3 — Data bank + Weblate glossary sync | Not started | — |
-| Weblate instance/config for DeltaV | Not confirmed as set up | — |
+| Tool 1 - Roslyn Analyzer (LOC001-LOC007, LOC010, LOC011-LOC015) + code fix | Complete - 132 tests passing, NuGet package generated | `src/` |
+| Tool 1 - CLI with per-file metrics | Complete - SARIF 2.1.0 + invocations[] + fileMetrics[] | `src/SarifCli.cs` |
+| Tool 1 - CLI enriched SARIF | Complete - classification, sourceSnippet, stringLiteral, rule metadata (helpUri, tags, examples) | `src/SarifCli.cs` |
+| Tool 1 - Desktop App (WPF + WebView2) | Complete - GUI with expandable row details, rule toggles, CA rules, SARIF export | `src/LocalizationAnalyzers.Desktop/` |
+| Tool 1 - SARIF to SonarQube/Azure DevOps integration | Complete - SARIF 2.1.0 compatible | `src/README.md` |
+| Tool 1 - CI baseline-gate (fail only on new violations) | Documented approach, tooling not yet built | - |
+| Tool 2 - `databank-cli` CLI (extraction from resource files) | Complete - resx/rc/fhx/ahc/json/grf parsers, grouping, stats, coverage, edit/write-back | `DatabankTool/DataBank.Cli` |
+| Tool 2 - CLI tests | Complete - 178 tests passing | `DatabankTool/DataBank.Cli.Tests` |
+| Tool 2 - Data Bank store (MongoDB + REST API) | Complete - CRUD, import/export, stats, sessions, Swagger | `DatabankTool/DataBank.Api` |
+| Tool 2 - Desktop app (Local + Remote modes) | Complete - dashboard, filters, inline edit with write-back, JSON export, GRF tab | `DatabankTool/DataBank.Desktop` |
 
 ---
 
 ## 6. Open Questions / Decisions Still Needed
 
 - Exact `Localize(...)` API/method signature to standardize on across the codebase.
-- Whether Tool 2 runs on a schedule, on every PR, or on-demand.
+- Tool 2 currently runs on-demand (CLI + desktop import); whether it should run on a
+  schedule or on every PR is undecided.
 - Ownership of the SARIF baseline file and who approves suppressions/exceptions for legacy violations.
-- Which languages get DeepL/LibreTranslate auto-translation vs. human-only.
-- Domain derivation heuristic for non-standard project structures (what if no `src/` folder?).
+- Which languages get AI-assisted translation vs. human-only.
 
 ---
 
 ## 7. Ground Rules
 
-1. **Don't conflate the three tools.** Tool 1 classifies. Tool 2 extracts + contextualizes. Tool 3 stores + syncs context for translation. Keep them as separate, composable pieces.
+1. **Don't conflate the two tools.** Tool 1 classifies. Tool 2 extracts, stores, and contextualizes. Keep them as separate, composable pieces.
 2. **Behavioral strings are the priority**, not display strings. A missed translation is a UX bug; a behavioral string is what's currently costing hours-long build times.
 3. **Don't gate CI on the legacy backlog.** Only new violations should block merges.
 4. **"Module" (and terms like it) are ambiguous across DeltaV components on purpose.** Any translation tooling must carry component-level context.
@@ -257,18 +239,18 @@ This is the bridge between "the analyzer found a problem" and "the problem is no
 ## 9. DeltaV-Specific Classification Rules
 
 **Display strings** (localizable, no CI gate):
-- Alarm message text: `"Pressure high"` → display
-- Status label: `"Running"` → display
-- User prompt: `"Enter setpoint"` → display
-- Error message to operator: `"Communication lost"` → display
-- Report label: `"Module State"` → display
+- Alarm message text: `"Pressure high"` - display
+- Status label: `"Running"` - display
+- User prompt: `"Enter setpoint"` - display
+- Error message to operator: `"Communication lost"` - display
+- Report label: `"Module State"` - display
 
 **Behavioral strings** (CI gate, requires review):
-- Plant model state: `if (state == "Running")` → behavioral
-- Control mode: `switch (mode) { "manual", "auto" }` → behavioral
-- Alarm severity: `if (severity == "critical")` → behavioral
-- Unit type: `if (unit == "pressure")` → behavioral
-- Device type: `if (type == "module")` → behavioral
+- Plant model state: `if (state == "Running")` - behavioral
+- Control mode: `switch (mode) { "manual", "auto" }` - behavioral
+- Alarm severity: `if (severity == "critical")` - behavioral
+- Unit type: `if (unit == "pressure")` - behavioral
+- Device type: `if (type == "module")` - behavioral
 
 ---
 
@@ -283,7 +265,7 @@ The word "module" appears in multiple DeltaV contexts:
 | Control module | `control module` | `module de contrôle` | `module de commande` |
 | Module type (unit) | `module` | `module` | `unité` |
 
-**Weblate glossary entries**:
+**Translation context / glossary entries** carried in the Data Bank:
 
 | Source | Target (FR) | Context | Definition | Notes |
 |--------|-------------|---------|------------|-------|
@@ -297,15 +279,14 @@ The word "module" appears in multiple DeltaV contexts:
 
 ## 11. Key Technical Decisions
 
-1. **JSON over .resx**: Source of truth in JSON, consumed by runtime localization library. Enables Weblate integration and AI processing.
+1. **JSON over .resx**: Source of truth in JSON, consumed by runtime localization library. Enables tooling and AI processing.
 2. **Behavioral = CI gate**: Only behavioral strings (logic-driven) block PRs. Display strings get warnings/info but don't block.
 3. **Baseline-suppress legacy**: Only new LOC001-LOC003 violations block merges. Existing violations are warnings tracked in backlog.
-4. **SARIF 2.1.0 as standard**: All analysis output in SARIF 2.1.0 format — required by both SonarQube and Azure DevOps. `dotnet build /p:ErrorLog=` produces 2.1.0 natively on modern .NET.
-5. **Weblate as translation memory**: The glossary provides context for AI disambiguation and consistency enforcement.
-6. **DeltaV domain context**: Glossary entries explicitly define DeltaV-specific meanings.
-7. **Data Bank is translator-centric**: The data bank stores translation context (key, source string, domain), not code metadata (file, line, class). Code location stays in SARIF for developers; the data bank is for translators and AI auto-translation.
-8. **Tool 2 is self-contained**: Tool 2 re-derives resource keys from source files using the same slug algorithm as Tool 1's code fix. No modifications to Tool 1 required.
-9. **Flat JSON format**: Resource files use flat key-value pairs (matches Tool 1's code fix output). Simpler to generate and merge; nested format can be added later if needed.
+4. **SARIF 2.1.0 as standard**: All analysis output in SARIF 2.1.0 format - required by both SonarQube and Azure DevOps. `dotnet build /p:ErrorLog=` produces 2.1.0 natively on modern .NET.
+5. **DeltaV domain context**: Translation tooling explicitly defines DeltaV-specific meanings for ambiguous terms.
+6. **Data Bank is translator-centric**: `data-bank.json` stores translation context (key, per-locale values, source locations, metadata), not code metadata. Code location stays in SARIF for developers; the data bank is for translators and AI-assisted translation.
+7. **Extraction is resource-driven**: `databank-cli` scans existing resource files (resx/rc/fhx/ahc/json/grf) to find translatable strings; no analyzer/SARIF dependency.
+8. **Flat JSON format**: Resource files use flat key-value pairs. Simpler to generate and merge; nested format can be added later if needed.
 
 ---
 
@@ -330,7 +311,7 @@ Resources/zh.json        # Chinese
 }
 ```
 
-This is the format Tool 1's code fix and Tool 2 produce. Flat keys are simpler to generate, merge, and deduplicate. Weblate reads this natively.
+Flat keys are simpler to generate, merge, and deduplicate.
 
 **Nested key format (alternative):**
 ```json
@@ -347,7 +328,7 @@ This is the format Tool 1's code fix and Tool 2 produce. Flat keys are simpler t
 }
 ```
 
-Nested format is more human-readable for large key sets but harder to merge automatically. Can be adopted later if the team prefers it — a flat-to-nested converter is straightforward.
+Nested format is more human-readable for large key sets but harder to merge automatically. Can be adopted later if the team prefers it - a flat-to-nested converter is straightforward.
 
 ---
 
@@ -367,7 +348,7 @@ Nested format is more human-readable for large key sets but harder to merge auto
 ### Phase 3: CI/CD Integration (Week 5-6)
 8. Configure SARIF generation in pipeline
 9. Implement baseline-gate script (diff against committed baseline)
-10. Setup Weblate integration with webhook for new keys
+10. Define the translation consumption workflow (data-bank exports, runtime resource packs)
 
 ### Phase 4: Production Rollout (Week 7-8)
 11. Run analyzer on full DeltaV codebase, categorize all strings
@@ -382,6 +363,6 @@ Nested format is more human-readable for large key sets but harder to merge auto
 |--------|--------|-------------|
 | New behavioral strings blocked | 100% | CI gate enforcement |
 | Display strings extracted | 90%+ | `Resources/en.json` coverage |
-| Translation context accuracy | 95%+ | Weblate glossary usage |
+| Translation context accuracy | 95%+ | Data Bank glossary usage |
 | AI translation quality | 90%+ | Human review of first batch |
 | Build processes | 1 (was 5-10+) | Pipeline count |

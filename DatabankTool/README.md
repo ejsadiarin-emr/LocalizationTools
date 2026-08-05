@@ -7,45 +7,75 @@ A localization data extraction and management pipeline for DeltaV. Extracts tran
 ### Prerequisites
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download) (or later)
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (for MongoDB)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (only needed for Remote mode — MongoDB)
 - [MongoDB Compass](https://www.mongodb.com/compass) (optional, for visual DB inspection)
 
-### Option 1: Full Stack (MongoDB + API)
+The desktop app has two modes:
+
+- **Local** — import a `data-bank.json` produced by the CLI and browse it offline (no server).
+- **Remote** — connect to the REST API backed by MongoDB.
+
+### Option 1: CLI extraction → Local mode (no server)
+
+Extract translatable strings from a directory of resource files into `data-bank.json`:
 
 ```bash
-# Start MongoDB container and API server
+# make (INPUT_DIR is required):
+make run-databank INPUT_DIR=./l10n-files
+
+# raw dotnet run (same thing):
+dotnet run --project DatabankTool/DataBank.Cli/DataBank.Cli.csproj -c Release -- --input-dir ./l10n-files
+
+# with options (output path, stats, verbose):
+make run-databank INPUT_DIR=./l10n-files ARGS="--output ./out/data-bank.json --stats --verbose"
+dotnet run --project DatabankTool/DataBank.Cli/DataBank.Cli.csproj -c Release -- --input-dir ./l10n-files --output ./out/data-bank.json --stats --verbose
+```
+
+Then open the desktop app in **Local** mode and click **Load DataBank JSON** to pick the
+generated `data-bank.json`:
+
+```bash
+make run-databank-desktop
+# raw:
+dotnet run --project DatabankTool/DataBank.Desktop/DataBank.Desktop.csproj -c Release
+```
+
+### Option 2: Full Stack → Remote mode (MongoDB + API)
+
+```bash
+# make: starts MongoDB (docker compose) then the API server
 make run-databank-stack
+
+# raw equivalent:
+docker compose -f DatabankTool/docker-compose.yml up -d mongodb
+dotnet run --project DatabankTool/DataBank.Api/DataBank.Api.csproj -c Release
 ```
 
 This starts:
-- **MongoDB** on `localhost:27017`
+
+- **MongoDB** on `localhost:27017` (database `databank`)
 - **API** on `http://localhost:5000`
 - **Swagger UI** at `http://localhost:5000/swagger`
 
 To stop:
+
 ```bash
 # Stop the API (Ctrl+C), then stop MongoDB
 make stop-mongo
+# raw:
+docker compose -f DatabankTool/docker-compose.yml down
 ```
 
-### Option 2: Desktop App
+### Option 3: Desktop App (either mode)
 
 ```bash
-# Build and run the Desktop app
 make run-databank-desktop
+# raw:
+dotnet run --project DatabankTool/DataBank.Desktop/DataBank.Desktop.csproj -c Release
 ```
 
-The app starts in **Local mode** by default. Switch to **Remote mode** in the toolbar to connect to a running API.
-
-### Option 3: CLI Extraction Only
-
-```bash
-# Extract strings from a directory of resource files
-make run-databank INPUT_DIR=./l10n-files
-
-# With options
-make run-databank INPUT_DIR=./l10n-files ARGS="--output ./out/data-bank.json --stats --verbose"
-```
+The app starts in **Local** mode by default. Switch to **Remote** mode in the toolbar to
+connect to a running API (see [Desktop App Modes](#desktop-app-modes)).
 
 ### Connecting to MongoDB Compass
 
@@ -61,32 +91,13 @@ Collections:
 
 ## Architecture
 
-```
-┌─────────────┐     ┌──────────────┐     ┌─────────────┐
-│  Resource   │────▶│  databank-cli  │────▶│ data-bank   │
-│  Files      │     │  (CLI)       │     │ .json       │
-└─────────────┘     └──────────────┘     └──────┬──────┘
-                                                │
-                          ┌─────────────────────┤
-                          ▼                     ▼
-                   ┌─────────────┐     ┌──────────────┐
-                   │   Import    │     │     API      │
-                   │  (deprecated│     │  /api/import │
-                   └──────┬──────┘     └──────┬───────┘
-                          │                   │
-                          └─────────┬─────────┘
-                                    ▼
-                              ┌───────────┐
-                              │  MongoDB  │
-                              └─────┬─────┘
-                                    │
-                          ┌─────────┴─────────┐
-                          ▼                   ▼
-                   ┌─────────────┐     ┌──────────────┐
-                   │   Desktop   │     │  Swagger UI  │
-                   │  (WPF +     │     │  /swagger    │
-                   │  WebView2)  │     │              │
-                   └─────────────┘     └──────────────┘
+```mermaid
+flowchart TD
+    RES[Resource Files] --> CLI[databank-cli]
+    CLI --> DB[data-bank.json]
+    DB --> MONGO[MongoDB via API<br/>/api/import]
+    MONGO --> DESK[Desktop app<br/>WPF + WebView2]
+    MONGO --> SWAG[Swagger UI<br/>/swagger]
 ```
 
 ## Sub-Projects
@@ -109,6 +120,7 @@ Collections:
 | `make run-databank-desktop` | Run Desktop app |
 | `make run-databank-api` | Run API server |
 | `make run-databank-stack` | Start MongoDB + API |
+| `make import-data` | Import `data-bank.json` into the API (`POST /api/import`) |
 | `make start-mongo` | Start MongoDB container |
 | `make stop-mongo` | Stop MongoDB container |
 | `make test-databank` | Run CLI tests |
@@ -170,14 +182,39 @@ Full interactive API docs available at `http://localhost:5000/swagger` when the 
 ## Desktop App Modes
 
 ### Local Mode
-- Load a `data-bank.json` file from disk via file dialog
+- Load a `data-bank.json` file from disk via file dialog (e.g., the output of
+  `make run-databank INPUT_DIR=...`)
 - No server required — works completely offline
 
 ### Remote Mode
-- Connects to the API at `http://localhost:5000`
+- Connects to the API at `http://localhost:5000` (start it with `make run-databank-stack`)
 - Fetches entries from MongoDB
 - Shows connection status with Retry / Switch to Local fallback buttons
+- **Base path** input for resolving relative source files (`~` expands to your home
+  directory); used by "Open Source File" and write-back. Persists across restarts.
+- **Import Data to API** button — uploads a `data-bank.json` directly to the API
+  (`POST /api/import`), no curl needed
 - Mode preference persists across app restarts
+
+## Common Things to Do in the Desktop App
+
+- **Switch modes (Local / Remote)** — toolbar radio buttons; the mode persists across restarts.
+- **Load data** — Local: **Load DataBank JSON** file dialog. Remote: **Connect API**
+  fetches all entries from MongoDB.
+- **Dashboard** — total entries, locales, formats, translated/untranslated counts, and a
+  per-locale completion bar.
+- **Filter entries** — multi-select **locales** (dropdown with Select All / Clear All),
+  **format** (resx/rc/fhx/ahc/json), **status** (Translated / Untranslated / Do Not
+  Translate), and free-text **search** across keys and values.
+- **Edit translations inline** — double-click a locale cell, type, press Enter. The new
+  value is **written back to the source file** when the entry has source info (uses the
+  base path to resolve relative files); otherwise it is kept in memory only.
+- **Inspect an entry** — click a row to open the detail panel: all locale values, source
+  file/line/format, status, comment, format specifiers, and an **Open Source File** button
+  (opens in VS Code at the exact line when VS Code is installed).
+- **Export JSON** — exports the current filtered view
+  (`databank-export-<timestamp>-<locales>.json`) for sharing subsets with translators.
+- **GRF Files tab** — GRF entries are listed separately from the main table.
 
 ## Common Workflows
 
@@ -189,15 +226,31 @@ make run-databank-desktop
 # In Desktop: Load DataBank JSON → select data-bank.json
 ```
 
-### Full pipeline with API
+Raw equivalents:
 
 ```bash
-make run-databank-stack
+dotnet run --project DatabankTool/DataBank.Cli/DataBank.Cli.csproj -c Release -- --input-dir ./l10n-files
+dotnet run --project DatabankTool/DataBank.Desktop/DataBank.Desktop.csproj -c Release
+```
+
+### Full pipeline with API (Remote mode)
+
+```bash
+make run-databank-stack                       # MongoDB + API
 # In another terminal:
-make run-databank INPUT_DIR=./l10n-files
-# Import into API:
-curl -X POST http://localhost:5000/api/import -F "file=@data-bank.json"
+make run-databank INPUT_DIR=./l10n-files       # produce data-bank.json
+make import-data                              # curl POST /api/import with data-bank.json
 # Browse in Desktop (Remote mode) or Swagger UI
+```
+
+Raw equivalents:
+
+```bash
+docker compose -f DatabankTool/docker-compose.yml up -d mongodb
+dotnet run --project DatabankTool/DataBank.Api/DataBank.Api.csproj -c Release
+
+dotnet run --project DatabankTool/DataBank.Cli/DataBank.Cli.csproj -c Release -- --input-dir ./l10n-files
+curl -X POST http://localhost:5000/api/import -F "file=@data-bank.json"
 ```
 
 ### Re-import updated data
@@ -207,4 +260,5 @@ curl -X POST http://localhost:5000/api/import -F "file=@data-bank.json"
 make run-databank INPUT_DIR=./l10n-files
 # Re-import (upserts — existing entries are updated)
 curl -X POST http://localhost:5000/api/import -F "file=@data-bank.json"
+# or use the Desktop app's Import Data to API button (Remote mode)
 ```

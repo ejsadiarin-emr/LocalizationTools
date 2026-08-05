@@ -1,36 +1,58 @@
 # DataBank API
 
-REST API for accessing and managing localization data extracted by the DataBank CLI tool.
+REST API for accessing and managing localization data. Backed by MongoDB. The DataBank
+CLI extracts `data-bank.json` from resource files; this API imports that data and serves
+it to the desktop app and Swagger UI.
 
 ## Getting Started
 
+Start MongoDB, then the API:
+
 ```bash
-cd DatabankTool/DataBank.Api
-dotnet run
+# From the repo root (Makefile):
+make run-databank-stack          # starts MongoDB (docker compose) + the API
+
+# Raw commands:
+docker compose -f DatabankTool/docker-compose.yml up -d mongodb
+dotnet run --project DatabankTool/DataBank.Api/DataBank.Api.csproj -c Release
 ```
 
-The API starts at `https://localhost:5001` (or `http://localhost:5000`).
+The API listens at `http://localhost:5000`. MongoDB runs on `localhost:27017`
+(database `databank`).
 
-Swagger UI is available at `/swagger` in development mode.
+Swagger UI is available at `http://localhost:5000/swagger` in development mode.
+
+## Importing Data
+
+```bash
+make run-databank INPUT_DIR=./l10n-files        # produce data-bank.json
+curl -X POST http://localhost:5000/api/import -F "file=@data-bank.json"
+# (or use `make import-data`)
+```
+
+Import is an upsert: existing entries are replaced, new entries are inserted.
 
 ## Endpoints
 
-### Entries
+### Entries (`/api/entries`)
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/entries` | List entries (with filtering & pagination) |
-| GET | `/api/entries/{id}` | Get a single entry |
-| POST | `/api/entries` | Create a new entry |
-| PUT | `/api/entries/{id}` | Update an entry |
-| DELETE | `/api/entries/{id}` | Delete an entry |
+| GET | `/api/entries` | List entries; filters: `locale`, `format` (`resx`/`rc`/`fhx`/`ahc`/`json`/`grf`), `key` |
+| GET | `/api/entries/count` | Entry count (optional `locale` filter) |
+| GET | `/api/entries/by-key/{key}` | Get a single entry by key |
+| POST | `/api/entries` | Create a new entry (fails if the key already exists; `Id` = `Key`) |
+| PUT | `/api/entries/{key}` | Update an entry |
+| PUT | `/api/entries/{key}/locales/{locale}` | Update a single locale value - body: `{ "value": "..." }` |
+| PATCH | `/api/entries/{key}/values` | Bulk-update locale values |
+| DELETE | `/api/entries/{key}` | Delete an entry |
 
-**Query Parameters for GET /api/entries:**
-- `locale` - Filter by locale (e.g., `en-US`, `fr`)
-- `format` - Filter by source format (`resx`, `rc`, `fhx`, `ahc`)
-- `status` - Filter by translation status (`Translated`, `Untranslated`, `DoNotTranslate`, `NeedsReview`)
-- `page` - Page number (default: 1)
-- `pageSize` - Items per page (default: 50)
+### Import / Export
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/import` | Import a `data-bank.json` file (multipart `file` field, upsert) |
+| GET | `/api/databank/export` | Export all data in `data-bank.json` shape (`version`, `entries[...]`, `translationSummary`) |
 
 ### Extraction
 
@@ -46,11 +68,13 @@ Swagger UI is available at `/swagger` in development mode.
 | GET | `/api/stats` | Get comprehensive statistics |
 | GET | `/api/stats/coverage` | Get coverage summary |
 
-### Health
+### Other
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/health` | Health check endpoint |
+| GET | `/api/health` | Health check (status, entry count, API version) |
+| GET | `/api/sessions` | Translation session tracking |
+| GET | `/api/metadata` | Dataset metadata |
 
 ## Example Usage
 
@@ -58,46 +82,43 @@ Swagger UI is available at `/swagger` in development mode.
 # Get all entries
 curl http://localhost:5000/api/entries
 
-# Filter by locale
-curl "http://localhost:5000/api/entries?locale=fr"
+# Filter by locale / format / key
+curl "http://localhost:5000/api/entries?locale=zh-CN&format=rc"
 
-# Filter by format and status
-curl "http://localhost:5000/api/entries?format=resx&status=Translated"
+# Count entries
+curl "http://localhost:5000/api/entries/count"
 
-# Paginate
-curl "http://localhost:5000/api/entries?page=1&pageSize=10"
+# Get a single entry
+curl http://localhost:5000/api/entries/by-key/IDS_WELCOME
 
-# Get statistics
-curl http://localhost:5000/api/stats
+# Update one locale value
+curl -X PUT http://localhost:5000/api/entries/IDS_WELCOME/locales/zh-CN \
+  -H "Content-Type: application/json" -d '{"value": "欢迎"}'
 
-# Get coverage
-curl "http://localhost:5000/api/stats/coverage?locale=de"
+# Import data-bank.json (upsert)
+curl -X POST http://localhost:5000/api/import -F "file=@data-bank.json"
 
-# Trigger extraction
-curl -X POST http://localhost:5000/api/extract \
-  -H "Content-Type: application/json" \
-  -d '{"sourceDirectory": "/path/to/source/files"}'
-
-# Check extraction status
-curl http://localhost:5000/api/extract/{jobId}
+# Export all data
+curl http://localhost:5000/api/databank/export
 ```
 
 ## Configuration
 
-Edit `appsettings.json`:
+Edit `DatabankTool/DataBank.Api/appsettings.json`:
 
 ```json
 {
-  "DataBank": {
-    "DataFilePath": "data-bank.json"
+  "MongoDb": {
+    "ConnectionString": "mongodb://localhost:27017",
+    "DatabaseName": "databank"
   },
   "Cors": {
-    "AllowedOrigins": ["http://localhost:3000"]
+    "AllowedOrigins": ["http://localhost:3000", "http://localhost:4200"]
   }
 }
 ```
 
 ## Requirements
 
-- .NET 8.0 SDK
-- A `data-bank.json` file (generated by the DataBank CLI tool)
+- .NET 10 SDK
+- MongoDB (start it with `docker compose -f DatabankTool/docker-compose.yml up -d mongodb`, or use an existing instance)
