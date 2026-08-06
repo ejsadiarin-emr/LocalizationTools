@@ -16,6 +16,8 @@ public partial class MainWindow : Window
     private bool _isRemoteMode;
     private string _apiBaseUrl = "http://localhost:5000";
     private string? _basePath;
+    private string? _dataBankPath;
+    private JsonElement? _dataBankJson;
 
     public MainWindow()
     {
@@ -80,6 +82,9 @@ public partial class MainWindow : Window
                         break;
                     case "writebackEdit":
                         HandleWritebackEdit(root);
+                        break;
+                    case "persistMetadata":
+                        HandlePersistMetadata(root);
                         break;
                 }
             }
@@ -241,7 +246,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void HandleWritebackEdit(JsonElement root)
+    private async void HandleWritebackEdit(JsonElement root)
     {
         try
         {
@@ -303,6 +308,18 @@ public partial class MainWindow : Window
 
             var result = new FileWriter().EditEntry(rawEntry, newValue);
 
+            if (result.Success)
+            {
+                if (_isRemoteMode)
+                {
+                    await PersistEditToRemote(key, locale, newValue);
+                }
+                else
+                {
+                    PersistEditToLocal(key, locale, newValue, result.Line);
+                }
+            }
+
             PostWritebackResult(new
             {
                 success = result.Success,
@@ -314,7 +331,9 @@ public partial class MainWindow : Window
             });
 
             StatusText.Text = result.Success
-                ? $"Saved {key} [{locale}] -> {resolvedPath}:{line}"
+                ? (_isRemoteMode
+                    ? $"Saved {key} [{locale}] -> {resolvedPath}:{line} + remote"
+                    : $"Saved {key} [{locale}] -> {resolvedPath}:{line} + data-bank.json")
                 : $"Write-back failed: {result.ErrorMessage}";
         }
         catch (Exception ex)
@@ -334,6 +353,176 @@ public partial class MainWindow : Window
         }
         catch
         {
+        }
+    }
+
+    private void PersistEditToLocal(string key, string locale, string newValue, int? newLine)
+    {
+        if (_dataBankPath == null || _dataBankJson == null)
+            return;
+
+        try
+        {
+            var data = _dataBankJson.Value;
+            if (!data.TryGetProperty("entries", out var entries))
+                return;
+
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var fullJson = data.GetRawText();
+            using var doc = JsonDocument.Parse(fullJson);
+            var root = doc.RootElement.Clone();
+
+            var updatedRoot = UpdateEntryInJson(root, key, locale, newValue, newLine);
+            var writeOptions = new JsonSerializerOptions { WriteIndented = true };
+            var serialized = JsonSerializer.Serialize(updatedRoot, writeOptions);
+            File.WriteAllText(_dataBankPath, serialized);
+
+            // Update cached JSON
+            _dataBankJson = JsonDocument.Parse(serialized).RootElement;
+        }
+        catch
+        {
+            StatusText.Text = $"Warning: source file saved but data-bank.json write failed for {key} [{locale}]";
+        }
+    }
+
+    private static JsonElement UpdateEntryInJson(JsonElement root, string key, string locale, string newValue, int? newLine)
+    {
+        var entriesJson = root.GetProperty("entries").GetRawText();
+        var entriesList = JsonSerializer.Deserialize<List<Dictionary<string, JsonElement>>>(entriesJson)!;
+
+        foreach (var entryDict in entriesList)
+        {
+            if (entryDict.TryGetValue("key", out var keyElement) && keyElement.GetString() == key)
+            {
+                // Update values
+                if (entryDict.TryGetValue("values", out var valuesElement))
+                {
+                    var valuesList = JsonSerializer.Deserialize<List<Dictionary<string, JsonElement>>>(valuesElement.GetRawText())!;
+                    foreach (var valDict in valuesList)
+                    {
+                        if (valDict.TryGetValue("locale", out var locElement) && locElement.GetString() == locale)
+                        {
+                            valDict["value"] = JsonSerializer.SerializeToElement(newValue);
+                            break;
+                        }
+                    }
+                    entryDict["values"] = JsonSerializer.SerializeToElement(valuesList);
+                }
+
+                // Update sources[locale].line
+                if (newLine.HasValue && entryDict.TryGetValue("sources", out var sourcesElement) && sourcesElement.TryGetProperty(locale, out var _))
+                {
+                    var sourcesDict = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(sourcesElement.GetRawText())!;
+                    if (sourcesDict.TryGetValue(locale, out var srcElement))
+                    {
+                        var srcDict = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(srcElement.GetRawText())!;
+                        srcDict["line"] = JsonSerializer.SerializeToElement(newLine.Value);
+                        sourcesDict[locale] = JsonSerializer.SerializeToElement(srcDict);
+                        entryDict["sources"] = JsonSerializer.SerializeToElement(sourcesDict);
+                    }
+                }
+
+                break;
+            }
+        }
+
+        var rebuiltRoot = root.Clone();
+        var rootDict = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(rebuiltRoot.GetRawText())!;
+        rootDict["entries"] = JsonSerializer.SerializeToElement(entriesList);
+        return JsonSerializer.SerializeToElement(rootDict);
+    }
+
+    private async Task PersistEditToRemote(string key, string locale, string newValue)
+    {
+        try
+        {
+            var success = await _apiClient.UpdateLocaleValueAsync(key, locale, newValue);
+            if (!success)
+            {
+                StatusText.Text = $"Warning: source file saved but remote update failed for {key} [{locale}]";
+            }
+        }
+        catch
+        {
+            StatusText.Text = $"Warning: source file saved but remote update failed for {key} [{locale}]";
+        }
+    }
+
+    private async void HandlePersistMetadata(JsonElement root)
+    {
+        try
+        {
+            if (!root.TryGetProperty("key", out var keyProp) ||
+                !root.TryGetProperty("metadata", out var metadataProp))
+            {
+                return;
+            }
+
+            var key = keyProp.GetString() ?? "";
+            if (string.IsNullOrEmpty(key))
+                return;
+
+            if (_isRemoteMode)
+            {
+                // Find the full entry from the API and update it
+                var entries = await _apiClient.FetchEntriesAsync();
+                var entry = entries.FirstOrDefault(e =>
+                    e.TryGetProperty("key", out var k) && k.GetString() == key);
+                if (entry.ValueKind != JsonValueKind.Undefined)
+                {
+                    // Update the metadata in the entry
+                    var entryDict = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(entry.GetRawText())!;
+                    entryDict["metadata"] = metadataProp;
+                    var updatedEntry = JsonSerializer.SerializeToElement(entryDict);
+                    var success = await _apiClient.UpdateEntryAsync(key, updatedEntry);
+                    if (!success)
+                    {
+                        StatusText.Text = $"Warning: metadata update failed for {key}";
+                    }
+                    else
+                    {
+                        StatusText.Text = $"Metadata saved for {key}";
+                    }
+                }
+            }
+            else
+            {
+                // Local mode: update _dataBankJson and write to disk
+                if (_dataBankPath == null || _dataBankJson == null)
+                    return;
+
+                var data = _dataBankJson.Value;
+                if (!data.TryGetProperty("entries", out var entries))
+                    return;
+
+                var entriesJson = entries.GetRawText();
+                var entriesList = JsonSerializer.Deserialize<List<Dictionary<string, JsonElement>>>(entriesJson)!;
+
+                foreach (var entryDict in entriesList)
+                {
+                    if (entryDict.TryGetValue("key", out var keyElement) && keyElement.GetString() == key)
+                    {
+                        entryDict["metadata"] = metadataProp;
+                        break;
+                    }
+                }
+
+                var rootDict = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(data.GetRawText())!;
+                rootDict["entries"] = JsonSerializer.SerializeToElement(entriesList);
+                var updatedRoot = JsonSerializer.SerializeToElement(rootDict);
+
+                var writeOptions = new JsonSerializerOptions { WriteIndented = true };
+                var serialized = JsonSerializer.Serialize(updatedRoot, writeOptions);
+                File.WriteAllText(_dataBankPath, serialized);
+                _dataBankJson = JsonDocument.Parse(serialized).RootElement;
+
+                StatusText.Text = $"Metadata saved for {key}";
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = $"Metadata save error: {ex.Message}";
         }
     }
 
@@ -440,6 +629,9 @@ public partial class MainWindow : Window
                 {
                     _basePath = basePathProp.GetString();
                 }
+
+                _dataBankPath = dialog.FileName;
+                _dataBankJson = data;
 
                 if (data.TryGetProperty("entries", out var entries))
                 {

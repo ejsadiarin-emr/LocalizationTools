@@ -671,18 +671,25 @@
         html += '<hr style="border-color:#3c3c3c;margin:16px 0">';
         html += '<div class="detail-label">Metadata</div>';
         html += detailField('Status', '<span class="status-badge status-' + status + '">' + getStatusLabel(status) + '</span>');
-        html += '<div class="detail-field">' +
-            '<div class="detail-label">Comment</div>' +
-            '<input type="text" class="detail-input" id="meta-comment" data-key="' + escapeAttr(entry.key) + '" value="' + escapeAttr((entry.metadata && entry.metadata.comment) || '') + '" placeholder="No comment">' +
+
+        var commentVal = (entry.metadata && entry.metadata.comment) || '';
+        html += '<div class="detail-field detail-editable-field">' +
+            '<div class="detail-label">Comment <span class="detail-edit-icon meta-edit-icon" data-field="comment" data-key="' + escapeAttr(entry.key) + '">\u270E</span></div>' +
+            '<div class="detail-value mono detail-editable-meta" data-field="comment" data-key="' + escapeAttr(entry.key) + '">' + (commentVal ? escapeHtml(commentVal) : '<span class="empty-value">\u2014</span>') + '</div>' +
             '</div>';
-        html += '<div class="detail-field">' +
-            '<div class="detail-label">Do Not Translate</div>' +
-            '<label class="detail-checkbox-label"><input type="checkbox" id="meta-dnt" data-key="' + escapeAttr(entry.key) + '"' + (entry.metadata && entry.metadata.doNotTranslate ? ' checked' : '') + '> Do not translate this key</label>' +
+
+        var dntVal = entry.metadata && entry.metadata.doNotTranslate;
+        html += '<div class="detail-field detail-editable-field">' +
+            '<div class="detail-label">Do Not Translate <span class="detail-edit-icon meta-edit-icon" data-field="doNotTranslate" data-key="' + escapeAttr(entry.key) + '">\u270E</span></div>' +
+            '<div class="detail-value detail-editable-meta" data-field="doNotTranslate" data-key="' + escapeAttr(entry.key) + '">' + (dntVal ? 'Yes' : 'No') + '</div>' +
             '</div>';
+
         html += detailField('Is Translated', entry.metadata && entry.metadata.isTranslated ? 'Yes' : 'No');
-        html += '<div class="detail-field">' +
-            '<div class="detail-label">Format Specifiers</div>' +
-            '<input type="text" class="detail-input" id="meta-fmt" data-key="' + escapeAttr(entry.key) + '" value="' + escapeAttr((entry.metadata && entry.metadata.formatSpecifiers && entry.metadata.formatSpecifiers.length > 0) ? entry.metadata.formatSpecifiers.join(', ') : '') + '" placeholder="e.g. %s, %d">' +
+
+        var fmtVal = (entry.metadata && entry.metadata.formatSpecifiers && entry.metadata.formatSpecifiers.length > 0) ? entry.metadata.formatSpecifiers.join(', ') : '';
+        html += '<div class="detail-field detail-editable-field">' +
+            '<div class="detail-label">Format Specifiers <span class="detail-edit-icon meta-edit-icon" data-field="formatSpecifiers" data-key="' + escapeAttr(entry.key) + '">\u270E</span></div>' +
+            '<div class="detail-value mono detail-editable-meta" data-field="formatSpecifiers" data-key="' + escapeAttr(entry.key) + '">' + (fmtVal ? escapeHtml(fmtVal) : '<span class="empty-value">\u2014</span>') + '</div>' +
             '</div>';
 
         detailContent.innerHTML = html;
@@ -827,42 +834,94 @@
     }
 
     function addMetadataEditing(entry) {
-        var commentInput = document.getElementById('meta-comment');
-        var dntCheckbox = document.getElementById('meta-dnt');
-        var fmtInput = document.getElementById('meta-fmt');
+        detailContent.querySelectorAll('.meta-edit-icon').forEach(function (icon) {
+            icon.addEventListener('click', function () {
+                var field = icon.getAttribute('data-field');
+                var key = icon.getAttribute('data-key');
+                var valueContainer = detailContent.querySelector('.detail-editable-meta[data-field="' + field + '"][data-key="' + key + '"]');
+                if (!valueContainer || valueContainer.getAttribute('contenteditable') === 'true') return;
 
-        if (commentInput) {
-            commentInput.addEventListener('blur', function () {
-                var newComment = commentInput.value.trim();
-                if (!entry.metadata) entry.metadata = {};
-                var oldComment = entry.metadata.comment;
-                if (newComment !== oldComment) {
-                    entry.metadata.comment = newComment || null;
-                    persistMetadata(entry);
+                var currentValue = '';
+                if (field === 'comment') {
+                    currentValue = (entry.metadata && entry.metadata.comment) || '';
+                } else if (field === 'doNotTranslate') {
+                    currentValue = entry.metadata && entry.metadata.doNotTranslate ? 'Yes' : 'No';
+                } else if (field === 'formatSpecifiers') {
+                    currentValue = (entry.metadata && entry.metadata.formatSpecifiers && entry.metadata.formatSpecifiers.length > 0) ? entry.metadata.formatSpecifiers.join(', ') : '';
                 }
-            });
-        }
 
-        if (dntCheckbox) {
-            dntCheckbox.addEventListener('change', function () {
-                if (!entry.metadata) entry.metadata = {};
-                entry.metadata.doNotTranslate = dntCheckbox.checked;
-                persistMetadata(entry);
-            });
-        }
+                valueContainer.setAttribute('contenteditable', 'true');
+                valueContainer.textContent = currentValue;
+                valueContainer.focus();
 
-        if (fmtInput) {
-            fmtInput.addEventListener('blur', function () {
-                var raw = fmtInput.value.trim();
-                if (!entry.metadata) entry.metadata = {};
-                var newSpecifiers = raw ? raw.split(',').map(function (s) { return s.trim(); }).filter(Boolean) : [];
-                var oldSpecifiers = entry.metadata.formatSpecifiers || [];
-                if (JSON.stringify(newSpecifiers) !== JSON.stringify(oldSpecifiers)) {
-                    entry.metadata.formatSpecifiers = newSpecifiers;
-                    persistMetadata(entry);
+                var range = document.createRange();
+                range.selectNodeContents(valueContainer);
+                var sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+
+                function saveMetaEdit() {
+                    valueContainer.removeAttribute('contenteditable');
+                    var newValue = valueContainer.textContent.trim();
+                    var changed = false;
+
+                    if (!entry.metadata) entry.metadata = {};
+
+                    if (field === 'comment') {
+                        if (newValue !== (entry.metadata.comment || '')) {
+                            entry.metadata.comment = newValue || null;
+                            changed = true;
+                        }
+                    } else if (field === 'doNotTranslate') {
+                        var newDnt = newValue.toLowerCase() === 'yes';
+                        if (newDnt !== entry.metadata.doNotTranslate) {
+                            entry.metadata.doNotTranslate = newDnt;
+                            changed = true;
+                        }
+                    } else if (field === 'formatSpecifiers') {
+                        var newSpecifiers = newValue ? newValue.split(',').map(function (s) { return s.trim(); }).filter(Boolean) : [];
+                        var oldSpecifiers = entry.metadata.formatSpecifiers || [];
+                        if (JSON.stringify(newSpecifiers) !== JSON.stringify(oldSpecifiers)) {
+                            entry.metadata.formatSpecifiers = newSpecifiers;
+                            changed = true;
+                        }
+                    }
+
+                    if (field === 'doNotTranslate') {
+                        valueContainer.textContent = entry.metadata.doNotTranslate ? 'Yes' : 'No';
+                    } else if (field === 'comment') {
+                        valueContainer.innerHTML = entry.metadata.comment ? escapeHtml(entry.metadata.comment) : '<span class="empty-value">\u2014</span>';
+                    } else if (field === 'formatSpecifiers') {
+                        var fmtDisplay = (entry.metadata.formatSpecifiers && entry.metadata.formatSpecifiers.length > 0) ? entry.metadata.formatSpecifiers.join(', ') : '';
+                        valueContainer.innerHTML = fmtDisplay ? escapeHtml(fmtDisplay) : '<span class="empty-value">\u2014</span>';
+                    }
+
+                    updateDashboard();
+
+                    if (changed) {
+                        persistMetadata(entry);
+                    }
                 }
+
+                valueContainer.addEventListener('blur', saveMetaEdit, { once: true });
+                valueContainer.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        valueContainer.blur();
+                    } else if (e.key === 'Escape') {
+                        valueContainer.removeAttribute('contenteditable');
+                        if (field === 'doNotTranslate') {
+                            valueContainer.textContent = entry.metadata.doNotTranslate ? 'Yes' : 'No';
+                        } else if (field === 'comment') {
+                            valueContainer.innerHTML = (entry.metadata && entry.metadata.comment) ? escapeHtml(entry.metadata.comment) : '<span class="empty-value">\u2014</span>';
+                        } else if (field === 'formatSpecifiers') {
+                            var fmtRestore = (entry.metadata && entry.metadata.formatSpecifiers && entry.metadata.formatSpecifiers.length > 0) ? entry.metadata.formatSpecifiers.join(', ') : '';
+                            valueContainer.innerHTML = fmtRestore ? escapeHtml(fmtRestore) : '<span class="empty-value">\u2014</span>';
+                        }
+                    }
+                });
             });
-        }
+        });
     }
 
     function persistMetadata(entry) {

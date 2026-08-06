@@ -108,6 +108,37 @@ public class ApiClient : IDisposable
         }
     }
 
+    public async Task<bool> UpdateLocaleValueAsync(string key, string locale, string value)
+    {
+        try
+        {
+            var request = new { value = value };
+            var json = JsonSerializer.Serialize(request);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+            var response = await _httpClient.PutAsync($"{_baseUrl}/api/entries/{Uri.EscapeDataString(key)}/locales/{Uri.EscapeDataString(locale)}", content);
+            return response.IsSuccessStatusCode;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public async Task<bool> UpdateEntryAsync(string key, JsonElement entry)
+    {
+        try
+        {
+            var json = entry.GetRawText();
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+            var response = await _httpClient.PutAsync($"{_baseUrl}/api/entries/{Uri.EscapeDataString(key)}", content);
+            return response.IsSuccessStatusCode;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     public void Dispose()
     {
         Dispose(true);
