@@ -418,7 +418,7 @@
                 var val = getLocaleValue(entry, loc);
                 var titleAttr = escapeAttr(val);
                 var displayVal = escapeHtml(truncate(val, 50));
-                rowHtml += '<td class="locale-cell" data-locale="' + escapeAttr(loc) + '" data-key="' + escapeAttr(entry.key) + '" title="' + titleAttr + '">' + (displayVal || '<span class="empty-value">\u2014</span>') + '</td>';
+                rowHtml += '<td class="locale-cell" data-locale="' + escapeAttr(loc) + '" data-key="' + escapeAttr(entry.key) + '" title="' + titleAttr + '">' + (displayVal || '<span class="empty-value">\u2014</span>') + ' <span class="edit-icon">\u270E</span></td>';
             });
             tr.innerHTML = rowHtml;
 
@@ -638,7 +638,7 @@
                     html += detailField(locale + ' Line', src.line.toString());
                 }
                 if (src.file) {
-                    html += '<div class="detail-field"><button class="open-source-btn" data-file="' + escapeAttr(src.file) + '" data-line="' + (src.line || '') + '">Open Source File</button></div>';
+                    html += '<div class="detail-field"><button class="open-source-btn" data-file="' + escapeAttr(src.file) + '" data-line="' + (src.line || '') + '">Open source file in VSCode</button></div>';
                 }
             });
         }

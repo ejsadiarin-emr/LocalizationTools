@@ -403,6 +403,30 @@ section {
     border-left: 3px solid #858585;
 }
 
+/* Edit icon for locale cells */
+.locale-cell {
+    position: relative;
+}
+
+.locale-cell .edit-icon {
+    display: none;
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    color: #858585;
+    pointer-events: none;
+}
+
+.locale-cell:hover .edit-icon {
+    display: inline;
+}
+
+.locale-cell[contenteditable="true"] .edit-icon {
+    display: none;
+}
+
 /* Status badges */
 .status-badge {
     display: inline-block;
