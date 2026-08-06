@@ -5,9 +5,9 @@ namespace DataBank.Cli.Helpers;
 public static class EntryGrouper
 {
     /// <summary>
-    /// Groups flat raw entries by key, merging values and sources per locale.
-    /// Parsers produce one RawLocalizedEntry per key per locale; this collapses them
-    /// into one LocalizedStringEntry per key with multi-locale values.
+    /// Groups flat raw entries by key+context, merging values and sources per locale.
+    /// For FHX entries, context distinguishes same keys in different files.
+    /// For other formats (context is null), grouping is by key alone.
     /// </summary>
     public static List<LocalizedStringEntry> GroupByKey(List<RawLocalizedEntry> flatEntries)
     {
@@ -15,12 +15,19 @@ public static class EntryGrouper
 
         foreach (var entry in flatEntries)
         {
-            if (!grouped.TryGetValue(entry.Key, out var existing))
+            var groupKey = GetGroupingKey(entry.Key, entry.Context);
+
+            if (!grouped.TryGetValue(groupKey, out var existing))
             {
+                var id = string.IsNullOrEmpty(entry.Context)
+                    ? entry.Key
+                    : $"{entry.Key}|||{entry.Context}";
+
                 existing = new LocalizedStringEntry
                 {
-                    Id = entry.Key,
+                    Id = id,
                     Key = entry.Key,
+                    Context = entry.Context,
                     Values = [],
                     Sources = new Dictionary<string, SourceInfo>(),
                     Metadata = new EntryMetadata
@@ -31,7 +38,7 @@ public static class EntryGrouper
                         IsTranslated = entry.Metadata.IsTranslated
                     }
                 };
-                grouped[entry.Key] = existing;
+                grouped[groupKey] = existing;
             }
 
             // Add locale value if not already present
@@ -69,6 +76,11 @@ public static class EntryGrouper
                 v.Locale != "en" && !string.IsNullOrEmpty(v.Value) && v.Value != enValue);
         }
 
-        return grouped.Values.OrderBy(e => e.Key).ToList();
+        return grouped.Values.OrderBy(e => e.Key).ThenBy(e => e.Context).ToList();
+    }
+
+    private static string GetGroupingKey(string key, string? context)
+    {
+        return string.IsNullOrEmpty(context) ? key : $"{key}\0{context}";
     }
 }

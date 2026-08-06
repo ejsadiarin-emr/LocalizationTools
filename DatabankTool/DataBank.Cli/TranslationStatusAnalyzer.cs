@@ -10,11 +10,14 @@ public static class TranslationStatusAnalyzer
 
         foreach (var entry in entries)
         {
-            var status = entry.Metadata.GetDerivedStatus();
+            var enValue = entry.Values.FirstOrDefault(v => v.Locale == "en")?.Value;
 
-            // Count per-locale status
+            // Count per-locale status (skip EN — it's the source language, not a translation)
             foreach (var val in entry.Values)
             {
+                if (string.Equals(val.Locale, "en", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
                 var localeCounts = summary.ByLocale.FirstOrDefault(lc =>
                     string.Equals(lc.Locale, val.Locale, StringComparison.OrdinalIgnoreCase));
 
@@ -24,13 +27,13 @@ public static class TranslationStatusAnalyzer
                     summary.ByLocale.Add(localeCounts);
                 }
 
-                // For each locale value, determine if it's translated
+                // For each non-EN locale value, determine if it's translated
                 if (entry.Metadata.DoNotTranslate)
                 {
                     localeCounts.DoNotTranslate++;
                     summary.Overall.DoNotTranslate++;
                 }
-                else if (!string.IsNullOrEmpty(val.Value))
+                else if (!string.IsNullOrEmpty(val.Value) && val.Value != enValue)
                 {
                     localeCounts.Translated++;
                     summary.Overall.Translated++;
@@ -42,10 +45,12 @@ public static class TranslationStatusAnalyzer
                 }
             }
 
-            // If entry has no values at all, count as untranslated
-            if (entry.Values.Count == 0)
+            // If entry has no non-EN values at all, count DNT status or as untranslated
+            if (entry.Values.All(v => string.Equals(v.Locale, "en", StringComparison.OrdinalIgnoreCase)))
             {
-                summary.Overall.Untranslated++;
+                if (entry.Metadata.DoNotTranslate)
+                    summary.Overall.DoNotTranslate++;
+                // EN-only entries with no other locales: not counted as translated or untranslated
             }
         }
 

@@ -77,6 +77,7 @@ public static class FhxParser
         return new RawLocalizedEntry
         {
             Key = key,
+            Context = context,
             Value = value,
             Locale = locale,
             Source = new SourceInfo

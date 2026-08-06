@@ -260,6 +260,7 @@ public class Program
     private static int RunEditCommand(string[] args)
     {
         string? key = null;
+        string? context = null;
         string? locale = null;
         string? newValue = null;
         string? dataBankPath = null;
@@ -271,6 +272,9 @@ public class Program
             {
                 case "--key" or "-k":
                     if (i + 1 < args.Length) key = args[++i];
+                    break;
+                case "--context" or "-c":
+                    if (i + 1 < args.Length) context = args[++i];
                     break;
                 case "--locale" or "-l":
                     if (i + 1 < args.Length) locale = args[++i];
@@ -318,13 +322,17 @@ public class Program
             return 1;
         }
 
-        // Find entry by key
+        // Find entry by key and optional context
         var entry = dataBank.Entries.FirstOrDefault(e =>
-            string.Equals(e.Key, key, StringComparison.OrdinalIgnoreCase));
+            string.Equals(e.Key, key, StringComparison.OrdinalIgnoreCase) &&
+            (context is null || string.Equals(e.Context, context, StringComparison.OrdinalIgnoreCase)));
 
         if (entry is null)
         {
-            Console.Error.WriteLine($"Error: Entry not found for key: {key}");
+            if (context is not null)
+                Console.Error.WriteLine($"Error: Entry not found for key: {key} with context: {context}");
+            else
+                Console.Error.WriteLine($"Error: Entry not found for key: {key}");
             return 1;
         }
 
@@ -354,6 +362,8 @@ public class Program
 
         // Show what will be changed
         Console.WriteLine($"Key:      {entry.Key}");
+        if (entry.Context is not null)
+            Console.WriteLine($"Context:  {entry.Context}");
         Console.WriteLine($"Locale:   {locale}");
         Console.WriteLine($"File:     {sourceFile}");
         Console.WriteLine($"Line:     {sourceInfo.Line}");
@@ -372,6 +382,7 @@ public class Program
         var rawEntry = new RawLocalizedEntry
         {
             Key = entry.Key,
+            Context = entry.Context,
             Locale = locale,
             Value = localeValue.Value,
             Source = new SourceInfo
@@ -410,6 +421,7 @@ public class Program
         Console.WriteLine();
         Console.WriteLine("Options:");
         Console.WriteLine("  --key, -k <key>        The entry key to edit (required)");
+        Console.WriteLine("  --context, -c <ctx>    The context to disambiguate FHX entries with same key");
         Console.WriteLine("  --locale, -l <locale>  The locale to edit (required)");
         Console.WriteLine("  --value, -v <value>    The new translation value (required)");
         Console.WriteLine("  --file, -f <path>      Path to data-bank.json (required)");
@@ -418,6 +430,7 @@ public class Program
         Console.WriteLine();
         Console.WriteLine("Examples:");
         Console.WriteLine("  databank-cli edit --key IDS_WELCOME --locale fr --value \"Bonjour\" --file data-bank.json");
+        Console.WriteLine("  databank-cli edit -k @ANY@ -c \"from: alarmtypes.fhx, alarm word\" -l zh-CN -v \"任意\" -f data-bank.json");
         Console.WriteLine("  databank-cli edit -k IDS_START -l zh-CN -v \"启动\" -f data-bank.json --dry-run");
     }
 

@@ -15,13 +15,14 @@ public static class EntriesEndpoints
             IDataBankRepository repository,
             [FromQuery] string? locale = null,
             [FromQuery] string? format = null,
-            [FromQuery] string? key = null) =>
+            [FromQuery] string? key = null,
+            [FromQuery] string? context = null) =>
         {
-            var entries = await repository.GetFilteredEntriesAsync(locale, format, key);
+            var entries = await repository.GetFilteredEntriesAsync(locale, format, key, context);
             return Results.Ok(entries);
         })
         .WithName("GetEntries")
-        .WithDescription("Get all entries with optional locale, format, and key filters");
+        .WithDescription("Get all entries with optional locale, format, key, and context filters");
 
         group.MapGet("/count", async (
             IDataBankRepository repository,
@@ -45,11 +46,11 @@ public static class EntriesEndpoints
 
         group.MapPost("/", async (DataBankEntryDocument entry, IDataBankRepository repository) =>
         {
-            var existing = await repository.GetEntryByKeyAsync(entry.Key);
+            var existing = await repository.GetEntryByKeyAsync(entry.Key, entry.Context);
             if (existing is not null)
-                return Results.Conflict(new { error = $"An entry with key '{entry.Key}' already exists." });
+                return Results.Conflict(new { error = $"An entry with key '{entry.Key}' and context '{entry.Context}' already exists." });
 
-            entry.Id = entry.Key;
+            entry.Id = string.IsNullOrEmpty(entry.Context) ? entry.Key : $"{entry.Key}|||{entry.Context}";
             var created = await repository.CreateEntryAsync(entry);
             return Results.Created($"/api/entries/{created.Id}", created);
         })
@@ -58,13 +59,13 @@ public static class EntriesEndpoints
 
         group.MapPut("/{key}", async (string key, DataBankEntryDocument entry, IDataBankRepository repository) =>
         {
-            var existing = await repository.GetEntryByKeyAsync(key);
+            var existing = await repository.GetEntryByKeyAsync(key, entry.Context);
             if (existing is null)
                 return Results.NotFound(new { error = $"Entry with key '{key}' not found." });
 
-            entry.Id = key;
+            entry.Id = string.IsNullOrEmpty(entry.Context) ? key : $"{key}|||{entry.Context}";
             entry.Key = key;
-            await repository.UpdateEntryAsync(key, entry);
+            await repository.UpdateEntryAsync(entry.Id, entry);
             return Results.Ok(entry);
         })
         .WithName("UpdateEntry")

@@ -10,6 +10,7 @@ public class LocalizedStringEntry
 {
     public required string Id { get; set; }
     public required string Key { get; set; }
+    public string? Context { get; set; }
     public List<LocaleValue> Values { get; set; } = [];
     public Dictionary<string, SourceInfo> Sources { get; set; } = [];
     public EntryMetadata Metadata { get; set; } = new();

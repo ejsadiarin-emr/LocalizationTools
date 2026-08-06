@@ -12,6 +12,9 @@ public class DataBankEntryDocument
     [BsonElement("Key")]
     public string Key { get; set; } = string.Empty;
 
+    [BsonElement("Context")]
+    public string? Context { get; set; }
+
     [BsonElement("Values")]
     public List<LocaleValueDocument> Values { get; set; } = [];
 

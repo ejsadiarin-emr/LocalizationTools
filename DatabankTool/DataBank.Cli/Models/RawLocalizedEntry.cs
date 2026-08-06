@@ -7,6 +7,7 @@ namespace DataBank.Cli.Models;
 public class RawLocalizedEntry
 {
     public required string Key { get; set; }
+    public string? Context { get; set; }
     public required string Locale { get; set; }
     public required string Value { get; set; }
     public required SourceInfo Source { get; set; }

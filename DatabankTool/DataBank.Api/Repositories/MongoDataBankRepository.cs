@@ -36,9 +36,9 @@ public class MongoDataBankRepository : IDataBankRepository
         }
 
         var entryKeys = Builders<DataBankEntryDocument>.IndexKeys;
-        // Unique index on Key (one document per key)
+        // Unique compound index on Key + Context (same key can appear with different contexts in FHX)
         _entries.Indexes.CreateOne(new CreateIndexModel<DataBankEntryDocument>(
-            entryKeys.Ascending(e => e.Key),
+            entryKeys.Ascending(e => e.Key).Ascending(e => e.Context),
             new CreateIndexOptions { Unique = true }));
         // Index on Values.Locale for locale-based filtering
         _entries.Indexes.CreateOne(new CreateIndexModel<DataBankEntryDocument>(
@@ -62,7 +62,7 @@ public class MongoDataBankRepository : IDataBankRepository
         return await _entries.Find(_ => true).ToListAsync();
     }
 
-    public async Task<List<DataBankEntryDocument>> GetFilteredEntriesAsync(string? locale, string? format, string? key)
+    public async Task<List<DataBankEntryDocument>> GetFilteredEntriesAsync(string? locale, string? format, string? key, string? context = null)
     {
         var filter = Builders<DataBankEntryDocument>.Filter;
         var filters = new List<FilterDefinition<DataBankEntryDocument>>();
@@ -76,6 +76,9 @@ public class MongoDataBankRepository : IDataBankRepository
         if (!string.IsNullOrEmpty(key))
             filters.Add(filter.Regex(e => e.Key, new BsonRegularExpression(key, "i")));
 
+        if (context is not null)
+            filters.Add(filter.Eq(e => e.Context, context));
+
         var combinedFilter = filters.Count > 0
             ? filter.And(filters)
             : filter.Empty;
@@ -88,9 +91,12 @@ public class MongoDataBankRepository : IDataBankRepository
         return await _entries.Find(e => e.Id == id).FirstOrDefaultAsync();
     }
 
-    public async Task<DataBankEntryDocument?> GetEntryByKeyAsync(string key)
+    public async Task<DataBankEntryDocument?> GetEntryByKeyAsync(string key, string? context = null)
     {
-        return await _entries.Find(e => e.Key == key).FirstOrDefaultAsync();
+        if (context is null)
+            return await _entries.Find(e => e.Key == key && e.Context == null).FirstOrDefaultAsync();
+
+        return await _entries.Find(e => e.Key == key && e.Context == context).FirstOrDefaultAsync();
     }
 
     public async Task<List<DataBankEntryDocument>> GetEntriesByLocaleAsync(string locale)
@@ -121,7 +127,9 @@ public class MongoDataBankRepository : IDataBankRepository
         {
             var batch = entries.Skip(i).Take(batchSize).ToList();
             var models = batch.Select(entry => new ReplaceOneModel<DataBankEntryDocument>(
-                Builders<DataBankEntryDocument>.Filter.Eq(e => e.Key, entry.Key),
+                Builders<DataBankEntryDocument>.Filter.And(
+                    Builders<DataBankEntryDocument>.Filter.Eq(e => e.Key, entry.Key),
+                    Builders<DataBankEntryDocument>.Filter.Eq(e => e.Context, entry.Context)),
                 entry)
             {
                 IsUpsert = true
@@ -144,6 +152,7 @@ public class MongoDataBankRepository : IDataBankRepository
     {
         var filter = Builders<DataBankEntryDocument>.Filter.And(
             Builders<DataBankEntryDocument>.Filter.Eq(e => e.Key, key),
+            Builders<DataBankEntryDocument>.Filter.Eq(e => e.Context, (string?)null),
             Builders<DataBankEntryDocument>.Filter.ElemMatch(e => e.Values, v => v.Locale == locale));
 
         var update = Builders<DataBankEntryDocument>.Update.Set("Values.$.Value", value);
@@ -153,7 +162,9 @@ public class MongoDataBankRepository : IDataBankRepository
         // If locale doesn't exist in Values array, add it
         if (result.MatchedCount == 0)
         {
-            var addFilter = Builders<DataBankEntryDocument>.Filter.Eq(e => e.Key, key);
+            var addFilter = Builders<DataBankEntryDocument>.Filter.And(
+                Builders<DataBankEntryDocument>.Filter.Eq(e => e.Key, key),
+                Builders<DataBankEntryDocument>.Filter.Eq(e => e.Context, (string?)null));
             var addUpdate = Builders<DataBankEntryDocument>.Update.AddToSet(e => e.Values,
                 new LocaleValueDocument { Locale = locale, Value = value });
             result = await _entries.UpdateOneAsync(addFilter, addUpdate);

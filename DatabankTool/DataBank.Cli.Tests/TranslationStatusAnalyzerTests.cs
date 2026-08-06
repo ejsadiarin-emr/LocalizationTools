@@ -55,16 +55,10 @@ public class TranslationStatusAnalyzerTests
         var summary = TranslationStatusAnalyzer.Analyze(entries);
 
         Assert.NotNull(summary);
-        Assert.Equal(4, summary.Overall.Translated);
+        // EN locale is skipped; zh-CN "中文" differs from EN → Translated
+        // fr empty → Untranslated; key2 EN-only → not counted
+        Assert.Equal(1, summary.Overall.Translated);
         Assert.Equal(1, summary.Overall.Untranslated);
-
-        var enEntry = entries.First(e => e.Key == "key1");
-        Assert.True(enEntry.Metadata.IsTranslated);
-        Assert.Equal(TranslationStatus.Translated, enEntry.Metadata.GetDerivedStatus());
-
-        var frEntry = entries.First(e => e.Key == "key1");
-        Assert.True(frEntry.Metadata.IsTranslated);
-        Assert.Equal(TranslationStatus.Translated, frEntry.Metadata.GetDerivedStatus());
 
         var key3Entry = entries.First(e => e.Key == "key3");
         Assert.False(string.IsNullOrEmpty(key3Entry.Values.First(v => v.Locale == "fr").Value) == false);
@@ -133,12 +127,13 @@ public class TranslationStatusAnalyzerTests
 
         var summary = TranslationStatusAnalyzer.Analyze(entries);
 
+        // EN-only entries: EN locale is skipped, so no translations counted
         Assert.All(entries, e =>
         {
             Assert.True(e.Metadata.IsTranslated);
             Assert.Equal(TranslationStatus.Translated, e.Metadata.GetDerivedStatus());
         });
-        Assert.Equal(2, summary.Overall.Translated);
+        Assert.Equal(0, summary.Overall.Translated);
         Assert.Equal(0, summary.Overall.Untranslated);
     }
 
@@ -207,9 +202,12 @@ public class TranslationStatusAnalyzerTests
 
         var summary = TranslationStatusAnalyzer.Analyze(entries);
 
-        Assert.Equal(5, summary.Overall.Translated);
+        // EN locale is skipped; key1 fr+de differ from EN → 2 Translated
+        // key3 de is empty → 1 Untranslated; key4 de is DNT → 1 DoNotTranslate
+        // key2 EN-only → not counted
+        Assert.Equal(2, summary.Overall.Translated);
         Assert.Equal(1, summary.Overall.Untranslated);
-        Assert.Equal(2, summary.Overall.DoNotTranslate);
+        Assert.Equal(1, summary.Overall.DoNotTranslate);
 
         var deLocale = summary.ByLocale.First(l => l.Locale == "de");
         Assert.Equal(1, deLocale.Translated);

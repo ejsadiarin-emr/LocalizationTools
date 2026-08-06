@@ -81,6 +81,7 @@ public static class ExtractionEndpoints
                 {
                     Id = e.Id,
                     Key = e.Key,
+                    Context = e.Context,
                     Values = e.Values.Select(v => new LocaleValueDocument
                     {
                         Locale = v.Locale,
@@ -209,6 +210,7 @@ public static class ExtractionEndpoints
             {
                 Id = e.Id,
                 Key = e.Key,
+                Context = e.Context,
                 Values = e.Values.Select(v => new LocaleValueDocument
                 {
                     Locale = v.Locale,

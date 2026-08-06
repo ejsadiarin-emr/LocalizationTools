@@ -5,9 +5,9 @@ namespace DataBank.Api.Repositories;
 public interface IDataBankRepository
 {
     Task<List<DataBankEntryDocument>> GetAllEntriesAsync();
-    Task<List<DataBankEntryDocument>> GetFilteredEntriesAsync(string? locale, string? format, string? key);
+    Task<List<DataBankEntryDocument>> GetFilteredEntriesAsync(string? locale, string? format, string? key, string? context = null);
     Task<DataBankEntryDocument?> GetEntryByIdAsync(string id);
-    Task<DataBankEntryDocument?> GetEntryByKeyAsync(string key);
+    Task<DataBankEntryDocument?> GetEntryByKeyAsync(string key, string? context = null);
     Task<List<DataBankEntryDocument>> GetEntriesByLocaleAsync(string locale);
     Task<DataBankEntryDocument> CreateEntryAsync(DataBankEntryDocument entry);
     Task InsertManyEntriesAsync(List<DataBankEntryDocument> entries);
