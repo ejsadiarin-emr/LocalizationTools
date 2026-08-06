@@ -416,7 +416,11 @@ section {
     transform: translateY(-50%);
     font-size: 10px;
     color: #858585;
-    pointer-events: none;
+    cursor: pointer;
+}
+
+.locale-cell .edit-icon:hover {
+    color: #cccccc;
 }
 
 .locale-cell:hover .edit-icon {
@@ -425,6 +429,33 @@ section {
 
 .locale-cell[contenteditable="true"] .edit-icon {
     display: none;
+}
+
+/* Detail panel editable fields */
+.detail-edit-icon {
+    font-size: 11px;
+    color: #858585;
+    cursor: pointer;
+    margin-left: 6px;
+}
+
+.detail-edit-icon:hover {
+    color: #cccccc;
+}
+
+.detail-editable-value {
+    cursor: pointer;
+}
+
+.detail-editable-value:hover {
+    background-color: rgba(14, 99, 156, 0.1);
+}
+
+.detail-editable-value[contenteditable="true"] {
+    outline: 1px solid #0e639c;
+    background-color: rgba(14, 99, 156, 0.15);
+    cursor: text;
+    min-height: 1em;
 }
 
 /* Status badges */

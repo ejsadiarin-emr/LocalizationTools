@@ -439,74 +439,98 @@
     }
 
     // --- Inline Editing ---
+    function startEditing(cell) {
+        if (cell.getAttribute('contenteditable') === 'true') return;
+
+        var key = cell.getAttribute('data-key');
+        var locale = cell.getAttribute('data-locale');
+        var entry = getTableEntries().find(function (e) { return e.key === key; });
+        if (!entry) return;
+
+        var currentValue = getLocaleValue(entry, locale);
+        cell.setAttribute('contenteditable', 'true');
+        cell.textContent = currentValue;
+        cell.focus();
+
+        // Select all text
+        var range = document.createRange();
+        range.selectNodeContents(cell);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+
+        function saveEdit() {
+            cell.removeAttribute('contenteditable');
+            var newValue = cell.textContent.trim();
+
+            // Update local state
+            if (!entry.values) entry.values = [];
+            var existing = entry.values.find(function (v) { return v.locale === locale; });
+            if (existing) {
+                existing.value = newValue;
+            } else {
+                entry.values.push({ locale: locale, value: newValue });
+            }
+
+            // Update metadata.isTranslated: true if any non-en locale has a non-empty value
+            var enVal = getLocaleValue(entry, 'en');
+            entry.metadata.isTranslated = entry.values.some(function (v) {
+                return v.locale !== 'en' && v.value !== '' && v.value !== enVal;
+            });
+
+            // Re-render cell
+            cell.textContent = newValue || '';
+            if (!newValue) {
+                cell.innerHTML = '<span class="empty-value">\u2014</span>';
+            }
+
+            // Re-add edit icon
+            var icon = document.createElement('span');
+            icon.className = 'edit-icon';
+            icon.textContent = '\u270E';
+            cell.appendChild(icon);
+
+            // Update dashboard
+            updateDashboard();
+
+            // Write back to source file
+            writeBackToSource(entry, locale, currentValue, newValue);
+        }
+
+        cell.addEventListener('blur', saveEdit, { once: true });
+        cell.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                cell.blur();
+            } else if (e.key === 'Escape') {
+                cell.removeAttribute('contenteditable');
+                cell.textContent = currentValue || '';
+                if (!currentValue) {
+                    cell.innerHTML = '<span class="empty-value">\u2014</span>';
+                }
+                // Re-add edit icon
+                var icon = document.createElement('span');
+                icon.className = 'edit-icon';
+                icon.textContent = '\u270E';
+                cell.appendChild(icon);
+            }
+        });
+    }
+
     function addInlineEditing() {
         document.querySelectorAll('.locale-cell').forEach(function (cell) {
             cell.addEventListener('dblclick', function () {
-                if (cell.getAttribute('contenteditable') === 'true') return;
-
-                var key = cell.getAttribute('data-key');
-                var locale = cell.getAttribute('data-locale');
-                var entry = getTableEntries().find(function (e) { return e.key === key; });
-                if (!entry) return;
-
-                var currentValue = getLocaleValue(entry, locale);
-                cell.setAttribute('contenteditable', 'true');
-                cell.textContent = currentValue;
-                cell.focus();
-
-                // Select all text
-                var range = document.createRange();
-                range.selectNodeContents(cell);
-                var sel = window.getSelection();
-                sel.removeAllRanges();
-                sel.addRange(range);
-
-                function saveEdit() {
-                    cell.removeAttribute('contenteditable');
-                    var newValue = cell.textContent.trim();
-
-                    // Update local state
-                    if (!entry.values) entry.values = [];
-                    var existing = entry.values.find(function (v) { return v.locale === locale; });
-                    if (existing) {
-                        existing.value = newValue;
-                    } else {
-                        entry.values.push({ locale: locale, value: newValue });
-                    }
-
-                    // Update metadata.isTranslated: true if any non-en locale has a non-empty value
-                    var enVal = getLocaleValue(entry, 'en');
-                    entry.metadata.isTranslated = entry.values.some(function (v) {
-                        return v.locale !== 'en' && v.value !== '' && v.value !== enVal;
-                    });
-
-                    // Re-render cell
-                    cell.textContent = newValue || '';
-                    if (!newValue) {
-                        cell.innerHTML = '<span class="empty-value">—</span>';
-                    }
-
-                    // Update dashboard
-                    updateDashboard();
-
-                    // Write back to source file
-                    writeBackToSource(entry, locale, currentValue, newValue);
-                }
-
-                cell.addEventListener('blur', saveEdit, { once: true });
-                cell.addEventListener('keydown', function (e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        cell.blur();
-                    } else if (e.key === 'Escape') {
-                        cell.removeAttribute('contenteditable');
-                        cell.textContent = currentValue || '';
-                        if (!currentValue) {
-                            cell.innerHTML = '<span class="empty-value">—</span>';
-                        }
-                    }
-                });
+                startEditing(cell);
             });
+
+            // Edit icon click
+            var icon = cell.querySelector('.edit-icon');
+            if (icon) {
+                icon.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    startEditing(cell);
+                });
+            }
         });
     }
 
@@ -615,12 +639,12 @@
 
         html += detailField('Key', entry.key, true);
 
-        // Show all locale values
+        // Show all locale values (editable)
         html += '<hr style="border-color:#3c3c3c;margin:16px 0">';
         html += '<div class="detail-label">Locale Values</div>';
         if (entry.values && entry.values.length > 0) {
             entry.values.forEach(function (v) {
-                html += detailField(v.locale, v.value, true);
+                html += detailEditableField(v.locale, v.value, entry.key);
             });
         } else {
             html += detailField('Values', 'None');
@@ -666,6 +690,9 @@
                 window.chrome.webview.postMessage(message);
             });
         });
+
+        // Attach click handlers for detail panel editing
+        addDetailEditing();
     }
 
     function detailField(label, value, isMono) {
@@ -673,6 +700,101 @@
             '<div class="detail-label">' + label + '</div>' +
             '<div class="detail-value' + (isMono ? ' mono' : '') + '">' + (value != null ? value : 'N/A') + '</div>' +
             '</div>';
+    }
+
+    function detailEditableField(locale, value, entryKey) {
+        var displayValue = (value != null ? value : '');
+        var emptyHtml = '<span class="empty-value">\u2014</span>';
+        return '<div class="detail-field detail-editable-field">' +
+            '<div class="detail-label">' + escapeHtml(locale) + ' <span class="detail-edit-icon" data-locale="' + escapeAttr(locale) + '" data-key="' + escapeAttr(entryKey) + '">\u270E</span></div>' +
+            '<div class="detail-value mono detail-editable-value" data-locale="' + escapeAttr(locale) + '" data-key="' + escapeAttr(entryKey) + '">' + (displayValue || emptyHtml) + '</div>' +
+            '</div>';
+    }
+
+    function addDetailEditing() {
+        detailContent.querySelectorAll('.detail-edit-icon').forEach(function (icon) {
+            icon.addEventListener('click', function () {
+                var locale = icon.getAttribute('data-locale');
+                var key = icon.getAttribute('data-key');
+                var valueContainer = detailContent.querySelector('.detail-editable-value[data-locale="' + locale + '"][data-key="' + key + '"]');
+                if (!valueContainer || valueContainer.getAttribute('contenteditable') === 'true') return;
+
+                var entry = allEntries.find(function (e) { return e.key === key; });
+                if (!entry) return;
+
+                var currentValue = getLocaleValue(entry, locale);
+                valueContainer.setAttribute('contenteditable', 'true');
+                valueContainer.textContent = currentValue;
+                valueContainer.focus();
+
+                // Select all text
+                var range = document.createRange();
+                range.selectNodeContents(valueContainer);
+                var sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+
+                function saveDetailEdit() {
+                    valueContainer.removeAttribute('contenteditable');
+                    var newValue = valueContainer.textContent.trim();
+
+                    // Update local state
+                    if (!entry.values) entry.values = [];
+                    var existing = entry.values.find(function (v) { return v.locale === locale; });
+                    if (existing) {
+                        existing.value = newValue;
+                    } else {
+                        entry.values.push({ locale: locale, value: newValue });
+                    }
+
+                    // Update metadata.isTranslated
+                    var enVal = getLocaleValue(entry, 'en');
+                    entry.metadata.isTranslated = entry.values.some(function (v) {
+                        return v.locale !== 'en' && v.value !== '' && v.value !== enVal;
+                    });
+
+                    // Re-render value
+                    valueContainer.textContent = newValue || '';
+                    if (!newValue) {
+                        valueContainer.innerHTML = '<span class="empty-value">\u2014</span>';
+                    }
+
+                    // Update corresponding table cell
+                    var tableCell = document.querySelector('.locale-cell[data-locale="' + locale + '"][data-key="' + key + '"]');
+                    if (tableCell) {
+                        tableCell.textContent = newValue || '';
+                        if (!newValue) {
+                            tableCell.innerHTML = '<span class="empty-value">\u2014</span>';
+                        }
+                        // Re-add edit icon to table cell
+                        var tableIcon = document.createElement('span');
+                        tableIcon.className = 'edit-icon';
+                        tableIcon.textContent = '\u270E';
+                        tableCell.appendChild(tableIcon);
+                    }
+
+                    // Update dashboard
+                    updateDashboard();
+
+                    // Write back to source file
+                    writeBackToSource(entry, locale, currentValue, newValue);
+                }
+
+                valueContainer.addEventListener('blur', saveDetailEdit, { once: true });
+                valueContainer.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        valueContainer.blur();
+                    } else if (e.key === 'Escape') {
+                        valueContainer.removeAttribute('contenteditable');
+                        valueContainer.textContent = currentValue || '';
+                        if (!currentValue) {
+                            valueContainer.innerHTML = '<span class="empty-value">\u2014</span>';
+                        }
+                    }
+                });
+            });
+        });
     }
 
     // --- GRF Tab ---
