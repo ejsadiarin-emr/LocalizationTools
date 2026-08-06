@@ -669,11 +669,21 @@
 
         // Metadata
         html += '<hr style="border-color:#3c3c3c;margin:16px 0">';
+        html += '<div class="detail-label">Metadata</div>';
         html += detailField('Status', '<span class="status-badge status-' + status + '">' + getStatusLabel(status) + '</span>');
-        html += detailField('Comment', (entry.metadata && entry.metadata.comment) || 'N/A');
-        html += detailField('Do Not Translate', entry.metadata && entry.metadata.doNotTranslate ? 'Yes' : 'No');
+        html += '<div class="detail-field">' +
+            '<div class="detail-label">Comment</div>' +
+            '<input type="text" class="detail-input" id="meta-comment" data-key="' + escapeAttr(entry.key) + '" value="' + escapeAttr((entry.metadata && entry.metadata.comment) || '') + '" placeholder="No comment">' +
+            '</div>';
+        html += '<div class="detail-field">' +
+            '<div class="detail-label">Do Not Translate</div>' +
+            '<label class="detail-checkbox-label"><input type="checkbox" id="meta-dnt" data-key="' + escapeAttr(entry.key) + '"' + (entry.metadata && entry.metadata.doNotTranslate ? ' checked' : '') + '> Do not translate this key</label>' +
+            '</div>';
         html += detailField('Is Translated', entry.metadata && entry.metadata.isTranslated ? 'Yes' : 'No');
-        html += detailField('Format Specifiers', (entry.metadata && entry.metadata.formatSpecifiers && entry.metadata.formatSpecifiers.length > 0) ? entry.metadata.formatSpecifiers.join(', ') : 'None');
+        html += '<div class="detail-field">' +
+            '<div class="detail-label">Format Specifiers</div>' +
+            '<input type="text" class="detail-input" id="meta-fmt" data-key="' + escapeAttr(entry.key) + '" value="' + escapeAttr((entry.metadata && entry.metadata.formatSpecifiers && entry.metadata.formatSpecifiers.length > 0) ? entry.metadata.formatSpecifiers.join(', ') : '') + '" placeholder="e.g. %s, %d">' +
+            '</div>';
 
         detailContent.innerHTML = html;
         detailPanel.classList.remove('hidden');
@@ -693,6 +703,9 @@
 
         // Attach click handlers for detail panel editing
         addDetailEditing();
+
+        // Attach metadata editing handlers
+        addMetadataEditing(entry);
     }
 
     function detailField(label, value, isMono) {
@@ -711,89 +724,157 @@
             '</div>';
     }
 
+    function startDetailEditing(valueContainer, locale, key) {
+        if (valueContainer.getAttribute('contenteditable') === 'true') return;
+
+        var entry = allEntries.find(function (e) { return e.key === key; });
+        if (!entry) return;
+
+        var currentValue = getLocaleValue(entry, locale);
+        valueContainer.setAttribute('contenteditable', 'true');
+        valueContainer.textContent = currentValue;
+        valueContainer.focus();
+
+        // Select all text
+        var range = document.createRange();
+        range.selectNodeContents(valueContainer);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+
+        function saveDetailEdit() {
+            valueContainer.removeAttribute('contenteditable');
+            var newValue = valueContainer.textContent.trim();
+
+            // Update local state
+            if (!entry.values) entry.values = [];
+            var existing = entry.values.find(function (v) { return v.locale === locale; });
+            if (existing) {
+                existing.value = newValue;
+            } else {
+                entry.values.push({ locale: locale, value: newValue });
+            }
+
+            // Update metadata.isTranslated
+            var enVal = getLocaleValue(entry, 'en');
+            entry.metadata.isTranslated = entry.values.some(function (v) {
+                return v.locale !== 'en' && v.value !== '' && v.value !== enVal;
+            });
+
+            // Re-render value
+            valueContainer.textContent = newValue || '';
+            if (!newValue) {
+                valueContainer.innerHTML = '<span class="empty-value">\u2014</span>';
+            }
+
+            // Update corresponding table cell
+            var tableCell = document.querySelector('.locale-cell[data-locale="' + locale + '"][data-key="' + key + '"]');
+            if (tableCell) {
+                tableCell.textContent = newValue || '';
+                if (!newValue) {
+                    tableCell.innerHTML = '<span class="empty-value">\u2014</span>';
+                }
+                // Re-add edit icon to table cell
+                var tableIcon = document.createElement('span');
+                tableIcon.className = 'edit-icon';
+                tableIcon.textContent = '\u270E';
+                tableCell.appendChild(tableIcon);
+            }
+
+            // Update dashboard
+            updateDashboard();
+
+            // Write back to source file
+            writeBackToSource(entry, locale, currentValue, newValue);
+        }
+
+        valueContainer.addEventListener('blur', saveDetailEdit, { once: true });
+        valueContainer.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                valueContainer.blur();
+            } else if (e.key === 'Escape') {
+                valueContainer.removeAttribute('contenteditable');
+                valueContainer.textContent = currentValue || '';
+                if (!currentValue) {
+                    valueContainer.innerHTML = '<span class="empty-value">\u2014</span>';
+                }
+            }
+        });
+    }
+
     function addDetailEditing() {
+        // Icon click triggers editing
         detailContent.querySelectorAll('.detail-edit-icon').forEach(function (icon) {
             icon.addEventListener('click', function () {
                 var locale = icon.getAttribute('data-locale');
                 var key = icon.getAttribute('data-key');
                 var valueContainer = detailContent.querySelector('.detail-editable-value[data-locale="' + locale + '"][data-key="' + key + '"]');
-                if (!valueContainer || valueContainer.getAttribute('contenteditable') === 'true') return;
-
-                var entry = allEntries.find(function (e) { return e.key === key; });
-                if (!entry) return;
-
-                var currentValue = getLocaleValue(entry, locale);
-                valueContainer.setAttribute('contenteditable', 'true');
-                valueContainer.textContent = currentValue;
-                valueContainer.focus();
-
-                // Select all text
-                var range = document.createRange();
-                range.selectNodeContents(valueContainer);
-                var sel = window.getSelection();
-                sel.removeAllRanges();
-                sel.addRange(range);
-
-                function saveDetailEdit() {
-                    valueContainer.removeAttribute('contenteditable');
-                    var newValue = valueContainer.textContent.trim();
-
-                    // Update local state
-                    if (!entry.values) entry.values = [];
-                    var existing = entry.values.find(function (v) { return v.locale === locale; });
-                    if (existing) {
-                        existing.value = newValue;
-                    } else {
-                        entry.values.push({ locale: locale, value: newValue });
-                    }
-
-                    // Update metadata.isTranslated
-                    var enVal = getLocaleValue(entry, 'en');
-                    entry.metadata.isTranslated = entry.values.some(function (v) {
-                        return v.locale !== 'en' && v.value !== '' && v.value !== enVal;
-                    });
-
-                    // Re-render value
-                    valueContainer.textContent = newValue || '';
-                    if (!newValue) {
-                        valueContainer.innerHTML = '<span class="empty-value">\u2014</span>';
-                    }
-
-                    // Update corresponding table cell
-                    var tableCell = document.querySelector('.locale-cell[data-locale="' + locale + '"][data-key="' + key + '"]');
-                    if (tableCell) {
-                        tableCell.textContent = newValue || '';
-                        if (!newValue) {
-                            tableCell.innerHTML = '<span class="empty-value">\u2014</span>';
-                        }
-                        // Re-add edit icon to table cell
-                        var tableIcon = document.createElement('span');
-                        tableIcon.className = 'edit-icon';
-                        tableIcon.textContent = '\u270E';
-                        tableCell.appendChild(tableIcon);
-                    }
-
-                    // Update dashboard
-                    updateDashboard();
-
-                    // Write back to source file
-                    writeBackToSource(entry, locale, currentValue, newValue);
+                if (valueContainer) {
+                    startDetailEditing(valueContainer, locale, key);
                 }
-
-                valueContainer.addEventListener('blur', saveDetailEdit, { once: true });
-                valueContainer.addEventListener('keydown', function (e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        valueContainer.blur();
-                    } else if (e.key === 'Escape') {
-                        valueContainer.removeAttribute('contenteditable');
-                        valueContainer.textContent = currentValue || '';
-                        if (!currentValue) {
-                            valueContainer.innerHTML = '<span class="empty-value">\u2014</span>';
-                        }
-                    }
-                });
             });
+        });
+
+        // Double-click on value also triggers editing
+        detailContent.querySelectorAll('.detail-editable-value').forEach(function (valueEl) {
+            valueEl.addEventListener('dblclick', function () {
+                var locale = valueEl.getAttribute('data-locale');
+                var key = valueEl.getAttribute('data-key');
+                startDetailEditing(valueEl, locale, key);
+            });
+        });
+    }
+
+    function addMetadataEditing(entry) {
+        var commentInput = document.getElementById('meta-comment');
+        var dntCheckbox = document.getElementById('meta-dnt');
+        var fmtInput = document.getElementById('meta-fmt');
+
+        if (commentInput) {
+            commentInput.addEventListener('blur', function () {
+                var newComment = commentInput.value.trim();
+                if (!entry.metadata) entry.metadata = {};
+                var oldComment = entry.metadata.comment;
+                if (newComment !== oldComment) {
+                    entry.metadata.comment = newComment || null;
+                    persistMetadata(entry);
+                }
+            });
+        }
+
+        if (dntCheckbox) {
+            dntCheckbox.addEventListener('change', function () {
+                if (!entry.metadata) entry.metadata = {};
+                entry.metadata.doNotTranslate = dntCheckbox.checked;
+                persistMetadata(entry);
+            });
+        }
+
+        if (fmtInput) {
+            fmtInput.addEventListener('blur', function () {
+                var raw = fmtInput.value.trim();
+                if (!entry.metadata) entry.metadata = {};
+                var newSpecifiers = raw ? raw.split(',').map(function (s) { return s.trim(); }).filter(Boolean) : [];
+                var oldSpecifiers = entry.metadata.formatSpecifiers || [];
+                if (JSON.stringify(newSpecifiers) !== JSON.stringify(oldSpecifiers)) {
+                    entry.metadata.formatSpecifiers = newSpecifiers;
+                    persistMetadata(entry);
+                }
+            });
+        }
+    }
+
+    function persistMetadata(entry) {
+        window.chrome.webview.postMessage({
+            action: 'persistMetadata',
+            key: entry.key,
+            metadata: {
+                comment: entry.metadata.comment || null,
+                doNotTranslate: entry.metadata.doNotTranslate || false,
+                formatSpecifiers: entry.metadata.formatSpecifiers || [],
+                isTranslated: entry.metadata.isTranslated || false
+            }
         });
     }
 
