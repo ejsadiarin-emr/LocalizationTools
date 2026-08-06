@@ -5,8 +5,8 @@ all: build build-databank
 
 # Restore dependencies
 restore:
-	dotnet restore src/LocalizationAnalyzers.csproj
-	dotnet restore src/LocalizationAnalyzers.Tests/LocalizationAnalyzers.Tests.csproj
+	dotnet restore LocalizationAnalyzer/LocalizationAnalyzers.csproj
+	dotnet restore LocalizationAnalyzer/LocalizationAnalyzers.Tests/LocalizationAnalyzers.Tests.csproj
 
 # ---------------------------------------------------------------------------------
 
@@ -15,57 +15,57 @@ build: build-analyzer build-cli
 
 # Build analyzer (netstandard2.0 for NuGet)
 build-analyzer:
-	dotnet build src/LocalizationAnalyzers.csproj -c Release -f netstandard2.0
+	dotnet build LocalizationAnalyzer/LocalizationAnalyzers.csproj -c Release -f netstandard2.0
 
 # Build CLI tool (net10.0)
 build-cli:
-	dotnet build src/LocalizationAnalyzers.csproj -c Release -f net10.0
+	dotnet build LocalizationAnalyzer/LocalizationAnalyzers.csproj -c Release -f net10.0
 
 # Run tests
 test:
-	dotnet test src/LocalizationAnalyzers.Tests/LocalizationAnalyzers.Tests.csproj
+	dotnet test LocalizationAnalyzer/LocalizationAnalyzers.Tests/LocalizationAnalyzers.Tests.csproj
 
 # Run analyzers and generate SARIF
 analyze: build-cli
-	dotnet run --project src/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- src results.sarif
+	dotnet run --project LocalizationAnalyzer/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- src results.sarif
 
 # Clean build artifacts
 clean:
-	dotnet clean src/LocalizationAnalyzers.csproj -c Release
-	dotnet clean src/LocalizationAnalyzers.Tests/LocalizationAnalyzers.Tests.csproj
-	rm -f src/results.sarif
+	dotnet clean LocalizationAnalyzer/LocalizationAnalyzers.csproj -c Release
+	dotnet clean LocalizationAnalyzer/LocalizationAnalyzers.Tests/LocalizationAnalyzers.Tests.csproj
+	rm -f LocalizationAnalyzer/results.sarif
 
 # Create NuGet package (analyzer)
 pack: build-analyzer
-	dotnet pack src/LocalizationAnalyzers.csproj -c Release -f netstandard2.0
+	dotnet pack LocalizationAnalyzer/LocalizationAnalyzers.csproj -c Release -f netstandard2.0
 
 # Create dotnet tool package
 pack-tool: build-cli
-	dotnet pack src/LocalizationAnalyzers.csproj -c Release --no-build -p:TargetFrameworks=net10.0 -p:PackAsDotnetTool=true
+	dotnet pack LocalizationAnalyzer/LocalizationAnalyzers.csproj -c Release --no-build -p:TargetFrameworks=net10.0 -p:PackAsDotnetTool=true
 
 pack-tool-2: build-cli
-	dotnet pack src/LocalizationAnalyzers.csproj -c Release --no-build -p:TargetFrameworks=net10.0 -p:PackAsDotnetTool=true
+	dotnet pack LocalizationAnalyzer/LocalizationAnalyzers.csproj -c Release --no-build -p:TargetFrameworks=net10.0 -p:PackAsDotnetTool=true
 
 # ---------------------------------------------------------------------------------
 # Build desktop app (WPF + WebView2)
 build-desktop:
-	dotnet build src/LocalizationAnalyzers.Desktop/LocalizationAnalyzers.Desktop.csproj -c Release
+	dotnet build LocalizationAnalyzer/LocalizationAnalyzers.Desktop/LocalizationAnalyzers.Desktop.csproj -c Release
 
 # Run desktop app
 run-desktop: build-desktop
-	dotnet run --project src/LocalizationAnalyzers.Desktop/LocalizationAnalyzers.Desktop.csproj -c Release --no-build
+	dotnet run --project LocalizationAnalyzer/LocalizationAnalyzers.Desktop/LocalizationAnalyzers.Desktop.csproj -c Release --no-build
 
 # Publish self-contained single-file desktop app
 publish-desktop:
-	dotnet publish src/LocalizationAnalyzers.Desktop/LocalizationAnalyzers.Desktop.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+	dotnet publish LocalizationAnalyzer/LocalizationAnalyzers.Desktop/LocalizationAnalyzers.Desktop.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
 
 # Run analyzers on test codebase (LOC rules only)
 analyze-test: build-cli
-	dotnet run --project src/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- test-codebase/
+	dotnet run --project LocalizationAnalyzer/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- test-codebase/
 
 # Run analyzers on test codebase with CA rules (LOC + CA globalization rules)
 analyze-test-ca: build-cli
-	dotnet run --project src/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- test-codebase/ --with-ca-rules
+	dotnet run --project LocalizationAnalyzer/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- test-codebase/ --with-ca-rules
 
 # Full CI pipeline
 ci: restore build test analyze

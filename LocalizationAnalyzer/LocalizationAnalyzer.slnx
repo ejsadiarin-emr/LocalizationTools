@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="LocalizationAnalyzers.csproj" />
+  <Project Path="LocalizationAnalyzers.Desktop/LocalizationAnalyzers.Desktop.csproj" />
+  <Project Path="LocalizationAnalyzers.Tests/LocalizationAnalyzers.Tests.csproj" />
+</Solution>

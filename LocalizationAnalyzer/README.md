@@ -34,22 +34,22 @@ languages with locale data loaded at runtime.
 ```bash
 # make targets
 make build-cli          # build the CLI (net10.0)
-make analyze            # analyze src/ → results.sarif
+make analyze            # analyze LocalizationAnalyzer/ → results.sarif
 make analyze-test       # analyze test-codebase/ → prints SARIF to stdout
 make analyze-test-ca    # same, plus built-in CA globalization rules (CA1303-CA1311)
 
 # raw dotnet run — point at any folder containing .cs files:
-dotnet run --project src/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- <directory> [output.sarif] [--with-ca-rules]
+dotnet run --project LocalizationAnalyzer/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- <directory> [output.sarif] [--with-ca-rules]
 ```
 
 Examples:
 
 ```bash
 # Analyze a specific directory and write the SARIF to a file
-dotnet run --project src/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- test-codebase/ results.sarif
+dotnet run --project LocalizationAnalyzer/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- test-codebase/ results.sarif
 
 # Analyze and print SARIF to stdout (no output file argument)
-dotnet run --project src/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- test-codebase/
+dotnet run --project LocalizationAnalyzer/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- test-codebase/
 
 # Include Microsoft's built-in CA globalization rules
 make analyze-test-ca
@@ -61,7 +61,7 @@ make analyze-test-ca
 make run-desktop        # builds + runs
 
 # raw:
-dotnet run --project src/LocalizationAnalyzers.Desktop/LocalizationAnalyzers.Desktop.csproj -c Release
+dotnet run --project LocalizationAnalyzer/LocalizationAnalyzers.Desktop/LocalizationAnalyzers.Desktop.csproj -c Release
 ```
 
 See [Desktop App](#desktop-app) for what you can do in the GUI.
@@ -88,7 +88,7 @@ code results.sarif
 ### Where to use the SARIF file
 
 - **GitHub Code Scanning** — the repo's `.github/workflows/analyze.yml` already runs the
-  CLI on `src/` and uploads the result to Code Scanning
+  CLI on `LocalizationAnalyzer/` and uploads the result to Code Scanning
   (`github/codeql-action/upload-sarif@v4`).
 - **SonarQube** — import the SARIF file in the project settings.
 - **Azure DevOps** — `dotnet build /p:ErrorLog=results.sarif` produces SARIF natively;
@@ -351,20 +351,20 @@ The project includes a command-line tool for running analyzers and generating SA
 
 ```bash
 # Build the CLI
-dotnet build src/LocalizationAnalyzers.csproj -c Release -f net10.0
+dotnet build LocalizationAnalyzer/LocalizationAnalyzers.csproj -c Release -f net10.0
 # (make build-cli does the same)
 
 # Run analysis on a directory of C# files
-dotnet run --project src/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- test-codebase results.sarif
+dotnet run --project LocalizationAnalyzer/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- test-codebase results.sarif
 
 # With the built-in CA globalization rules (CA1303-CA1311)
-dotnet run --project src/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- test-codebase/ --with-ca-rules
+dotnet run --project LocalizationAnalyzer/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- test-codebase/ --with-ca-rules
 
 # Print SARIF to stdout instead of a file
-dotnet run --project src/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- test-codebase/
+dotnet run --project LocalizationAnalyzer/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- test-codebase/
 
 # Or publish as self-contained
-dotnet publish src/LocalizationAnalyzers.csproj -c Release -f net10.0 --self-contained
+dotnet publish LocalizationAnalyzer/LocalizationAnalyzers.csproj -c Release -f net10.0 --self-contained
 ./publish/LocalizationAnalyzers src results.sarif
 ```
 
@@ -394,8 +394,8 @@ A WPF + WebView2 desktop application provides a GUI for running the analyzer on 
 make run-desktop        # builds + runs
 
 # raw:
-dotnet build src/LocalizationAnalyzers.Desktop/LocalizationAnalyzers.Desktop.csproj -c Release
-dotnet run --project src/LocalizationAnalyzers.Desktop/LocalizationAnalyzers.Desktop.csproj -c Release --no-build
+dotnet build LocalizationAnalyzer/LocalizationAnalyzers.Desktop/LocalizationAnalyzers.Desktop.csproj -c Release
+dotnet run --project LocalizationAnalyzer/LocalizationAnalyzers.Desktop/LocalizationAnalyzers.Desktop.csproj -c Release --no-build
 ```
 
 ### Common Workflow
@@ -445,7 +445,7 @@ dotnet run --project src/LocalizationAnalyzers.Desktop/LocalizationAnalyzers.Des
 
 ### GitHub Actions
 
-The repo ships `.github/workflows/analyze.yml`, which runs the CLI on `src/` and uploads
+The repo ships `.github/workflows/analyze.yml`, which runs the CLI on `LocalizationAnalyzer/` and uploads
 the SARIF to GitHub Code Scanning:
 
 ```yaml
@@ -455,11 +455,11 @@ the SARIF to GitHub Code Scanning:
     dotnet-version: '10.0.x'
 
 - name: Build CLI tool (net10.0)
-  run: dotnet build src/LocalizationAnalyzers.csproj --no-restore -c Release -f net10.0
+  run: dotnet build LocalizationAnalyzer/LocalizationAnalyzers.csproj --no-restore -c Release -f net10.0
 
 - name: Run analyzers and generate SARIF
   run: |
-    dotnet run --project src/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- src string_classification_results.sarif
+    dotnet run --project LocalizationAnalyzer/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- src string_classification_results.sarif
 
 - name: Upload SARIF to GitHub Code Scanning
   uses: github/codeql-action/upload-sarif@v4

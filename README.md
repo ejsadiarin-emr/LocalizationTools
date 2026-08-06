@@ -8,7 +8,7 @@ This repo contains **two related but separate tools**:
 
 | Tool | What it does | Location |
 |------|--------------|----------|
-| **LocalizationAnalyzers** | Roslyn analyzers (LOC001–LOC015) that classify string literals as *behavioral* or *display*, plus a CLI and a WPF desktop app. Outputs enriched **SARIF 2.1.0**. | `src/` ([README](src/README.md)) |
+| **LocalizationAnalyzers** | Roslyn analyzers (LOC001–LOC015) that classify string literals as *behavioral* or *display*, plus a CLI and a WPF desktop app. Outputs enriched **SARIF 2.1.0**. | `LocalizationAnalyzer/` ([README](LocalizationAnalyzer/README.md)) |
 | **DatabankTool** | Extracts translatable strings from resource files (`.resx`, `.rc`, `.fhx`, `.ahc`, `.json`, `.grf`) into `data-bank.json`, stores them in **MongoDB** via a REST API, and provides a WPF desktop app (Local and Remote modes). | `DatabankTool/` ([README](DatabankTool/README.md)) |
 
 > Both tools share the `Makefile` at the repo root. Raw `dotnet run` equivalents are shown
@@ -28,18 +28,18 @@ This repo contains **two related but separate tools**:
 
 ```bash
 # make:
-make analyze            # runs against src/ → results.sarif
+make analyze            # runs against LocalizationAnalyzer/ → results.sarif
 make analyze-test       # runs against test-codebase/ → stdout
 make analyze-test-ca    # same, plus built-in CA globalization rules (CA1303–CA1311)
 
 # raw dotnet run (directory → SARIF file):
-dotnet run --project src/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- <directory> [output.sarif] [--with-ca-rules]
+dotnet run --project LocalizationAnalyzer/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- <directory> [output.sarif] [--with-ca-rules]
 ```
 
 Example:
 
 ```bash
-dotnet run --project src/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- test-codebase/ results.sarif
+dotnet run --project LocalizationAnalyzer/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- test-codebase/ results.sarif
 ```
 
 - Point it at any **folder** containing `*.cs` files (or a `.csproj` — the directory is used).
@@ -53,7 +53,7 @@ SARIF 2.1.0 files are plain JSON — inspect with any JSON viewer, or use the SA
 extensions for [VS Code](https://marketplace.visualstudio.com/items?itemName=MS-SarifVSCode.sarif-viewer),
 GitHub Code Scanning, **SonarQube**, or **Azure DevOps** (all consume SARIF natively):
 
-- GitHub: the `.github/workflows/analyze.yml` workflow runs the CLI on `src/` and uploads
+- GitHub: the `.github/workflows/analyze.yml` workflow runs the CLI on `LocalizationAnalyzer/` and uploads
   `string_classification_results.sarif` to Code Scanning.
 - Locally: `results.sarif` / `published_results.sarif` at the repo root are examples of the
   CLI output.
@@ -64,7 +64,7 @@ GitHub Code Scanning, **SonarQube**, or **Azure DevOps** (all consume SARIF nati
 make run-desktop
 
 # raw:
-dotnet run --project src/LocalizationAnalyzers.Desktop/LocalizationAnalyzers.Desktop.csproj -c Release
+dotnet run --project LocalizationAnalyzer/LocalizationAnalyzers.Desktop/LocalizationAnalyzers.Desktop.csproj -c Release
 ```
 
 Common things to do in the app:
@@ -187,7 +187,7 @@ make test-databank # databank CLI tests
 
 ```
 ├── Makefile                       # shared build/run targets for both tools
-├── src/                           # LocalizationAnalyzers (analyzers + CLI + desktop app)
+├── LocalizationAnalyzer/          # LocalizationAnalyzers (analyzers + CLI + desktop app)
 ├── DatabankTool/                  # databank-cli, DataBank.Api, DataBank.Desktop, docker-compose.yml
 ├── l10n-files/                    # sample resource files (EN + Translated) for FHX/RC/GRF/RESX/AHC
 ├── test-codebase/                 # sample C# code used by the analyzer CLI targets

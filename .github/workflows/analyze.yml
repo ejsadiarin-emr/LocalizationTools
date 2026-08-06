@@ -23,17 +23,17 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore src/LocalizationAnalyzers.csproj
+        run: dotnet restore LocalizationAnalyzer/LocalizationAnalyzers.csproj
 
       - name: Build analyzers (netstandard2.0)
-        run: dotnet build src/LocalizationAnalyzers.csproj --no-restore -c Release -f netstandard2.0
+        run: dotnet build LocalizationAnalyzer/LocalizationAnalyzers.csproj --no-restore -c Release -f netstandard2.0
 
       - name: Build CLI tool (net10.0)
-        run: dotnet build src/LocalizationAnalyzers.csproj --no-restore -c Release -f net10.0
+        run: dotnet build LocalizationAnalyzer/LocalizationAnalyzers.csproj --no-restore -c Release -f net10.0
 
       - name: Run analyzers and generate SARIF
         run: |
-          dotnet run --project src/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- src string_classification_results.sarif
+          dotnet run --project LocalizationAnalyzer/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- src string_classification_results.sarif
 
       - name: Upload SARIF to GitHub Code Scanning
         uses: github/codeql-action/upload-sarif@v4

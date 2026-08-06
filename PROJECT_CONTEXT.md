@@ -52,7 +52,7 @@ These are related but **should be built and reasoned about separately** - do not
 
 ### Tool 1 - Static Analysis (Roslyn Analyzer) - Complete
 
-**Location:** `src/` (see that folder's own README.md for build/usage details)
+**Location:** `LocalizationAnalyzer/` (see that folder's own README.md for build/usage details)
 
 - Classifies string literals in C# source as **Behavioral** or **Display** using syntax-level heuristics.
 - Emits standard Roslyn diagnostics (15 LOC rules + optional CA rules):
@@ -183,11 +183,11 @@ flowchart TD
 
 | Piece | Status | Location |
 |---|---|---|
-| Tool 1 - Roslyn Analyzer (LOC001-LOC007, LOC010, LOC011-LOC015) + code fix | Complete - 132 tests passing, NuGet package generated | `src/` |
-| Tool 1 - CLI with per-file metrics | Complete - SARIF 2.1.0 + invocations[] + fileMetrics[] | `src/SarifCli.cs` |
-| Tool 1 - CLI enriched SARIF | Complete - classification, sourceSnippet, stringLiteral, rule metadata (helpUri, tags, examples) | `src/SarifCli.cs` |
-| Tool 1 - Desktop App (WPF + WebView2) | Complete - GUI with expandable row details, rule toggles, CA rules, SARIF export | `src/LocalizationAnalyzers.Desktop/` |
-| Tool 1 - SARIF to SonarQube/Azure DevOps integration | Complete - SARIF 2.1.0 compatible | `src/README.md` |
+| Tool 1 - Roslyn Analyzer (LOC001-LOC007, LOC010, LOC011-LOC015) + code fix | Complete - 132 tests passing, NuGet package generated | `LocalizationAnalyzer/` |
+| Tool 1 - CLI with per-file metrics | Complete - SARIF 2.1.0 + invocations[] + fileMetrics[] | `LocalizationAnalyzer/SarifCli.cs` |
+| Tool 1 - CLI enriched SARIF | Complete - classification, sourceSnippet, stringLiteral, rule metadata (helpUri, tags, examples) | `LocalizationAnalyzer/SarifCli.cs` |
+| Tool 1 - Desktop App (WPF + WebView2) | Complete - GUI with expandable row details, rule toggles, CA rules, SARIF export | `LocalizationAnalyzer/LocalizationAnalyzers.Desktop/` |
+| Tool 1 - SARIF to SonarQube/Azure DevOps integration | Complete - SARIF 2.1.0 compatible | `LocalizationAnalyzer/README.md` |
 | Tool 1 - CI baseline-gate (fail only on new violations) | Documented approach, tooling not yet built | - |
 | Tool 2 - `databank-cli` CLI (extraction from resource files) | Complete - resx/rc/fhx/ahc/json/grf parsers, grouping, stats, coverage, edit/write-back | `DatabankTool/DataBank.Cli` |
 | Tool 2 - CLI tests | Complete - 178 tests passing | `DatabankTool/DataBank.Cli.Tests` |
@@ -335,7 +335,7 @@ Nested format is more human-readable for large key sets but harder to merge auto
 ## 13. Implementation Phases
 
 ### Phase 1: Foundation (Week 1-2)
-1. Create Roslyn Analyzer project (`src/`)
+1. Create Roslyn Analyzer project (`LocalizationAnalyzer/`)
 2. Implement LOC001 (StringInConditional) and LOC002 (StringInDataAccess)
 3. Write unit tests with `Microsoft.CodeAnalysis.Testing`
 4. Create `Resources/en.json` with existing string keys
