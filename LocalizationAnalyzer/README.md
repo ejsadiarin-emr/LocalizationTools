@@ -2,6 +2,41 @@
 
 Roslyn analyzers for detecting behavioral strings and unlocalized display strings in C# codebases.
 
+This can be used as a CLI tool with a desktop app (see [Desktop app](#desktop-app)) or in the future, can be used as a build step in CI/CD pipelines to catch localization-related code smells early.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Use Case](#use-case)
+- [Quick Run](#quick-run)
+  - [CLI (analyze a directory → SARIF)](#cli-analyze-a-directory--sarif)
+  - [Desktop app](#desktop-app)
+  - [Checking the SARIF file](#checking-the-sarif-file)
+  - [Where to use the SARIF file](#where-to-use-the-sarif-file)
+- [Installation](#installation)
+  - [NuGet Package](#nuget-package)
+  - [Manual Installation](#manual-installation)
+- [Diagnostic Rules](#diagnostic-rules)
+- [Configuration](#configuration)
+  - [.editorconfig](#editorconfig)
+  - [Suppression](#suppression)
+- [Code Fixes](#code-fixes)
+- [SARIF Output](#sarif-output)
+  - [Sample SARIF Structure](#sample-sarif-structure)
+- [CLI Tool](#cli-tool)
+  - [Build and Run](#build-and-run)
+  - [Metrics Output](#metrics-output)
+- [Desktop App](#desktop-app-1)
+  - [Build and Run](#build-and-run-1)
+  - [Common Workflow](#common-workflow)
+  - [Features](#features)
+- [CI Integration](#ci-integration)
+  - [Azure DevOps Pipeline](#azure-devops-pipeline)
+  - [GitHub Actions](#github-actions)
+- [Testing](#testing)
+- [Building](#building)
+- [License](#license)
+
 ## Overview
 
 This analyzer package helps prevent localization issues by detecting two categories of hardcoded strings:
@@ -14,18 +49,11 @@ Additional rules (LOC011-LOC015) cover string interpolation in localizable conte
 
 ## Use Case
 
-The analyzer classifies every string literal in a C# codebase as either **behavioral**
-(drives control flow, DB lookups, equality checks — translated strings break the program)
-or **display** (UI text that should go through `Localize()`). The goal: stop
-locale-specific string literals from driving business logic, so one build can serve all
-languages with locale data loaded at runtime.
+The analyzer classifies every string literal in a C# codebase as either **behavioral** (drives control flow, DB lookups, equality checks — translated strings break the program) or **display** (UI text that should go through `Localize()`). The goal: stop locale-specific string literals from driving business logic, so one build can serve all languages with locale data loaded at runtime.
 
-- Run it on **any directory** of C# files — no project compilation required (works on
-  plain folders; `bin`, `obj`, `Test`, `TestResults` are skipped).
-- Results are emitted as **SARIF 2.1.0**, consumable by GitHub Code Scanning, SonarQube,
-  and Azure DevOps.
-- Includes a **code fix** (lightbulb) that extracts a LOC010 display string into a
-  `Localize("suggested.key")` call.
+- Run it on **any directory** of C# files — no project compilation required (works on plain folders; `bin`, `obj`, `Test`, `TestResults` are skipped).
+- Results are emitted as **SARIF 2.1.0**, consumable by GitHub Code Scanning, SonarQube, and Azure DevOps.
+- Includes a **code fix** (lightbulb) that extracts a LOC010 display string into a `Localize("suggested.key")` call.
 
 ## Quick Run
 
@@ -33,12 +61,12 @@ languages with locale data loaded at runtime.
 
 ```bash
 # make targets
-make build-cli          # build the CLI (net10.0)
-make analyze            # analyze LocalizationAnalyzer/ → results.sarif
-make analyze-test       # analyze test-codebase/ → prints SARIF to stdout
-make analyze-test-ca    # same, plus built-in CA globalization rules (CA1303-CA1311)
+make build-la-cli       # build the CLI (net10.0)
+make run-la             # analyze LocalizationAnalyzer/ → results.sarif
+make run-la-test        # analyze test-codebase/ → prints SARIF to stdout
+make run-la-test-ca     # same, plus built-in CA globalization rules (CA1303-CA1311)
 
-# raw dotnet run — point at any folder containing .cs files:
+# or raw dotnet run — point at any folder containing .cs files:
 dotnet run --project LocalizationAnalyzer/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- <directory> [output.sarif] [--with-ca-rules]
 ```
 
@@ -52,15 +80,15 @@ dotnet run --project LocalizationAnalyzer/LocalizationAnalyzers.csproj --no-buil
 dotnet run --project LocalizationAnalyzer/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- test-codebase/
 
 # Include Microsoft's built-in CA globalization rules
-make analyze-test-ca
+make run-la-test-ca
 ```
 
 ### Desktop app
 
 ```bash
-make run-desktop        # builds + runs
+make run-la-desktop # builds + runs
 
-# raw:
+# or raw:
 dotnet run --project LocalizationAnalyzer/LocalizationAnalyzers.Desktop/LocalizationAnalyzers.Desktop.csproj -c Release
 ```
 
@@ -352,7 +380,7 @@ The project includes a command-line tool for running analyzers and generating SA
 ```bash
 # Build the CLI
 dotnet build LocalizationAnalyzer/LocalizationAnalyzers.csproj -c Release -f net10.0
-# (make build-cli does the same)
+# (make build-la-cli does the same)
 
 # Run analysis on a directory of C# files
 dotnet run --project LocalizationAnalyzer/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- test-codebase results.sarif
@@ -391,9 +419,9 @@ A WPF + WebView2 desktop application provides a GUI for running the analyzer on 
 ### Build and Run
 
 ```bash
-make run-desktop        # builds + runs
+make run-la-desktop        # builds + runs
 
-# raw:
+# or raw:
 dotnet build LocalizationAnalyzer/LocalizationAnalyzers.Desktop/LocalizationAnalyzers.Desktop.csproj -c Release
 dotnet run --project LocalizationAnalyzer/LocalizationAnalyzers.Desktop/LocalizationAnalyzers.Desktop.csproj -c Release --no-build
 ```
@@ -488,28 +516,6 @@ dotnet pack
 ```
 
 The NuGet package will be generated in the `bin/Release` directory.
-
-## Future Enhancements
-
-### Rule Metadata (Pending Localization Data)
-
-The following per-rule metadata properties are planned but deferred until localization sample data (RC, RESX files) is analyzed:
-
-- **impact**: localization impact rating (high/medium/low) — requires understanding of real-world string usage patterns
-- **fixability**: whether a rule has an automatic code fix (automatic/manual/none)
-- **ciGate**: whether a rule is enforced in CI pipelines (true/false)
-
-These properties will be added to the SARIF `rules[]` array once we have sufficient data to make informed decisions about their values.
-
-### Binary Format Parsers (GRF & iFix DLL)
-
-Two file formats in the l10n-files test set require specialized binary parsers that are not yet implemented:
-
-- **GRF (`.grf`)**: GE iFix graphic files — OLE Compound Documents with embedded VBA and proprietary stream formats. Would require OpenMcdf (NuGet) for OLE container access and reverse-engineering of iFix-specific stream layouts (CONTROLSAVESTREAM, TabStripStorage, etc.). Best-effort string extraction is feasible but low-confidence.
-
-- **iFix DLLs (`.dll`)**: Compiled .NET satellite assemblies containing localized error strings. Would require AsmResolver (NuGet) or System.Resources.ResourceManager for runtime extraction. Only Translated versions exist in the test set — no EN source counterpart means coverage analysis is impossible without also providing the EN assembly.
-
-These parsers are deferred pending prioritization and availability of EN/Translated file pairs for coverage analysis.
 
 ## License
 

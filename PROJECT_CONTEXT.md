@@ -183,14 +183,14 @@ flowchart TD
 
 | Piece | Status | Location |
 |---|---|---|
-| Tool 1 - Roslyn Analyzer (LOC001-LOC007, LOC010, LOC011-LOC015) + code fix | Complete - 132 tests passing, NuGet package generated | `LocalizationAnalyzer/` |
+| Tool 1 - Roslyn Analyzer (LOC001-LOC007, LOC010, LOC011-LOC015) + code fix | Complete - 126 tests passing (4 pending fixes), NuGet package generated | `LocalizationAnalyzer/` |
 | Tool 1 - CLI with per-file metrics | Complete - SARIF 2.1.0 + invocations[] + fileMetrics[] | `LocalizationAnalyzer/SarifCli.cs` |
 | Tool 1 - CLI enriched SARIF | Complete - classification, sourceSnippet, stringLiteral, rule metadata (helpUri, tags, examples) | `LocalizationAnalyzer/SarifCli.cs` |
 | Tool 1 - Desktop App (WPF + WebView2) | Complete - GUI with expandable row details, rule toggles, CA rules, SARIF export | `LocalizationAnalyzer/LocalizationAnalyzers.Desktop/` |
 | Tool 1 - SARIF to SonarQube/Azure DevOps integration | Complete - SARIF 2.1.0 compatible | `LocalizationAnalyzer/README.md` |
 | Tool 1 - CI baseline-gate (fail only on new violations) | Documented approach, tooling not yet built | - |
 | Tool 2 - `databank-cli` CLI (extraction from resource files) | Complete - resx/rc/fhx/ahc/json/grf parsers, grouping, stats, coverage, edit/write-back | `DatabankTool/DataBank.Cli` |
-| Tool 2 - CLI tests | Complete - 178 tests passing | `DatabankTool/DataBank.Cli.Tests` |
+| Tool 2 - CLI tests | Complete - 194 tests passing | `DatabankTool/DataBank.Cli.Tests` |
 | Tool 2 - Data Bank store (MongoDB + REST API) | Complete - CRUD, import/export, stats, sessions, Swagger | `DatabankTool/DataBank.Api` |
 | Tool 2 - Desktop app (Local + Remote modes) | Complete - dashboard, filters, inline edit with write-back, JSON export, GRF tab | `DatabankTool/DataBank.Desktop` |
 

@@ -2,6 +2,31 @@
 
 A localization data extraction and management pipeline for DeltaV. Extracts translatable strings from resource files (.resx, .rc, .fhx, .ahc, .json, .grf), stores them in MongoDB, and provides a desktop and web interface for browsing and managing translations.
 
+This can be used to aggregate localization-related KEYS and manage translation values in the desktop app
+
+## Table of Contents
+
+- [Quick How to Run](#quick-how-to-run)
+  - [Prerequisites](#prerequisites)
+  - [Option 1: CLI extraction → Local mode](#option-1-cli-extraction--local-mode-no-server)
+  - [Option 2: Full Stack → Remote mode](#option-2-full-stack--remote-mode-mongodb--api)
+  - [Option 3: Desktop App](#option-3-desktop-app-either-mode)
+  - [Connecting to MongoDB Compass](#connecting-to-mongodb-compass)
+- [Architecture](#architecture)
+- [Sub-Projects](#sub-projects)
+- [Makefile Commands](#makefile-commands)
+- [CLI Reference](#cli-reference)
+- [Supported File Formats](#supported-file-formats)
+- [API Endpoints](#api-endpoints)
+- [Desktop App Modes](#desktop-app-modes)
+  - [Local Mode](#local-mode)
+  - [Remote Mode](#remote-mode)
+- [Common Things to Do in the Desktop App](#common-things-to-do-in-the-desktop-app)
+- [Common Workflows](#common-workflows)
+  - [Extract and browse locally](#extract-and-browse-locally-no-server)
+  - [Full pipeline with API](#full-pipeline-with-api-remote-mode)
+  - [Re-import updated data](#re-import-updated-data)
+
 ## Quick How to Run
 
 ### Prerequisites
@@ -12,41 +37,56 @@ A localization data extraction and management pipeline for DeltaV. Extracts tran
 
 The desktop app has two modes:
 
-- **Local** — import a `data-bank.json` produced by the CLI and browse it offline (no server).
-- **Remote** — connect to the REST API backed by MongoDB.
+- **Local** - import a `data-bank.json` produced by the CLI and browse it offline (no server).
+- **Remote** - connect to the REST API backed by MongoDB.
+
+> [!NOTE]
+> The app starts in **Local** mode by default. Switch to **Remote** mode in the toolbar to connect to a running API (see [Desktop App Modes](#desktop-app-modes)).
+
+---
 
 ### Option 1: CLI extraction → Local mode (no server)
 
-Extract translatable strings from a directory of resource files into `data-bank.json`:
+1. Extract translatable strings from a directory of resource files into `data-bank.json`:
+
+> [!NOTE]
+> Point a resource folder (where all localization-related keys are stored) to extract the KEYS --> This is the `INPUT_DIR` argument
+> - currently detects FHX, RESX, RC, AHC, JSON files (GRF files are not parsed)
 
 ```bash
-# make (INPUT_DIR is required):
+# make (INPUT_DIR is required - this is the resource folder where the keys live) - this outputs data-bank.json file:
 make run-databank INPUT_DIR=./l10n-files
 
-# raw dotnet run (same thing):
+# or raw dotnet run (same thing):
 dotnet run --project DatabankTool/DataBank.Cli/DataBank.Cli.csproj -c Release -- --input-dir ./l10n-files
 
-# with options (output path, stats, verbose):
+# or with options (output path, stats, verbose):
 make run-databank INPUT_DIR=./l10n-files ARGS="--output ./out/data-bank.json --stats --verbose"
 dotnet run --project DatabankTool/DataBank.Cli/DataBank.Cli.csproj -c Release -- --input-dir ./l10n-files --output ./out/data-bank.json --stats --verbose
 ```
 
-Then open the desktop app in **Local** mode and click **Load DataBank JSON** to pick the
-generated `data-bank.json`:
+2. Then open the desktop app in **Local** mode
 
 ```bash
+# run desktop app
 make run-databank-desktop
-# raw:
+# or raw:
 dotnet run --project DatabankTool/DataBank.Desktop/DataBank.Desktop.csproj -c Release
 ```
 
+3. Then click **Load DataBank JSON** and pick the generated `data-bank.json`:
+
+---
+
 ### Option 2: Full Stack → Remote mode (MongoDB + API)
+
+1. Run the databank stack (MongoDB and API server via docker compose)
 
 ```bash
 # make: starts MongoDB (docker compose) then the API server
 make run-databank-stack
 
-# raw equivalent:
+# or raw equivalent:
 docker compose -f DatabankTool/docker-compose.yml up -d mongodb
 dotnet run --project DatabankTool/DataBank.Api/DataBank.Api.csproj -c Release
 ```
@@ -62,20 +102,34 @@ To stop:
 ```bash
 # Stop the API (Ctrl+C), then stop MongoDB
 make stop-mongo
-# raw:
+# or raw:
 docker compose -f DatabankTool/docker-compose.yml down
 ```
 
-### Option 3: Desktop App (either mode)
+2. Open the desktop app, then switch to "Remote mode" and connect to the API
 
 ```bash
+# run desktop app
 make run-databank-desktop
-# raw:
+# or raw:
 dotnet run --project DatabankTool/DataBank.Desktop/DataBank.Desktop.csproj -c Release
 ```
 
-The app starts in **Local** mode by default. Switch to **Remote** mode in the toolbar to
-connect to a running API (see [Desktop App Modes](#desktop-app-modes)).
+3. To import data in "Remote mode", click "Import data to API" and select data-bank.json to import data to the local MongoDB database
+
+---
+
+### Desktop App (either mode) Information
+
+Run the desktop app either via `Makefile` or raw `dotnet run ...`
+
+```bash
+make run-databank-desktop
+# or raw:
+dotnet run --project DatabankTool/DataBank.Desktop/DataBank.Desktop.csproj -c Release
+```
+
+---
 
 ### Connecting to MongoDB Compass
 
@@ -182,38 +236,26 @@ Full interactive API docs available at `http://localhost:5000/swagger` when the 
 ## Desktop App Modes
 
 ### Local Mode
-- Load a `data-bank.json` file from disk via file dialog (e.g., the output of
-  `make run-databank INPUT_DIR=...`)
+- Load a `data-bank.json` file from disk via file dialog (e.g., the output of `make run-databank INPUT_DIR=...`)
 - No server required — works completely offline
 
 ### Remote Mode
 - Connects to the API at `http://localhost:5000` (start it with `make run-databank-stack`)
 - Fetches entries from MongoDB
 - Shows connection status with Retry / Switch to Local fallback buttons
-- **Base path** input for resolving relative source files (`~` expands to your home
-  directory); used by "Open Source File" and write-back. Persists across restarts.
+- **Base path** input for resolving relative source files (`~` expands to your home directory); used by "Open Source File" and write-back. Persists across restarts.
 - **Import Data to API** button — uploads a `data-bank.json` directly to the API
-  (`POST /api/import`), no curl needed
-- Mode preference persists across app restarts
+  (`POST /api/import`), no curl needed - Mode preference persists across app restarts
 
 ## Common Things to Do in the Desktop App
 
 - **Switch modes (Local / Remote)** — toolbar radio buttons; the mode persists across restarts.
-- **Load data** — Local: **Load DataBank JSON** file dialog. Remote: **Connect API**
-  fetches all entries from MongoDB.
-- **Dashboard** — total entries, locales, formats, translated/untranslated counts, and a
-  per-locale completion bar.
-- **Filter entries** — multi-select **locales** (dropdown with Select All / Clear All),
-  **format** (resx/rc/fhx/ahc/json), **status** (Translated / Untranslated / Do Not
-  Translate), and free-text **search** across keys and values.
-- **Edit translations inline** — double-click a locale cell, type, press Enter. The new
-  value is **written back to the source file** when the entry has source info (uses the
-  base path to resolve relative files); otherwise it is kept in memory only.
-- **Inspect an entry** — click a row to open the detail panel: all locale values, source
-  file/line/format, status, comment, format specifiers, and an **Open Source File** button
-  (opens in VS Code at the exact line when VS Code is installed).
-- **Export JSON** — exports the current filtered view
-  (`databank-export-<timestamp>-<locales>.json`) for sharing subsets with translators.
+- **Load data** — Local: **Load DataBank JSON** file dialog. Remote: **Connect API** fetches all entries from MongoDB.
+- **Dashboard** — total entries, locales, formats, translated/untranslated counts, and a per-locale completion bar.
+- **Filter entries** — multi-select **locales** (dropdown with Select All / Clear All), **format** (resx/rc/fhx/ahc/json), **status** (Translated / Untranslated / Do Not Translate), and free-text **search** across keys and values.
+- **Edit translations inline** — double-click a locale cell, type, press Enter. The new value is **written back to the source file** when the entry has source info (uses the base path to resolve relative files); otherwise it is kept in memory only.
+- **Inspect an entry** — click a row to open the detail panel: all locale values, source file/line/format, status, comment, format specifiers, and an **Open Source File** button (opens in VS Code at the exact line when VS Code is installed).
+- **Export JSON** — exports the current filtered view (`databank-export-<timestamp>-<locales>.json`) for sharing subsets with translators.
 - **GRF Files tab** — GRF entries are listed separately from the main table.
 
 ## Common Workflows
@@ -226,7 +268,7 @@ make run-databank-desktop
 # In Desktop: Load DataBank JSON → select data-bank.json
 ```
 
-Raw equivalents:
+OR Raw equivalents:
 
 ```bash
 dotnet run --project DatabankTool/DataBank.Cli/DataBank.Cli.csproj -c Release -- --input-dir ./l10n-files
@@ -243,7 +285,7 @@ make import-data                              # curl POST /api/import with data-
 # Browse in Desktop (Remote mode) or Swagger UI
 ```
 
-Raw equivalents:
+OR Raw equivalents:
 
 ```bash
 docker compose -f DatabankTool/docker-compose.yml up -d mongodb

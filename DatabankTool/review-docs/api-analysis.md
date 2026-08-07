@@ -1,3 +1,9 @@
+> **HISTORICAL DOCUMENT** — This analysis was written before the v3 multi-locale schema
+> upgrade and the API route refactoring. The schema described here (v2, flat per-entry)
+> is superseded by the current `data-bank.json` v3 format (entries grouped by key with
+> multi-locale values). API routes have been migrated to key-based paths. Retained for
+> reference only.
+
 # Databank API vs CLI Architecture Analysis
 
 ## Current Architecture: Two Parallel Systems (Problem)

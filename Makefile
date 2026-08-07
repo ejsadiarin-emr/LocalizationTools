@@ -1,74 +1,95 @@
-.PHONY: build build-analyzer build-cli build-desktop test clean analyze analyze-test analyze-test-ca restore pack run-desktop publish-desktop ci build-databank build-databank-cli build-databank-desktop run-databank run-databank-desktop test-databank clean-databank restore-databank start-mongo stop-mongo run-databank-api run-databank-stack
+.PHONY: build build-analyzer build-cli build-desktop test clean analyze analyze-test analyze-test-ca restore pack run-desktop publish-desktop ci build-databank build-databank-cli build-databank-desktop run-databank run-databank-desktop test-databank clean-databank restore-databank start-mongo stop-mongo run-databank-api run-databank-stack build-la build-la-analyzer build-la-cli test-la clean-la pack-la pack-la-tool build-la-desktop run-la-desktop publish-la-desktop run-la-test run-la-test-ca ci-la restore-la
 
 # Default target
-all: build build-databank
+all: build-la build-databank
+
+# ---------------------------------------------------------------------------------
+# LocalizationAnalyzer targets
+# ---------------------------------------------------------------------------------
 
 # Restore dependencies
-restore:
+restore-la:
 	dotnet restore LocalizationAnalyzer/LocalizationAnalyzers.csproj
 	dotnet restore LocalizationAnalyzer/LocalizationAnalyzers.Tests/LocalizationAnalyzers.Tests.csproj
 
-# ---------------------------------------------------------------------------------
-
 # Build both analyzer and CLI
-build: build-analyzer build-cli
+build-la: build-la-analyzer build-la-cli
 
 # Build analyzer (netstandard2.0 for NuGet)
-build-analyzer:
+build-la-analyzer:
 	dotnet build LocalizationAnalyzer/LocalizationAnalyzers.csproj -c Release -f netstandard2.0
 
 # Build CLI tool (net10.0)
-build-cli:
+build-la-cli:
 	dotnet build LocalizationAnalyzer/LocalizationAnalyzers.csproj -c Release -f net10.0
 
 # Run tests
-test:
+test-la:
 	dotnet test LocalizationAnalyzer/LocalizationAnalyzers.Tests/LocalizationAnalyzers.Tests.csproj
 
 # Run analyzers and generate SARIF
-analyze: build-cli
+run-la: build-la-cli
 	dotnet run --project LocalizationAnalyzer/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- src results.sarif
 
 # Clean build artifacts
-clean:
+clean-la:
 	dotnet clean LocalizationAnalyzer/LocalizationAnalyzers.csproj -c Release
 	dotnet clean LocalizationAnalyzer/LocalizationAnalyzers.Tests/LocalizationAnalyzers.Tests.csproj
 	rm -f LocalizationAnalyzer/results.sarif
 
 # Create NuGet package (analyzer)
-pack: build-analyzer
+pack-la: build-la-analyzer
 	dotnet pack LocalizationAnalyzer/LocalizationAnalyzers.csproj -c Release -f netstandard2.0
 
 # Create dotnet tool package
-pack-tool: build-cli
+pack-la-tool: build-la-cli
 	dotnet pack LocalizationAnalyzer/LocalizationAnalyzers.csproj -c Release --no-build -p:TargetFrameworks=net10.0 -p:PackAsDotnetTool=true
 
-pack-tool-2: build-cli
+pack-la-tool-2: build-la-cli
 	dotnet pack LocalizationAnalyzer/LocalizationAnalyzers.csproj -c Release --no-build -p:TargetFrameworks=net10.0 -p:PackAsDotnetTool=true
 
-# ---------------------------------------------------------------------------------
 # Build desktop app (WPF + WebView2)
-build-desktop:
+build-la-desktop:
 	dotnet build LocalizationAnalyzer/LocalizationAnalyzers.Desktop/LocalizationAnalyzers.Desktop.csproj -c Release
 
 # Run desktop app
-run-desktop: build-desktop
+run-la-desktop: build-la-desktop
 	dotnet run --project LocalizationAnalyzer/LocalizationAnalyzers.Desktop/LocalizationAnalyzers.Desktop.csproj -c Release --no-build
 
 # Publish self-contained single-file desktop app
-publish-desktop:
+publish-la-desktop:
 	dotnet publish LocalizationAnalyzer/LocalizationAnalyzers.Desktop/LocalizationAnalyzers.Desktop.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
 
 # Run analyzers on test codebase (LOC rules only)
-analyze-test: build-cli
+run-la-test: build-la-cli
 	dotnet run --project LocalizationAnalyzer/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- test-codebase/
 
 # Run analyzers on test codebase with CA rules (LOC + CA globalization rules)
-analyze-test-ca: build-cli
+run-la-test-ca: build-la-cli
 	dotnet run --project LocalizationAnalyzer/LocalizationAnalyzers.csproj --no-build -c Release -f net10.0 -- test-codebase/ --with-ca-rules
 
 # Full CI pipeline
-ci: restore build test analyze
+ci-la: restore-la build-la test-la run-la
+
+# ---------------------------------------------------------------------------------
+# Backward-compat aliases (deprecated — prefer la- prefixed targets)
+# ---------------------------------------------------------------------------------
+restore: restore-la
+build: build-la
+build-analyzer: build-la-analyzer
+build-cli: build-la-cli
+test: test-la
+analyze: run-la
+clean: clean-la
+pack: pack-la
+pack-tool: pack-la-tool
+pack-tool-2: pack-la-tool-2
+build-desktop: build-la-desktop
+run-desktop: run-la-desktop
+publish-desktop: publish-la-desktop
+analyze-test: run-la-test
+analyze-test-ca: run-la-test-ca
+ci: ci-la
 
 # ---------------------------------------------------------------------------------
 # DatabankTool targets (CLI + Desktop + Tests)
@@ -79,7 +100,7 @@ ci: restore build test analyze
 #   make run-databank INPUT_DIR=./l10n-files ARGS="--format resx --verbose"
 #
 # INPUT_DIR is required and should point to a folder containing resource files.
-# Supported file formats: resx, rc, fhx, ahc, json
+# Supported file formats: resx, rc, fhx, ahc, json, grf
 
 restore-databank:
 	dotnet restore DatabankTool/DatabankTool.sln
