@@ -20,13 +20,53 @@ Tooling for the DeltaV localization initiative: static analysis of C# for locali
 ## Repository Layout
 
 ```
-├── Makefile                       # shared build/run targets for both tools
-├── LocalizationAnalyzer/          # LocalizationAnalyzers (analyzers + CLI + desktop app)
-├── DatabankTool/                  # databank-cli, DataBank.Api, DataBank.Desktop, docker-compose.yml
-├── l10n-files/                    # sample resource files (EN + Translated) for FHX/RC/GRF/RESX/AHC
-├── test-codebase/                 # sample C# code used by the analyzer CLI targets
-├── data-bank.json                 # extracted data-bank output (repo-local sample)
-└── results.sarif / published_results.sarif   # example analyzer SARIF output
+LocalizationTools/
+│
+├── README.md                               ← Root: ToC, quick starts, repo layout, CLI refs
+│
+├── PROJECT_CONTEXT.md                      ← PRD: problem, goals, architecture diagrams, rules
+│
+├── Makefile                                ← Shared targets (la-* for analyzer, databank-* for tool)
+│
+├── LocalizationAnalyzer/                   ← TOOL 1: Static Analysis
+│   ├── README.md                           ←   Overview, all 13 LOC rules, CLI usage, CI integration
+│   ├── LocalizationAnalyzers.csproj        ←   Analyzer + CLI project
+│   ├── SarifCli.cs                         ←   CLI entry point (SARIF output, per-file metrics)
+│   ├── DiagnosticAnalyzer/*.cs             ←   LOC001–LOC015 diagnostic analyzers
+│   ├── CodeFixProviders/*.cs               ←   Lightbulb: extract string → Localize()
+│   ├── LocalizationAnalyzers.Tests/        ←   126 unit tests
+│   └── LocalizationAnalyzers.Desktop/      ←   WPF + WebView2 GUI
+│       └── README.md                       ←     Desktop app features
+│
+├── DatabankTool/                           ← TOOL 2: Databank Pipeline
+│   ├── README.md                           ←   Quick start, architecture, CLI ref, desktop modes
+│   ├── docker-compose.yml                  ←   MongoDB setup
+│   │
+│   ├── DataBank.Cli/                       ←   Extraction CLI (databank-cli)
+│   │   ├── DataBank.Cli.csproj
+│   │   └── Services/                       ←     Parsers: resx, rc, fhx, ahc, json, grf
+│   │
+│   ├── DataBank.Cli.Tests/                 ←   194 unit tests
+│   │
+│   ├── DataBank.Api/                       ←   REST API (ASP.NET Core + MongoDB)
+│   │   ├── README.md                       ←   Full API refs, endpoints, MongoDB setup
+│   │   ├── Controllers/                    ←     CRUD, import/export, stats, sessions
+│   │   └── Services/                       ←     MongoContext, extraction jobs
+│   │
+│   └── DataBank.Desktop/                   ←   WPF + WebView2 Desktop App
+│       └── README.md                       ←     Local mode, Remote mode, features
+│
+├── l10n-files/                             ← Sample resource files
+│   ├── FHX/                                ←   FHX format (EN + Translated/Chinese)
+│   ├── RC/                                 ←   Windows RC format
+│   ├── GRF/                                ←   GRF format
+│   └── RESX/                               ←   .NET RESX format
+│
+├── test-codebase/                          ← Sample C# code for analyzer testing
+│
+├── data-bank.json                          ← Extracted databank output (repo sample)
+│
+└── results.sarif                           ← Analyzer SARIF output (repo sample)
 ```
 
 This repo contains **two related but separate tools**:
