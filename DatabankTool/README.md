@@ -2,13 +2,14 @@
 
 A localization data extraction and management pipeline for DeltaV. Extracts translatable strings from resource files (.resx, .rc, .fhx, .ahc, .json, .grf), stores them in MongoDB, and provides a desktop and web interface for browsing and managing translations.
 
-This can be used to aggregate localization-related KEYS and manage translation values in the desktop app
+This can be used to aggregate localization-related KEYS and manage translation values in the desktop app (follow [Option 1: CLI extraction → Local mode - Quickest](#option-1-cli-extraction-local-mode-no-server-quickest) for quick run).
+ 
 
 ## Table of Contents
 
 - [Quick How to Run](#quick-how-to-run)
   - [Prerequisites](#prerequisites)
-  - [Option 1: CLI extraction → Local mode](#option-1-cli-extraction--local-mode-no-server)
+  - [Option 1: CLI extraction → Local mode - Quickest](#option-1-cli-extraction-local-mode-no-server-quickest)
   - [Option 2: Full Stack → Remote mode](#option-2-full-stack--remote-mode-mongodb--api)
   - [Option 3: Desktop App](#option-3-desktop-app-either-mode)
   - [Connecting to MongoDB Compass](#connecting-to-mongodb-compass)
@@ -45,13 +46,10 @@ The desktop app has two modes:
 
 ---
 
-### Option 1: CLI extraction → Local mode (no server)
+### Option 1: CLI extraction → Local mode (no server) - Quickest
 
-1. Extract translatable strings from a directory of resource files into `data-bank.json`:
-
-> [!NOTE]
-> Point a resource folder (where all localization-related keys are stored) to extract the KEYS --> This is the `INPUT_DIR` argument
-> - currently detects FHX, RESX, RC, AHC, JSON files (GRF files are not parsed)
+1. Extract keys from a folder of resource files (via `Makefile` or raw `dotrun run ...`)
+    - currently detects FHX, RESX, RC, AHC, JSON files (GRF files are not parsed)
 
 ```bash
 # make (INPUT_DIR is required - this is the resource folder where the keys live) - this outputs data-bank.json file:
@@ -65,7 +63,9 @@ make run-databank INPUT_DIR=./l10n-files ARGS="--output ./out/data-bank.json --s
 dotnet run --project DatabankTool/DataBank.Cli/DataBank.Cli.csproj -c Release -- --input-dir ./l10n-files --output ./out/data-bank.json --stats --verbose
 ```
 
-2. Then open the desktop app in **Local** mode
+- This outputs a `data-bank.json` containing ALL localization-related KEYS in a unified JSON schema.
+
+2. Then open the desktop app in **Local** mode (it opens in Local mode by default)
 
 ```bash
 # run desktop app
@@ -75,6 +75,11 @@ dotnet run --project DatabankTool/DataBank.Desktop/DataBank.Desktop.csproj -c Re
 ```
 
 3. Then click **Load DataBank JSON** and pick the generated `data-bank.json`:
+
+> [!IMPORTANT]
+> **Every edit in "Local mode" (ex. changing a translation value) will persist in:**
+>  - (1) the actual source file AND 
+>  - (2) the imported `data-bank.json`
 
 ---
 
@@ -115,7 +120,12 @@ make run-databank-desktop
 dotnet run --project DatabankTool/DataBank.Desktop/DataBank.Desktop.csproj -c Release
 ```
 
-3. To import data in "Remote mode", click "Import data to API" and select data-bank.json to import data to the local MongoDB database
+3. To import data in "Remote mode", click "Import data to API" and select `data-bank.json` to import data to the local MongoDB database
+
+> [!IMPORTANT]
+> **Every edit in "Remote mode" (ex. changing a translation value) will persist in:**
+>  - (1) the actual source file AND 
+>  - (2) the MongoDB database
 
 ---
 
